@@ -41,6 +41,11 @@ Run `cdk bootstrap aws://<ACCOUNT>/<REGION>` once before the first pipeline run.
 4. If `DEPLOY_ADMIN=true`: read stack outputs, build the admin SPA with the matching `VITE_*`
    values, `s3 sync` to the admin bucket, and invalidate CloudFront.
 
+> **No Docker, even for Lambda bundling.** The CDK `NodejsFunction` Lambdas bundle with **esbuild**,
+> which is a committed dev dependency of `infra/` — so `npm ci` installs it and CDK bundles locally.
+> Keep the CodeBuild project **Privileged/Docker = OFF**; if esbuild were missing, CDK would fall
+> back to Docker bundling and `cdk deploy` would fail with exit 1.
+
 ## Multi-environment promotion
 Use one pipeline per environment (separate `ENV`), or one pipeline with sequential stages each
 running this buildspec with a different `ENV` and a **manual approval** before staging/prod.
