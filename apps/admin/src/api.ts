@@ -16,7 +16,20 @@ import type {
   HelpRequest,
   HelpRequestStatus,
   HelpRequestUpdate,
+  DiningItem,
+  DiningItemCreate,
+  DiningItemUpdate,
+  MapLocation,
+  MapLocationCreate,
+  MapLocationUpdate,
+  WeatherInfo,
+  WeatherUpsert,
 } from '@eventmgr/shared-types';
+
+interface ImportResult {
+  imported: number;
+  errors: { row: number; message: string }[];
+}
 
 interface FeedbackSummary {
   targetId: string;
@@ -95,4 +108,58 @@ export const adminApi = {
     request<HelpRequest>('PATCH', `/admin/events/${ev()}/help-requests/${attendeeId}/${requestId}`, patch),
   listFeedback: (targetId: string) =>
     request<FeedbackSummary>('GET', `/admin/events/${ev()}/feedback?targetId=${encodeURIComponent(targetId)}`),
+
+  // Dining
+  listDining: () => request<DiningItem[]>('GET', `/admin/events/${ev()}/dining`),
+  createDining: (input: DiningItemCreate) =>
+    request<DiningItem>('POST', `/admin/events/${ev()}/dining`, input),
+  updateDining: (id: string, patch: DiningItemUpdate) =>
+    request<DiningItem>('PATCH', `/admin/events/${ev()}/dining/${id}`, patch),
+
+  // Maps
+  listMaps: () => request<MapLocation[]>('GET', `/admin/events/${ev()}/maps`),
+  createMap: (input: MapLocationCreate) =>
+    request<MapLocation>('POST', `/admin/events/${ev()}/maps`, input),
+  updateMap: (id: string, patch: MapLocationUpdate) =>
+    request<MapLocation>('PATCH', `/admin/events/${ev()}/maps/${id}`, patch),
+
+  // Weather
+  getWeather: () => request<WeatherInfo>('GET', `/events/${ev()}/weather`),
+  upsertWeather: (input: WeatherUpsert) =>
+    request<WeatherInfo>('PUT', `/admin/events/${ev()}/weather`, input),
+
+  // CSV import (raw text body) + export (download)
+  importAttendees: (csv: string) => importCsv(`/admin/events/${ev()}/attendees/import`, csv),
+  importAgenda: (csv: string) => importCsv(`/admin/events/${ev()}/agenda/import`, csv),
+  exportAttendees: () => downloadCsv(`/admin/events/${ev()}/attendees/export`, 'attendees.csv'),
+  exportFeedback: (targetId: string) =>
+    downloadCsv(`/admin/events/${ev()}/feedback/export?targetId=${encodeURIComponent(targetId)}`, `feedback-${targetId}.csv`),
 };
+
+async function importCsv(path: string, csv: string): Promise<ImportResult> {
+  const res = await fetch(`${config.apiUrl}${path}`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'text/csv',
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
+    body: csv,
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((json as ApiError)?.error?.message ?? `Import failed (${res.status})`);
+  return (json as { data: ImportResult }).data;
+}
+
+async function downloadCsv(path: string, filename: string): Promise<void> {
+  const res = await fetch(`${config.apiUrl}${path}`, {
+    headers: { ...(token ? { authorization: `Bearer ${token}` } : {}) },
+  });
+  if (!res.ok) throw new Error(`Export failed (${res.status})`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}

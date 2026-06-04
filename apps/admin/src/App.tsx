@@ -5,11 +5,36 @@ import { NotificationsPage } from './components/NotificationsPage';
 import { PhotosPage } from './components/PhotosPage';
 import { FaqPage } from './components/FaqPage';
 import { SupportPage } from './components/SupportPage';
+import { DiningPage } from './components/DiningPage';
+import { MapsPage } from './components/MapsPage';
+import { WeatherPage } from './components/WeatherPage';
+import { DataPage } from './components/DataPage';
 import { getCurrentSession, signOut, type AdminSession } from './auth';
 import { setToken } from './api';
 import { config } from './config';
 
-type Tab = 'agenda' | 'notifications' | 'photos' | 'faq' | 'support';
+type Tab =
+  | 'agenda'
+  | 'dining'
+  | 'notifications'
+  | 'photos'
+  | 'faq'
+  | 'maps'
+  | 'weather'
+  | 'support'
+  | 'data';
+
+const TABS: { id: Tab; label: string }[] = [
+  { id: 'agenda', label: 'Agenda' },
+  { id: 'dining', label: 'Dining' },
+  { id: 'maps', label: 'Maps' },
+  { id: 'weather', label: 'Weather' },
+  { id: 'notifications', label: 'Notifications' },
+  { id: 'photos', label: 'Photos' },
+  { id: 'faq', label: 'FAQ' },
+  { id: 'support', label: 'Support' },
+  { id: 'data', label: 'Import/Export' },
+];
 
 export function App() {
   const [session, setSession] = useState<AdminSession | null>(null);
@@ -49,30 +74,24 @@ export function App() {
           <button className="secondary" onClick={handleSignOut}>Sign out</button>
         </div>
       </header>
-      <nav className="container" style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 0 }}>
-        <button className={tab === 'agenda' ? '' : 'secondary'} onClick={() => setTab('agenda')}>
-          Agenda
-        </button>
-        <button className={tab === 'notifications' ? '' : 'secondary'}
-          onClick={() => setTab('notifications')}>
-          Notifications
-        </button>
-        <button className={tab === 'photos' ? '' : 'secondary'} onClick={() => setTab('photos')}>
-          Photos
-        </button>
-        <button className={tab === 'faq' ? '' : 'secondary'} onClick={() => setTab('faq')}>
-          FAQ
-        </button>
-        <button className={tab === 'support' ? '' : 'secondary'} onClick={() => setTab('support')}>
-          Support
-        </button>
+      <nav className="container"
+        style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 0, flexWrap: 'wrap' }}>
+        {TABS.map((t) => (
+          <button key={t.id} className={tab === t.id ? '' : 'secondary'} onClick={() => setTab(t.id)}>
+            {t.label}
+          </button>
+        ))}
       </nav>
       <main className="container">
         {tab === 'agenda' && <AgendaPage />}
+        {tab === 'dining' && <DiningPage />}
+        {tab === 'maps' && <MapsPage />}
+        {tab === 'weather' && <WeatherPage />}
         {tab === 'notifications' && <NotificationsPage />}
         {tab === 'photos' && <PhotosPage />}
         {tab === 'faq' && <FaqPage />}
         {tab === 'support' && <SupportPage />}
+        {tab === 'data' && <DataPage />}
       </main>
     </>
   );
