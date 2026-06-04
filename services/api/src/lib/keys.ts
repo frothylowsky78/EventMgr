@@ -139,6 +139,30 @@ export const keys = {
     SK: 'WEATHER',
   }),
 
+  // --- Feedback (per attendee, one per target; GSI1 lists a target's feedback for an event) ---
+  feedbackPrefix: 'FEEDBACK#',
+  feedback: (attendeeId: string, targetId: string) => ({
+    PK: attendeePk(attendeeId),
+    SK: `FEEDBACK#${targetId}`,
+  }),
+  feedbackByTarget: (eventId: string, targetId: string) => ({
+    GSI1PK: `EVENT#${eventId}#FEEDBACK#${targetId}`,
+  }),
+
+  // --- Help content (one per event) + help requests (per attendee; GSI1 by status) ---
+  helpContent: (eventId: string) => ({
+    PK: eventPk(eventId),
+    SK: 'HELP',
+  }),
+  helpRequestPrefix: 'HELP#',
+  helpRequest: (attendeeId: string, requestId: string) => ({
+    PK: attendeePk(attendeeId),
+    SK: `HELP#${requestId}`,
+  }),
+  helpRequestByStatus: (eventId: string, status: string) => ({
+    GSI1PK: `EVENT#${eventId}#HELP#${status}`,
+  }),
+
   // --- Audit log ---
   audit: (eventId: string, ts: string, id: string) => ({
     PK: eventPk(eventId),

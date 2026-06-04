@@ -10,12 +10,15 @@ import '../data/repositories/notifications_repository.dart';
 import '../data/repositories/content_repository.dart';
 import '../data/repositories/personal_repository.dart';
 import '../data/repositories/photos_repository.dart';
+import '../data/repositories/support_repository.dart';
 import '../domain/agenda_item.dart';
 import '../domain/attendee_card.dart';
 import '../domain/dining_item.dart';
 import '../domain/event.dart';
 import '../domain/faq_item.dart';
+import '../domain/help.dart';
 import '../domain/itinerary_item.dart';
+import '../domain/me.dart';
 import '../domain/notification_item.dart';
 import '../domain/photo.dart';
 import '../domain/transportation_item.dart';
@@ -58,6 +61,9 @@ final photosRepositoryProvider = Provider<PhotosRepository>(
 );
 final contentRepositoryProvider = Provider<ContentRepository>(
   (ref) => ContentRepository(ref.watch(apiClientProvider), ref.watch(localCacheProvider)),
+);
+final supportRepositoryProvider = Provider<SupportRepository>(
+  (ref) => SupportRepository(ref.watch(apiClientProvider), ref.watch(localCacheProvider)),
 );
 
 /// Stale-while-revalidate: try the network; on failure fall back to the offline cache.
@@ -170,6 +176,28 @@ final weatherProvider = FutureProvider<WeatherInfo>((ref) async {
     return await repo.fetchWeather();
   } catch (e) {
     final cached = repo.cachedWeather();
+    if (cached != null) return cached;
+    rethrow;
+  }
+});
+
+final meProvider = FutureProvider<AttendeeMe>((ref) async {
+  final repo = ref.watch(supportRepositoryProvider);
+  try {
+    return await repo.fetchMe();
+  } catch (e) {
+    final cached = repo.cachedMe();
+    if (cached != null) return cached;
+    rethrow;
+  }
+});
+
+final helpProvider = FutureProvider<HelpContent>((ref) async {
+  final repo = ref.watch(supportRepositoryProvider);
+  try {
+    return await repo.fetchHelp();
+  } catch (e) {
+    final cached = repo.cachedHelp();
     if (cached != null) return cached;
     rethrow;
   }

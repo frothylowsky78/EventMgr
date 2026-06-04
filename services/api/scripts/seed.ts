@@ -33,6 +33,13 @@ async function main() {
     address: '123 Ocean Drive, Big Sur, CA',
     timezone: 'America/Los_Angeles',
     registrationDeadline: '2026-08-15T23:59:00-07:00',
+    registrationActions: [
+      { id: 'confirm_attendance', label: 'Confirm attendance' },
+      { id: 'select_activities', label: 'Select activities' },
+      { id: 'dietary', label: 'Submit dietary restrictions' },
+      { id: 'flight', label: 'Provide flight details' },
+      { id: 'photo', label: 'Upload profile photo' },
+    ],
     branding: {
       logoUrl: '',
       heroImageUrl: '',
@@ -112,6 +119,7 @@ async function main() {
     directoryVisible: true,
     contactSharingOptIn: false,
     registrationStatus: 'in_progress',
+    completedRegistrationActions: ['confirm_attendance', 'dietary'],
     tags: ['golf', 'early_arrival'],
     enabled: true,
     accessCodeHash: hashAccessCode(EMAIL, ACCESS_CODE),
@@ -328,6 +336,28 @@ async function main() {
     tags: ['vip'],
     enabled: true,
     accessCodeHash: hashAccessCode('john@example.com', ACCESS_CODE),
+  });
+
+  // Help content (contacts, topics, emergency, lost & found).
+  await put({
+    ...keys.helpContent(EVENT_ID),
+    entity: 'HelpContent',
+    eventId: EVENT_ID,
+    contacts: [
+      { label: 'Event concierge', phone: '+1-831-555-0100', email: 'concierge@vipsummit.example' },
+      { label: 'Hotel front desk', phone: '+1-831-555-0111' },
+      { label: 'Transportation desk', phone: '+1-831-555-0190' },
+      { label: 'App support', email: 'support@vipsummit.example' },
+    ],
+    topics: [
+      { title: 'How do I change my dinner seating?',
+        body: 'Visit the concierge desk in the main lobby or send a help request in the app.' },
+      { title: 'Where do I catch the shuttle?',
+        body: 'See your Transportation section for your assigned shuttle and pickup point.' },
+    ],
+    emergencyText: 'For any medical or safety emergency, call 911, then notify event staff.',
+    lostAndFound: 'Lost something? Check with the hotel front desk or submit a help request.',
+    updatedAt: '2026-09-10T12:00:00-07:00',
   });
 
   console.log('Seed complete.');

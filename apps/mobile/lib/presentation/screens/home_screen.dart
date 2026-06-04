@@ -49,6 +49,7 @@ class HomeScreen extends ConsumerWidget {
                       icon: Icons.place_outlined,
                       text: '${event.locationName}\n${event.address}'),
                   const SizedBox(height: 16),
+                  const _RegistrationBanner(),
                   const _WeatherSnapshot(),
                   const SizedBox(height: 20),
                   Text('Up next', style: theme.textTheme.titleLarge),
@@ -76,6 +77,40 @@ class HomeScreen extends ConsumerWidget {
     } catch (_) {
       return '$start – $end';
     }
+  }
+}
+
+class _RegistrationBanner extends ConsumerWidget {
+  const _RegistrationBanner();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final me = ref.watch(meProvider).valueOrNull;
+    if (me == null || me.registrationComplete) return const SizedBox.shrink();
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Card(
+        color: scheme.secondary.withOpacity(0.12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => context.go('/registration'),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                Icon(Icons.how_to_reg, color: scheme.primary),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text('Finish your registration',
+                      style: TextStyle(fontWeight: FontWeight.w600)),
+                ),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -196,6 +196,46 @@ export const weatherUpsertSchema = z.object({
   notes: z.array(weatherNote).optional(),
 });
 
+// --- Feedback (spec §4.16) ---
+export const feedbackCreateSchema = z.object({
+  type: z.enum(['event', 'session', 'activity', 'meal', 'nps']),
+  targetId: z.string().min(1).max(100),
+  rating: z.number().min(0).max(10),
+  comments: z.string().max(2000).optional(),
+  wouldRecommend: z.boolean().optional(),
+  issueFlag: z.boolean().optional(),
+  anonymous: z.boolean().optional(),
+});
+
+// --- Help (spec §4.15) ---
+export const helpRequestCreateSchema = z.object({
+  category: z.string().min(1).max(100),
+  message: z.string().min(1).max(2000),
+  urgency: z.enum(['low', 'normal', 'high']).optional(),
+  contactPreference: z.string().max(200).optional(),
+});
+export const helpRequestUpdateSchema = z.object({
+  status: z.enum(['open', 'assigned', 'resolved']).optional(),
+  assignedTo: z.string().nullable().optional(),
+});
+export const helpContentUpsertSchema = z.object({
+  contacts: z
+    .array(
+      z.object({
+        label: z.string().max(150),
+        phone: z.string().max(50).optional(),
+        email: z.string().max(200).optional(),
+        note: z.string().max(300).optional(),
+      })
+    )
+    .optional(),
+  topics: z
+    .array(z.object({ title: z.string().max(200), body: z.string().max(2000) }))
+    .optional(),
+  emergencyText: z.string().max(1000).optional(),
+  lostAndFound: z.string().max(1000).optional(),
+});
+
 export function parseBody<T>(schema: z.ZodSchema<T>, raw: string | undefined): T {
   let json: unknown;
   try {

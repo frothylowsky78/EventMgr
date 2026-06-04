@@ -8,8 +8,11 @@ import 'screens/agenda_detail_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/dining_screen.dart';
 import 'screens/faq_screen.dart';
+import 'screens/feedback_screen.dart';
+import 'screens/help_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/notification_center_screen.dart';
+import 'screens/registration_screen.dart';
 import 'screens/transportation_screen.dart';
 import 'screens/travel_screen.dart';
 import 'screens/weather_screen.dart';
@@ -50,6 +53,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/faq', builder: (_, __) => const FaqScreen()),
       GoRoute(path: '/attendees', builder: (_, __) => const YearbookScreen()),
       GoRoute(path: '/weather', builder: (_, __) => const WeatherScreen()),
+      GoRoute(path: '/help', builder: (_, __) => const HelpScreen()),
+      GoRoute(path: '/feedback', builder: (_, __) => const FeedbackScreen()),
+      GoRoute(path: '/registration', builder: (_, __) => const RegistrationScreen()),
     ],
   );
 });

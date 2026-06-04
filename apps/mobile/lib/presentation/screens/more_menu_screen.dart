@@ -19,9 +19,10 @@ class MoreMenuScreen extends ConsumerWidget {
       const _MoreEntry('Attendees / Yearbook', Icons.people_outline, route: '/attendees'),
       const _MoreEntry('Weather', Icons.wb_sunny_outlined, route: '/weather'),
       const _MoreEntry('FAQ', Icons.help_outline, route: '/faq'),
+      const _MoreEntry('Registration', Icons.how_to_reg_outlined, route: '/registration'),
+      const _MoreEntry('Help', Icons.support_agent, route: '/help'),
+      const _MoreEntry('Feedback', Icons.rate_review_outlined, route: '/feedback'),
       const _MoreEntry('Maps', Icons.map_outlined),
-      const _MoreEntry('Help', Icons.support_agent),
-      const _MoreEntry('Feedback', Icons.rate_review_outlined),
     ];
 
     return Scaffold(

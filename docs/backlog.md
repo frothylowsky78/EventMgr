@@ -21,7 +21,7 @@ V1 scope. **P2** = spec "optional/later". Each epic lists the spec section(s) it
 ## P1 — Remaining V1 scope
 | Status | Epic | Key items | Spec |
 | --- | --- | --- | --- |
-| ⬜ | Registration deadline | countdown, status, required action items | §4.3 |
+| ✅ | Registration deadline | countdown, status, required action checklist, home banner, registration screen (event-driven) | §4.3 |
 | ⬜ | Activity detail pages | full fields + images | §4.5 |
 | 🟡 | Personal travel & transportation | ✅ `/me/travel`, `/me/transportation`, admin upsert/assign, transport group push segment, mobile screens; ⬜ admin UI, transport status push automation | §4.10, §4.11 |
 | 🟡 | Dining | ✅ schedule, menus, dietary, private seating, `/me/dining`, admin create/edit + seat assign, dining push segment, mobile screen; ⬜ admin UI for seating grid | §4.13 |
@@ -31,8 +31,8 @@ V1 scope. **P2** = spec "optional/later". Each epic lists the spec section(s) it
 | ✅ | FAQ | categories, search, featured-first, expand/collapse, admin CRUD, mobile screen | §4.9 |
 | ⬜ | Maps & navigation | static/interactive, pins, external nav links | §4.12 |
 | 🟡 | Photos & gallery | ✅ pre-signed S3 upload, S3-trigger processor, moderation queue (approve/hide/reject/feature), gallery (grid, like, lazy-load), admin moderation UI, mobile upload (camera/library); ⬜ real thumbnailing (sharp/Object Lambda), Rekognition auto-moderation, albums UI, download/export | §4.14, §18.5 |
-| ⬜ | Help / concierge | contacts, help requests → admin | §4.15 |
-| ⬜ | Feedback | forms attached to items, one per item, export | §4.16 |
+| ✅ | Help / concierge | contacts (tap-to-call/email), topics, help-request submit → admin triage queue (assign/resolve), admin help-content upsert | §4.15 |
+| 🟡 | Feedback | ✅ form (rating/comments/recommend/anonymous), one per target, event + per-session (from agenda detail), admin list + aggregate; ⬜ CSV export, NPS dashboard | §4.16 |
 | 🟡 | Weather | ✅ admin-entered current + daily forecast + alert notes, `/weather` API, mobile screen + home snapshot, admin upsert API; ⬜ live weather API integration, admin weather editor UI | §4.17 |
 | ⬜ | Calendar sync | single item + full itinerary (ICS), timezone-correct | §4.18 |
 | ⬜ | Profile self-edit + profile photo upload | `PATCH /me/profile`, upload URL | §4.1, §4.8 |

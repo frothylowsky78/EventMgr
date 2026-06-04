@@ -55,8 +55,11 @@ custom-auth flow (handled inside Cognito).
 | ✅ | POST | `/events/{eventId}/photos/upload-url` |
 | ✅ | POST | `/events/{eventId}/photos/{photoId}/like` |
 | ✅ | DELETE | `/events/{eventId}/photos/{photoId}` (owner/admin) |
-| ⬜ | POST | `/events/{eventId}/feedback` |
-| ⬜ | POST | `/events/{eventId}/help-requests` |
+| ✅ | POST | `/events/{eventId}/feedback` |
+| ✅ | GET | `/me/feedback-submissions` |
+| ✅ | GET | `/events/{eventId}/help` (contacts/topics) |
+| ✅ | POST | `/events/{eventId}/help-requests` |
+| ✅ | GET | `/me/help-requests` |
 
 ### Admin
 | | Method | Path | Notes |
@@ -85,6 +88,10 @@ custom-auth flow (handled inside Cognito).
 | ✅ | PATCH | `/admin/events/{eventId}/photos/{photoId}` | Approve / hide / reject / feature / album |
 | ✅ | GET/POST/PATCH | `/admin/events/{eventId}/faq …` | FAQ list / create / edit |
 | ✅ | PUT | `/admin/events/{eventId}/weather` | Upsert weather snapshot + notes |
+| ✅ | GET | `/admin/events/{eventId}/feedback?targetId=` | Feedback list + aggregate |
+| ✅ | PUT | `/admin/events/{eventId}/help` | Upsert help contacts/topics |
+| ✅ | GET | `/admin/events/{eventId}/help-requests?status=` | Help triage queue |
+| ✅ | PATCH | `/admin/events/{eventId}/help-requests/{attendeeId}/{requestId}` | Assign / resolve |
 | ⬜ | GET | `…/feedback/export` `…/photos/export` | Exports |
 
 ## Implemented request/response examples

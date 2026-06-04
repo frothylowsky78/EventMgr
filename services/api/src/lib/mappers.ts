@@ -7,6 +7,9 @@ import type {
   DiningSeat,
   EventProfile,
   FaqItem,
+  FeedbackSubmission,
+  HelpContent,
+  HelpRequest,
   ItineraryItem,
   NotificationCenterItem,
   NotificationRecord,
@@ -33,6 +36,7 @@ export const toEvent = (i: Item): EventProfile => ({
   address: i.address,
   timezone: i.timezone,
   registrationDeadline: i.registrationDeadline ?? null,
+  registrationActions: i.registrationActions ?? [],
   branding: {
     logoUrl: i.branding?.logoUrl ?? '',
     heroImageUrl: i.branding?.heroImageUrl ?? '',
@@ -235,6 +239,44 @@ export const toAttendee = (i: Item): Attendee => ({
   directoryVisible: i.directoryVisible ?? true,
   contactSharingOptIn: i.contactSharingOptIn ?? false,
   registrationStatus: i.registrationStatus ?? 'not_started',
+  completedRegistrationActions: i.completedRegistrationActions ?? [],
   tags: i.tags ?? [],
   enabled: i.enabled ?? true,
+});
+
+export const toFeedback = (i: Item): FeedbackSubmission => ({
+  id: i.id,
+  eventId: i.eventId,
+  attendeeId: i.attendeeId,
+  type: i.type,
+  targetId: i.targetId,
+  rating: i.rating,
+  comments: i.comments ?? '',
+  wouldRecommend: i.wouldRecommend,
+  issueFlag: i.issueFlag ?? false,
+  anonymous: i.anonymous ?? false,
+  createdAt: i.createdAt,
+});
+
+export const toHelpContent = (i: Item): HelpContent => ({
+  eventId: i.eventId,
+  contacts: i.contacts ?? [],
+  topics: i.topics ?? [],
+  emergencyText: i.emergencyText ?? '',
+  lostAndFound: i.lostAndFound ?? '',
+});
+
+export const toHelpRequest = (i: Item): HelpRequest => ({
+  id: i.id,
+  eventId: i.eventId,
+  attendeeId: i.attendeeId,
+  category: i.category,
+  message: i.message,
+  urgency: i.urgency ?? 'normal',
+  contactPreference: i.contactPreference ?? '',
+  photoKey: i.photoKey ?? null,
+  status: i.status ?? 'open',
+  assignedTo: i.assignedTo ?? null,
+  createdAt: i.createdAt,
+  updatedAt: i.updatedAt ?? i.createdAt,
 });
