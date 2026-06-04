@@ -1,0 +1,34 @@
+<!--
+  Paste these keys into ios/Runner/Info.plist (inside the top-level <dict>) after running
+  `flutter create .`. Permission strings are user-facing — keep them specific and honest
+  (App Store review rejects vague descriptions).
+-->
+
+<key>CFBundleDisplayName</key>
+<string>VIP Summit</string>
+
+<!-- image_picker: camera capture + library selection (photo upload, profile photo) -->
+<key>NSCameraUsageDescription</key>
+<string>Used to take and share event photos and your profile picture.</string>
+<key>NSPhotoLibraryUsageDescription</key>
+<string>Used to choose photos to share to the event gallery and set your profile picture.</string>
+<key>NSPhotoLibraryAddUsageDescription</key>
+<string>Used to save event photos to your library.</string>
+
+<!-- add_2_calendar: writing agenda/itinerary items to the device calendar -->
+<key>NSCalendarsUsageDescription</key>
+<string>Used to add event sessions and your itinerary to your calendar.</string>
+
+<!-- url_launcher: tap-to-call/email help contacts and open external maps -->
+<key>LSApplicationQueriesSchemes</key>
+<array>
+  <string>tel</string>
+  <string>mailto</string>
+  <string>https</string>
+  <string>maps</string>
+  <string>comgooglemaps</string>
+</array>
+
+<!-- The app uses only standard HTTPS/AWS TLS; declare no non-exempt encryption. -->
+<key>ITSAppUsesNonExemptEncryption</key>
+<false/>

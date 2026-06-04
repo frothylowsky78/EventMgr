@@ -22,7 +22,14 @@ apps/mobile/build/
 apps/mobile/.idea/
 apps/mobile/ios/Pods/
 apps/mobile/android/.gradle/
+apps/mobile/android/key.properties
+*.keystore
+*.jks
 *.iml
+
+# Per-env mobile build config (real values) — keep only the .example.json templates
+apps/mobile/config/*.json
+!apps/mobile/config/*.example.json
 
 # Env / secrets
 .env
