@@ -19,6 +19,9 @@ config.pushPlatformAppArnAndroid =
   (app.node.tryGetContext('pushAndroidArn') as string | undefined) ??
   config.pushPlatformAppArnAndroid;
 
+// Optional ops alarm email: cdk deploy --context alarmEmail=ops@example.com
+config.alarmEmail = (app.node.tryGetContext('alarmEmail') as string | undefined) ?? config.alarmEmail;
+
 new EventAppStack(app, `EventApp-${config.envName}`, {
   config,
   env: { account: config.account, region: config.region },

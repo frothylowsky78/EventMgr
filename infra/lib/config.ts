@@ -21,6 +21,12 @@ export interface EnvConfig {
    */
   pushPlatformAppArnIos?: string;
   pushPlatformAppArnAndroid?: string;
+  /** Daily AWS Backup of the DynamoDB table (on by default for staging/prod). */
+  enableBackups: boolean;
+  /** Retention (days) for AWS Backup recovery points. */
+  backupRetentionDays: number;
+  /** Optional email subscribed to the CloudWatch alarm SNS topic. */
+  alarmEmail?: string;
 }
 
 const base = {
@@ -38,6 +44,8 @@ export const ENVIRONMENTS: Record<EnvName, EnvConfig> = {
     enforceAdminMfa: false,
     adminPortalOrigins: ['http://localhost:5173'],
     logRetentionDays: 14,
+    enableBackups: false,
+    backupRetentionDays: 7,
   },
   staging: {
     ...base,
@@ -48,6 +56,8 @@ export const ENVIRONMENTS: Record<EnvName, EnvConfig> = {
     enforceAdminMfa: false,
     adminPortalOrigins: ['https://admin-staging.example.com'],
     logRetentionDays: 30,
+    enableBackups: true,
+    backupRetentionDays: 14,
   },
   prod: {
     ...base,
@@ -58,6 +68,8 @@ export const ENVIRONMENTS: Record<EnvName, EnvConfig> = {
     enforceAdminMfa: true,
     adminPortalOrigins: ['https://admin.example.com'],
     logRetentionDays: 90,
+    enableBackups: true,
+    backupRetentionDays: 35,
   },
 };
 

@@ -6,6 +6,8 @@ import { Media } from './constructs/media';
 import { Auth } from './constructs/auth';
 import { Api } from './constructs/api';
 import { Web } from './constructs/web';
+import { Observability } from './constructs/observability';
+import { Backups } from './constructs/backup';
 
 interface EventAppStackProps extends StackProps {
   config: EnvConfig;
@@ -33,6 +35,17 @@ export class EventAppStack extends Stack {
       profilePhotosBucket: media.profilePhotos,
     });
     const web = new Web(this, 'Web', config);
+
+    new Observability(this, 'Observability', {
+      config,
+      httpApi: api.httpApi,
+      asyncFunctions: [
+        { name: 'PhotoProcess', fn: api.photoProcessFn },
+        { name: 'NotificationSendJob', fn: api.sendJobFn },
+      ],
+    });
+
+    new Backups(this, 'Backups', { config, table: data.table });
 
     // Outputs consumed by mobile (--dart-define) and admin (VITE_*) build configs.
     new CfnOutput(this, 'ApiUrl', { value: api.httpApi.apiEndpoint });

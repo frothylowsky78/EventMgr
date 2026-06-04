@@ -38,8 +38,8 @@ V1 scope. **P2** = spec "optional/later". Each epic lists the spec section(s) it
 | ✅ | Profile self-edit + profile photo upload | `PATCH /me/profile`, pre-signed photo upload, privacy toggles, mobile profile screen | §4.1, §4.8 |
 | ✅ | Admin content mgmt + import/export | admin UIs for agenda, attendees (per-attendee itinerary/travel/transportation), dining, maps, weather, FAQ, photos, support; CSV import (attendees, agenda) + export (attendees, feedback). ⬜ XLSX (optional) | §5, §18.8 |
 | ✅ | Admin: per-attendee itinerary/travel/transportation mgmt UI | Attendees tab → manage itinerary (add/edit/delete), travel (upsert), transportation (add/status) | §4.6, §5 |
-| ⬜ | Observability: alarms, X-Ray, audit log, DLQs | §18.10 |
-| ⬜ | Backup/retention/archive procedures | §18.11 |
+| ✅ | Observability: alarms, X-Ray, audit log, DLQs, dashboard | API 5xx/latency + async-Lambda error + DLQ alarms → SNS topic; CloudWatch dashboard; X-Ray on all fns; audit-log entity; DLQs on async fns | §18.10 |
+| 🟡 | Backup/retention/archive | ✅ PITR + AWS Backup plan (staging/prod), S3 versioning, restore + export runbook (`docs/backup-retention.md`). ⬜ retention-purge job (needs policy sign-off) | §18.11 |
 | ⬜ | Analytics events | installs, DAU, views, opens, etc. | §10 |
 | ⬜ | Accessibility pass (dynamic text, screen reader, contrast) | §8.5 |
 | 🟡 | Store readiness | ✅ launcher icon + splash config & brand assets, per-env build config, native permission overlays (iOS Info.plist / Android manifest), flavor + signing snippets, full `docs/store-readiness.md` (privacy declarations + launch checklist). ⬜ final branded artwork, screenshots, signed builds, listing copy | §16, §18.15 |
