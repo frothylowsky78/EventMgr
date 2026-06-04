@@ -58,6 +58,8 @@ export class EventAppStack extends Stack {
     new CfnOutput(this, 'AdminPortalUrl', {
       value: `https://${web.distribution.distributionDomainName}`,
     });
+    new CfnOutput(this, 'AdminBucketName', { value: web.bucket.bucketName });
+    new CfnOutput(this, 'AdminDistributionId', { value: web.distribution.distributionId });
     new CfnOutput(this, 'Region', { value: this.region });
   }
 }

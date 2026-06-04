@@ -1,0 +1,66 @@
+# AWS CodeBuild buildspec for the EventMgr CodePipeline "Build" stage.
+#
+# This is a SERVERLESS app — there is no Dockerfile and none is needed. The build installs
+# dependencies, deploys the backend with AWS CDK, then builds the admin SPA and ships it to
+# S3 + CloudFront. If your CodeBuild project was created with "Build type: Docker image" or a
+# privileged/container build, change it to a standard build using THIS buildspec
+# (Image: aws/codebuild/amazonlinux2-x86_64-standard:5.0 or newer; Privileged: off).
+#
+# Required CodeBuild environment variables (set on the project or pipeline):
+#   ENV          dev | staging | prod   (which stack to deploy)
+#   EVENT_ID     event id for the admin build (default event_001)
+#   DEPLOY_ADMIN true|false             (set false to deploy backend only)
+#
+# The CodeBuild service role needs permission to assume the CDK bootstrap roles
+# (cdk-*-deploy/​publish/​file-publishing) — i.e. sts:AssumeRole on arn:aws:iam::<acct>:role/cdk-*.
+
+version: 0.2
+
+env:
+  variables:
+    ENV: dev
+    EVENT_ID: event_001
+    DEPLOY_ADMIN: "true"
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - node -v && npm -v
+      - npm ci
+
+  pre_build:
+    commands:
+      # Shared DTOs must be compiled before CDK bundles the Lambdas / the admin builds.
+      - npm run build -w @eventmgr/shared-types
+
+  build:
+    commands:
+      # --- Backend (CDK) ---
+      - cd infra
+      - npx cdk deploy "EventApp-$ENV" --context env="$ENV" --require-approval never --outputs-file ../cdk-outputs.json
+      - cd ..
+
+      # --- Admin portal (static SPA -> S3 + CloudFront) ---
+      - |
+        if [ "$DEPLOY_ADMIN" = "true" ]; then
+          STACK="EventApp-$ENV"
+          export VITE_ENV="$ENV"
+          export VITE_API_URL=$(node tools/cdk-output.mjs cdk-outputs.json "$STACK" ApiUrl)
+          export VITE_USER_POOL_ID=$(node tools/cdk-output.mjs cdk-outputs.json "$STACK" UserPoolId)
+          export VITE_ADMIN_CLIENT_ID=$(node tools/cdk-output.mjs cdk-outputs.json "$STACK" AdminClientId)
+          export VITE_REGION=$(node tools/cdk-output.mjs cdk-outputs.json "$STACK" Region)
+          export VITE_EVENT_ID="$EVENT_ID"
+          BUCKET=$(node tools/cdk-output.mjs cdk-outputs.json "$STACK" AdminBucketName)
+          DIST=$(node tools/cdk-output.mjs cdk-outputs.json "$STACK" AdminDistributionId)
+          npm run build -w @eventmgr/admin
+          aws s3 sync apps/admin/dist "s3://$BUCKET" --delete
+          aws cloudfront create-invalidation --distribution-id "$DIST" --paths '/*'
+        else
+          echo "DEPLOY_ADMIN=$DEPLOY_ADMIN — skipping admin deploy"
+        fi
+
+artifacts:
+  files:
+    - cdk-outputs.json
