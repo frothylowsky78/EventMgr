@@ -1,3 +1,7 @@
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
+
 import '../../core/config.dart';
 import '../../domain/help.dart';
 import '../../domain/me.dart';
@@ -25,6 +29,32 @@ class SupportRepository {
     final me = AttendeeMe.fromJson((data as Map).cast<String, dynamic>());
     _cache.putJson(_meKey, me.toJson());
     return me;
+  }
+
+  final Dio _raw = Dio();
+
+  Future<AttendeeMe> updateProfile(Map<String, dynamic> patch) async {
+    final data = await _api.patchData('/me/profile', patch);
+    final me = AttendeeMe.fromJson((data as Map).cast<String, dynamic>());
+    _cache.putJson(_meKey, me.toJson());
+    return me;
+  }
+
+  /// Requests a pre-signed URL and uploads the profile photo straight to S3.
+  Future<void> uploadProfilePhoto({
+    required Uint8List bytes,
+    required String contentType,
+  }) async {
+    final data = await _api.postData('/me/profile-photo/upload-url', {'contentType': contentType});
+    final uploadUrl = (data as Map)['uploadUrl'] as String;
+    await _raw.put(
+      uploadUrl,
+      data: Stream.fromIterable([bytes]),
+      options: Options(headers: {
+        'Content-Type': contentType,
+        Headers.contentLengthHeader: bytes.length,
+      }),
+    );
   }
 
   // --- Help (cached for offline per spec §8.2) ---

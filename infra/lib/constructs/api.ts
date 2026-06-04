@@ -19,6 +19,7 @@ interface ApiProps {
   appClient: cognito.UserPoolClient;
   adminClient: cognito.UserPoolClient;
   galleryBucket: s3.Bucket;
+  profilePhotosBucket: s3.Bucket;
 }
 
 /**
@@ -30,8 +31,10 @@ export class Api extends Construct {
 
   constructor(scope: Construct, id: string, props: ApiProps) {
     super(scope, id);
-    const { config, table, userPool, appClient, adminClient, galleryBucket } = props;
+    const { config, table, userPool, appClient, adminClient, galleryBucket, profilePhotosBucket } =
+      props;
     const galleryEnv = { GALLERY_BUCKET: galleryBucket.bucketName };
+    const profileEnv = { PROFILE_BUCKET: profilePhotosBucket.bucketName };
 
     this.httpApi = new apigw.HttpApi(this, 'HttpApi', {
       apiName: `eventmgr-${config.envName}`,
@@ -118,8 +121,15 @@ export class Api extends Construct {
     route('GetMyTravel', apigw.HttpMethod.GET, '/me/travel', 'getMyTravel.ts', 'read');
     route('GetMyTransportation', apigw.HttpMethod.GET, '/me/transportation', 'getMyTransportation.ts', 'read');
     route('GetMyDining', apigw.HttpMethod.GET, '/me/dining', 'getMyDining.ts', 'read');
+    route('GetItineraryIcs', apigw.HttpMethod.GET, '/me/itinerary.ics', 'getItineraryIcs.ts', 'read');
 
-    // Content modules — FAQ, yearbook directory, weather
+    // Profile self-service (edit + photo upload)
+    route('UpdateProfile', apigw.HttpMethod.PATCH, '/me/profile', 'updateProfile.ts', 'write');
+    const profilePhotoFn = route('RequestProfilePhotoUrl', apigw.HttpMethod.POST, '/me/profile-photo/upload-url', 'requestProfilePhotoUrl.ts', 'write', { environment: profileEnv });
+    profilePhotosBucket.grantPut(profilePhotoFn);
+
+    // Content modules — FAQ, yearbook directory, weather, maps
+    route('ListMaps', apigw.HttpMethod.GET, '/events/{eventId}/maps', 'listMaps.ts', 'read');
     route('ListFaq', apigw.HttpMethod.GET, '/events/{eventId}/faq', 'listFaq.ts', 'read');
     route('ListAttendees', apigw.HttpMethod.GET, '/events/{eventId}/attendees', 'listAttendees.ts', 'read');
     route('GetWeather', apigw.HttpMethod.GET, '/events/{eventId}/weather', 'getWeather.ts', 'read');
@@ -156,6 +166,11 @@ export class Api extends Construct {
     route('AdminUpsertHelp', apigw.HttpMethod.PUT, '/admin/events/{eventId}/help', 'adminUpsertHelp.ts', 'write');
     route('AdminListHelpRequests', apigw.HttpMethod.GET, '/admin/events/{eventId}/help-requests', 'adminListHelpRequests.ts', 'read');
     route('AdminUpdateHelpRequest', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/help-requests/{attendeeId}/{requestId}', 'adminUpdateHelpRequest.ts', 'write');
+
+    // Admin — maps
+    route('AdminListMaps', apigw.HttpMethod.GET, '/admin/events/{eventId}/maps', 'adminListMaps.ts', 'read');
+    route('AdminCreateMap', apigw.HttpMethod.POST, '/admin/events/{eventId}/maps', 'adminCreateMap.ts', 'write');
+    route('AdminUpdateMap', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/maps/{mapId}', 'adminUpdateMap.ts', 'write');
 
     // Attendee — device tokens + in-app notification center
     route('RegisterDeviceToken', apigw.HttpMethod.POST, '/me/device-tokens', 'registerDeviceToken.ts', 'write');

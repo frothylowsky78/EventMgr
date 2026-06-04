@@ -29,13 +29,13 @@ V1 scope. **P2** = spec "optional/later". Each epic lists the spec section(s) it
 | 🟡 | Admin push composer | ✅ compose, audience preview, test send, send-now/scheduled, confirm (extra for urgent/all), history, duplicate, cancel, audit log; ⬜ resend-failed, export | §18.16 |
 | 🟡 | Attendee yearbook | ✅ directory (visibility-filtered card projection), search, initials avatars, mobile screen; ⬜ full profile view, filters, contact opt-in display, admin photo upload | §4.8 |
 | ✅ | FAQ | categories, search, featured-first, expand/collapse, admin CRUD, mobile screen | §4.9 |
-| ⬜ | Maps & navigation | static/interactive, pins, external nav links | §4.12 |
+| 🟡 | Maps & navigation | ✅ static map images, pins, external nav (Open in Maps), admin CRUD, mobile screen; ⬜ interactive in-app map, per-agenda/dining map deep links | §4.12 |
 | 🟡 | Photos & gallery | ✅ pre-signed S3 upload, S3-trigger processor, moderation queue (approve/hide/reject/feature), gallery (grid, like, lazy-load), admin moderation UI, mobile upload (camera/library); ⬜ real thumbnailing (sharp/Object Lambda), Rekognition auto-moderation, albums UI, download/export | §4.14, §18.5 |
 | ✅ | Help / concierge | contacts (tap-to-call/email), topics, help-request submit → admin triage queue (assign/resolve), admin help-content upsert | §4.15 |
 | 🟡 | Feedback | ✅ form (rating/comments/recommend/anonymous), one per target, event + per-session (from agenda detail), admin list + aggregate; ⬜ CSV export, NPS dashboard | §4.16 |
 | 🟡 | Weather | ✅ admin-entered current + daily forecast + alert notes, `/weather` API, mobile screen + home snapshot, admin upsert API; ⬜ live weather API integration, admin weather editor UI | §4.17 |
-| ⬜ | Calendar sync | single item + full itinerary (ICS), timezone-correct | §4.18 |
-| ⬜ | Profile self-edit + profile photo upload | `PATCH /me/profile`, upload URL | §4.1, §4.8 |
+| 🟡 | Calendar sync | ✅ single agenda item via native add-to-calendar (add_2_calendar), full-itinerary `.ics` export endpoint; ⬜ per-itinerary add-all, change-warning on updated items | §4.18 |
+| ✅ | Profile self-edit + profile photo upload | `PATCH /me/profile`, pre-signed photo upload, privacy toggles, mobile profile screen | §4.1, §4.8 |
 | ⬜ | Admin: attendees, itineraries, travel, dining mgmt + CSV/XLSX import/export | §5, §18.8 |
 | ⬜ | Observability: alarms, X-Ray, audit log, DLQs | §18.10 |
 | ⬜ | Backup/retention/archive procedures | §18.11 |

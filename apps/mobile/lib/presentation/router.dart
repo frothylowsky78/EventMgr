@@ -11,7 +11,9 @@ import 'screens/faq_screen.dart';
 import 'screens/feedback_screen.dart';
 import 'screens/help_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/maps_screen.dart';
 import 'screens/notification_center_screen.dart';
+import 'screens/profile_screen.dart';
 import 'screens/registration_screen.dart';
 import 'screens/transportation_screen.dart';
 import 'screens/travel_screen.dart';
@@ -56,6 +58,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/help', builder: (_, __) => const HelpScreen()),
       GoRoute(path: '/feedback', builder: (_, __) => const FeedbackScreen()),
       GoRoute(path: '/registration', builder: (_, __) => const RegistrationScreen()),
+      GoRoute(path: '/maps', builder: (_, __) => const MapsScreen()),
+      GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
     ],
   );
 });

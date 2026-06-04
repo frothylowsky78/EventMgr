@@ -621,3 +621,71 @@ export interface HelpRequestUpdate {
   status?: HelpRequestStatus;
   assignedTo?: string | null;
 }
+
+// ---------------------------------------------------------------------------
+// Maps & navigation (spec §4.12)
+// ---------------------------------------------------------------------------
+export type MapType =
+  | 'property'
+  | 'meeting_room'
+  | 'dining'
+  | 'activity'
+  | 'transportation'
+  | 'local_area';
+
+export interface MapPin {
+  label: string;
+  note?: string;
+}
+
+export interface MapLocation {
+  id: string;
+  eventId: string;
+  title: string;
+  type: MapType;
+  imageUrl?: string; // static map image (S3 asset)
+  description?: string;
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  pins: MapPin[];
+  order: number;
+  published: boolean;
+}
+
+export interface MapLocationCreate {
+  title: string;
+  type: MapType;
+  imageUrl?: string;
+  description?: string;
+  address?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  pins?: MapPin[];
+  order?: number;
+  published?: boolean;
+}
+export type MapLocationUpdate = Partial<MapLocationCreate>;
+
+// ---------------------------------------------------------------------------
+// Profile self-service (spec §4.1, §4.8)
+// ---------------------------------------------------------------------------
+/** Attendee-editable subset of their own profile. */
+export interface ProfileUpdate {
+  phone?: string;
+  company?: string;
+  title?: string;
+  city?: string;
+  bio?: string;
+  linkedinUrl?: string;
+  dietaryRestrictions?: string[];
+  accessibilityNeeds?: string;
+  guestName?: string;
+  directoryVisible?: boolean;
+  contactSharingOptIn?: boolean;
+}
+
+export interface UploadTicket {
+  uploadUrl: string;
+  key: string;
+}

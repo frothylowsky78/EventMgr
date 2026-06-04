@@ -1,6 +1,7 @@
 import '../../core/config.dart';
 import '../../domain/attendee_card.dart';
 import '../../domain/faq_item.dart';
+import '../../domain/map_location.dart';
 import '../../domain/weather.dart';
 import '../api_client.dart';
 import '../local_cache.dart';
@@ -41,6 +42,21 @@ class ContentRepository {
         .toList()
       ..sort((a, b) => a.lastName.compareTo(b.lastName));
     _cache.putJson(_evt('attendees'), items.map((e) => e.toJson()).toList());
+    return items;
+  }
+
+  // --- Maps ---
+  List<MapLocation> cachedMaps() =>
+      (_cache.getList(_evt('maps')) ?? const [])
+          .map((e) => MapLocation.fromJson((e as Map).cast<String, dynamic>()))
+          .toList();
+
+  Future<List<MapLocation>> fetchMaps() async {
+    final data = await _api.getData('/events/${AppConfig.eventId}/maps');
+    final items = (data as List)
+        .map((e) => MapLocation.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+    _cache.putJson(_evt('maps'), items.map((e) => e.toJson()).toList());
     return items;
   }
 

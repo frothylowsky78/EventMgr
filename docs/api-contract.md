@@ -30,8 +30,9 @@ custom-auth flow (handled inside Cognito).
 | ✅ | GET | `/me/travel` | Caller's travel detail (null if none) |
 | ✅ | GET | `/me/transportation` | Caller's transport assignments |
 | ✅ | GET | `/me/dining` | Caller's dining (incl. seating) |
-| ⬜ | PATCH | `/me/profile` | Update editable profile fields |
-| ⬜ | POST | `/me/profile-photo/upload-url` | Pre-signed S3 upload URL |
+| ✅ | PATCH | `/me/profile` | Update editable profile fields |
+| ✅ | POST | `/me/profile-photo/upload-url` | Pre-signed S3 upload URL |
+| ✅ | GET | `/me/itinerary.ics` | Full itinerary as downloadable iCalendar |
 | ✅ | GET | `/me/notifications` | In-app notification center (`{ items, unread }`) |
 | ✅ | PATCH | `/me/notifications/{id}/read` | Mark read |
 | ✅ | PATCH | `/me/notifications/read-all` | Mark all read |
@@ -48,7 +49,7 @@ custom-auth flow (handled inside Cognito).
 | ✅ | GET | `/events/{eventId}/dining` |
 | ✅ | GET | `/events/{eventId}/faq` |
 | ✅ | GET | `/events/{eventId}/attendees` (yearbook, card projection) |
-| ⬜ | GET | `/events/{eventId}/maps` |
+| ✅ | GET | `/events/{eventId}/maps` |
 | ✅ | GET | `/events/{eventId}/weather` |
 | ⬜ | GET | `/events/{eventId}/announcements` |
 | ✅ | GET | `/events/{eventId}/photos` (approved, pre-signed URLs) |
@@ -92,6 +93,7 @@ custom-auth flow (handled inside Cognito).
 | ✅ | PUT | `/admin/events/{eventId}/help` | Upsert help contacts/topics |
 | ✅ | GET | `/admin/events/{eventId}/help-requests?status=` | Help triage queue |
 | ✅ | PATCH | `/admin/events/{eventId}/help-requests/{attendeeId}/{requestId}` | Assign / resolve |
+| ✅ | GET/POST/PATCH | `/admin/events/{eventId}/maps …` | Maps list / create / edit |
 | ⬜ | GET | `…/feedback/export` `…/photos/export` | Exports |
 
 ## Implemented request/response examples
