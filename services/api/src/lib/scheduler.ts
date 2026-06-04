@@ -10,6 +10,8 @@ const scheduler = new SchedulerClient({});
 
 const SEND_JOB_ARN = process.env.SEND_JOB_FUNCTION_ARN;
 const SCHEDULER_ROLE_ARN = process.env.SCHEDULER_ROLE_ARN;
+/** Optional SQS DLQ for the schedule target — captures sends that fail after retries. */
+const SCHEDULER_DLQ_ARN = process.env.SCHEDULER_DLQ_ARN;
 
 export const schedulerConfigured = (): boolean =>
   Boolean(SEND_JOB_ARN && SCHEDULER_ROLE_ARN);
@@ -42,6 +44,10 @@ export async function scheduleSend(
         Arn: SEND_JOB_ARN,
         RoleArn: SCHEDULER_ROLE_ARN,
         Input: JSON.stringify({ eventId, notificationId }),
+        // Retry the (synchronous) Lambda invoke, then route a persistent failure to the DLQ so a
+        // scheduled notification is never silently dropped.
+        RetryPolicy: { MaximumRetryAttempts: 3, MaximumEventAgeInSeconds: 3600 },
+        ...(SCHEDULER_DLQ_ARN ? { DeadLetterConfig: { Arn: SCHEDULER_DLQ_ARN } } : {}),
       },
     })
   );

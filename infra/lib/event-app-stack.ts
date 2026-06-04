@@ -43,6 +43,7 @@ export class EventAppStack extends Stack {
         { name: 'PhotoProcess', fn: api.photoProcessFn },
         { name: 'NotificationSendJob', fn: api.sendJobFn },
       ],
+      deadLetterQueues: [{ name: 'Scheduler', queue: api.schedulerDlq }],
     });
 
     new Backups(this, 'Backups', { config, table: data.table });

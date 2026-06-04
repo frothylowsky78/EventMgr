@@ -8,6 +8,7 @@ import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import type { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { EnvConfig } from '../config';
 import { makeHandler } from './function-factory';
@@ -31,6 +32,8 @@ export class Api extends Construct {
   /** Async (non-API) functions — exposed so Observability can alarm on their errors/DLQs. */
   readonly sendJobFn: NodejsFunction;
   readonly photoProcessFn: NodejsFunction;
+  /** DLQ for the EventBridge Scheduler target (failed scheduled sends) — exposed for alarming. */
+  readonly schedulerDlq: sqs.Queue;
 
   constructor(scope: Construct, id: string, props: ApiProps) {
     super(scope, id);
@@ -64,13 +67,14 @@ export class Api extends Construct {
     };
 
     // --- Scheduled-send job (invoked by EventBridge Scheduler, not on the public API) ---
+    // No Lambda async DLQ here: the Scheduler invokes this function synchronously, so failures
+    // are captured by the Scheduler-target DLQ (this.schedulerDlq) below, not an async DLQ.
     const sendJobFn = makeHandler(this, 'NotificationSendJobFn', {
       entry: 'notificationSendJob.ts',
       config,
       table,
       access: 'write',
       environment: pushEnv,
-      deadLetterQueueEnabled: true,
     });
     grantPush(sendJobFn);
     this.sendJobFn = sendJobFn;
@@ -81,9 +85,19 @@ export class Api extends Construct {
     });
     sendJobFn.grantInvoke(schedulerRole);
 
+    // DLQ for the schedule target: Scheduler invokes Lambda synchronously, so a persistent
+    // failure (after retries) lands here rather than in the Lambda's async DLQ.
+    this.schedulerDlq = new sqs.Queue(this, 'SchedulerDlq', {
+      queueName: `eventmgr-scheduler-dlq-${config.envName}`,
+      retentionPeriod: Duration.days(14),
+      enforceSSL: true,
+    });
+    this.schedulerDlq.grantSendMessages(schedulerRole);
+
     const schedulingEnv = {
       SEND_JOB_FUNCTION_ARN: sendJobFn.functionArn,
       SCHEDULER_ROLE_ARN: schedulerRole.roleArn,
+      SCHEDULER_DLQ_ARN: this.schedulerDlq.queueArn,
     };
 
     const route = (
