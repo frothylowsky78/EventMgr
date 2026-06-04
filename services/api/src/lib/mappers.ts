@@ -8,6 +8,7 @@ import type {
   ItineraryItem,
   NotificationCenterItem,
   NotificationRecord,
+  Photo,
   TransportationItem,
   TravelDetail,
 } from '@eventmgr/shared-types';
@@ -168,6 +169,19 @@ export const toTransportationItem = (i: Item): TransportationItem => ({
   notes: i.notes ?? '',
   mapLink: i.mapLink ?? '',
   status: i.status ?? 'scheduled',
+});
+
+export const toPhoto = (i: Item): Photo => ({
+  id: i.id,
+  eventId: i.eventId,
+  uploadedByAttendeeId: i.uploadedByAttendeeId,
+  albumId: i.albumId ?? null,
+  caption: i.caption ?? '',
+  status: i.status ?? 'pending',
+  featured: i.featured ?? false,
+  likeCount: i.likeCount ?? 0,
+  contentType: i.contentType ?? 'image/jpeg',
+  createdAt: i.createdAt,
 });
 
 /** Full attendee — only for the owner (/me) or admins. */

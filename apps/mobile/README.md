@@ -54,6 +54,14 @@ Home, deep-link to agenda/itinerary) and works without any push setup. To enable
 2. Call `NotificationsRepository.registerDeviceToken('ios'|'android', token)` after sign-in.
 3. Configure SNS platform applications and deploy with the push ARNs (see `services/api/README.md`).
 
+## Photos & gallery
+
+The **Photos** tab browses approved photos (3-col grid, lazy-loaded via `cached_network_image`),
+supports likes, and uploads from camera or library straight to S3 via a pre-signed URL — uploads
+land in the moderation queue. Required native permissions before release:
+- **iOS** `Info.plist`: `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`.
+- **Android**: camera permission is requested at runtime by `image_picker`.
+
 ## Store readiness (P1)
 App icon, splash (flutter_native_splash), bundle ids per env, iOS privacy manifest, Android
 release signing, and store listings are tracked in `docs/backlog.md`.

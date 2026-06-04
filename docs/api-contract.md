@@ -50,8 +50,10 @@ custom-auth flow (handled inside Cognito).
 | ⬜ | GET | `/events/{eventId}/maps` |
 | ⬜ | GET | `/events/{eventId}/weather` |
 | ⬜ | GET | `/events/{eventId}/announcements` |
-| ⬜ | GET | `/events/{eventId}/photos` |
-| ⬜ | POST | `/events/{eventId}/photos/upload-url` |
+| ✅ | GET | `/events/{eventId}/photos` (approved, pre-signed URLs) |
+| ✅ | POST | `/events/{eventId}/photos/upload-url` |
+| ✅ | POST | `/events/{eventId}/photos/{photoId}/like` |
+| ✅ | DELETE | `/events/{eventId}/photos/{photoId}` (owner/admin) |
 | ⬜ | POST | `/events/{eventId}/feedback` |
 | ⬜ | POST | `/events/{eventId}/help-requests` |
 
@@ -78,7 +80,8 @@ custom-auth flow (handled inside Cognito).
 | ✅ | POST | `…/notifications/{id}/send-test` | Test send to self/test attendee |
 | ✅ | POST | `…/notifications/{id}/cancel` | Cancel draft/scheduled |
 | ✅ | POST | `…/notifications/{id}/duplicate` | Clone to new draft |
-| ⬜ | PATCH | `/admin/photos/{photoId}/approve` `…/hide` | Moderation |
+| ✅ | GET | `/admin/events/{eventId}/photos?status=` | Moderation queue by status |
+| ✅ | PATCH | `/admin/events/{eventId}/photos/{photoId}` | Approve / hide / reject / feature / album |
 | ⬜ | GET | `…/feedback/export` `…/photos/export` | Exports |
 
 ## Implemented request/response examples

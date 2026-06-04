@@ -409,3 +409,44 @@ export interface TransportationCreate {
   status?: TransportationStatus;
 }
 export type TransportationUpdate = Partial<Omit<TransportationCreate, 'attendeeId'>>;
+
+// ---------------------------------------------------------------------------
+// Photos & gallery (spec §4.14, §18.5)
+// ---------------------------------------------------------------------------
+export type PhotoStatus = 'pending' | 'approved' | 'hidden' | 'rejected';
+
+export interface Photo {
+  id: string;
+  eventId: string;
+  uploadedByAttendeeId: string;
+  albumId?: string | null;
+  caption?: string;
+  status: PhotoStatus;
+  featured: boolean;
+  likeCount: number;
+  contentType: string;
+  createdAt: string;
+  /** Presigned, time-limited URLs (only populated on read responses). */
+  imageUrl?: string;
+  thumbnailUrl?: string;
+}
+
+export interface PhotoUploadRequest {
+  contentType: string;
+  caption?: string;
+  albumId?: string;
+}
+
+export interface PhotoUploadTicket {
+  photoId: string;
+  uploadUrl: string;
+  /** Echo of the moderation decision the photo will land in once uploaded. */
+  status: PhotoStatus;
+}
+
+/** Admin patch for moderation (spec §18.5). */
+export interface PhotoModeration {
+  status?: PhotoStatus;
+  featured?: boolean;
+  albumId?: string | null;
+}

@@ -7,6 +7,9 @@ import type {
   NotificationCreate,
   NotificationRecord,
   NotificationTarget,
+  Photo,
+  PhotoModeration,
+  PhotoStatus,
 } from '@eventmgr/shared-types';
 import { config } from './config';
 
@@ -58,4 +61,10 @@ export const adminApi = {
     request<NotificationRecord>('POST', `/admin/events/${ev()}/notifications/${id}/cancel`),
   duplicateNotification: (id: string) =>
     request<NotificationRecord>('POST', `/admin/events/${ev()}/notifications/${id}/duplicate`),
+
+  // Photos (moderation)
+  listPhotos: (status: PhotoStatus) =>
+    request<Photo[]>('GET', `/admin/events/${ev()}/photos?status=${status}`),
+  moderatePhoto: (photoId: string, patch: PhotoModeration) =>
+    request<Photo>('PATCH', `/admin/events/${ev()}/photos/${photoId}`, patch),
 };

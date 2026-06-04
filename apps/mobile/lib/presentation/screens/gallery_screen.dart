@@ -1,0 +1,179 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../../application/providers.dart';
+import '../../domain/photo.dart';
+
+/// Event photo gallery (spec §4.14): browse approved photos, like, and upload from camera roll
+/// or camera. Uploads go to a moderation queue when moderation is enabled.
+class GalleryScreen extends ConsumerStatefulWidget {
+  const GalleryScreen({super.key});
+
+  @override
+  ConsumerState<GalleryScreen> createState() => _GalleryScreenState();
+}
+
+class _GalleryScreenState extends ConsumerState<GalleryScreen> {
+  bool _uploading = false;
+
+  Future<void> _pickAndUpload(ImageSource source) async {
+    final picker = ImagePicker();
+    final file = await picker.pickImage(source: source, maxWidth: 2400, imageQuality: 85);
+    if (file == null) return;
+
+    setState(() => _uploading = true);
+    try {
+      final bytes = await file.readAsBytes();
+      final contentType = _contentType(file.name);
+      await ref.read(photosRepositoryProvider).upload(bytes: bytes, contentType: contentType);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Uploaded! It will appear once approved.'),
+      ));
+      ref.invalidate(galleryProvider);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
+
+  void _showUploadSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: const Text('Take a photo'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickAndUpload(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from library'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickAndUpload(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _contentType(String name) {
+    final n = name.toLowerCase();
+    if (n.endsWith('.png')) return 'image/png';
+    if (n.endsWith('.heic')) return 'image/heic';
+    if (n.endsWith('.webp')) return 'image/webp';
+    return 'image/jpeg';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final async = ref.watch(galleryProvider);
+    return Scaffold(
+      appBar: AppBar(title: const Text('Photos')),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: _uploading ? null : _showUploadSheet,
+        icon: _uploading
+            ? const SizedBox(
+                width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+            : const Icon(Icons.add_a_photo),
+        label: Text(_uploading ? 'Uploading…' : 'Upload'),
+      ),
+      body: async.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Could not load the gallery.\n$e',
+            textAlign: TextAlign.center)),
+        data: (photos) {
+          if (photos.isEmpty) {
+            return const Center(child: Text('No photos yet — be the first to share!'));
+          }
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(galleryProvider);
+              await ref.read(galleryProvider.future);
+            },
+            child: GridView.builder(
+              padding: const EdgeInsets.all(8),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                mainAxisSpacing: 6,
+                crossAxisSpacing: 6,
+              ),
+              itemCount: photos.length,
+              itemBuilder: (_, i) => _PhotoTile(photo: photos[i]),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PhotoTile extends ConsumerWidget {
+  const _PhotoTile({required this.photo});
+  final Photo photo;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () => _openViewer(context, ref),
+      child: Hero(
+        tag: photo.id,
+        child: photo.thumbnailUrl == null
+            ? Container(color: Colors.black12)
+            : CachedNetworkImage(
+                imageUrl: photo.thumbnailUrl!,
+                fit: BoxFit.cover,
+                placeholder: (_, __) => Container(color: Colors.black12),
+                errorWidget: (_, __, ___) =>
+                    const ColoredBox(color: Colors.black12, child: Icon(Icons.broken_image)),
+              ),
+      ),
+    );
+  }
+
+  void _openViewer(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => Dialog(
+        insetPadding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (photo.imageUrl != null)
+              CachedNetworkImage(imageUrl: photo.imageUrl!, fit: BoxFit.contain),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(child: Text(photo.caption.isEmpty ? 'Photo' : photo.caption)),
+                  IconButton(
+                    icon: const Icon(Icons.favorite_border),
+                    onPressed: () async {
+                      await ref.read(photosRepositoryProvider).like(photo.id);
+                      ref.invalidate(galleryProvider);
+                    },
+                  ),
+                  Text('${photo.likeCount}'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

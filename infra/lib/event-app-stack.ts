@@ -29,6 +29,7 @@ export class EventAppStack extends Stack {
       userPool: auth.userPool,
       appClient: auth.appClient,
       adminClient: auth.adminClient,
+      galleryBucket: media.gallery,
     });
     const web = new Web(this, 'Web', config);
 

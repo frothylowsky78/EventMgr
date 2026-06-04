@@ -110,6 +110,18 @@ export const keys = {
     GSI1PK: `EVENT#${eventId}#TRANSPORT#${group}`,
   }),
 
+  // --- Photos (event-scoped; GSI1 lists by status, GSI2 lists by album) ---
+  photo: (eventId: string, photoId: string) => ({
+    PK: eventPk(eventId),
+    SK: `PHOTO#${photoId}`,
+  }),
+  photoByStatus: (eventId: string, status: string) => ({
+    GSI1PK: `EVENT#${eventId}#PHOTO#${status}`,
+  }),
+  photoByAlbum: (albumId: string) => ({
+    GSI2PK: `ALBUM#${albumId}`,
+  }),
+
   // --- Audit log ---
   audit: (eventId: string, ts: string, id: string) => ({
     PK: eventPk(eventId),

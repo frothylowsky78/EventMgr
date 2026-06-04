@@ -6,6 +6,8 @@ import { HttpJwtAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
 import type { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { EnvConfig } from '../config';
 import { makeHandler } from './function-factory';
@@ -16,6 +18,7 @@ interface ApiProps {
   userPool: cognito.UserPool;
   appClient: cognito.UserPoolClient;
   adminClient: cognito.UserPoolClient;
+  galleryBucket: s3.Bucket;
 }
 
 /**
@@ -27,7 +30,8 @@ export class Api extends Construct {
 
   constructor(scope: Construct, id: string, props: ApiProps) {
     super(scope, id);
-    const { config, table, userPool, appClient, adminClient } = props;
+    const { config, table, userPool, appClient, adminClient, galleryBucket } = props;
+    const galleryEnv = { GALLERY_BUCKET: galleryBucket.bucketName };
 
     this.httpApi = new apigw.HttpApi(this, 'HttpApi', {
       apiName: `eventmgr-${config.envName}`,
@@ -166,6 +170,37 @@ export class Api extends Construct {
       { environment: schedulingEnv }
     );
     grantScheduling(cancelFn, schedulerRole.roleArn);
+
+    // --- Photos & gallery (pre-signed S3 upload + moderation, spec §4.14/§18.5) ---
+    const uploadUrlFn = route('RequestPhotoUploadUrl', apigw.HttpMethod.POST, '/events/{eventId}/photos/upload-url', 'requestPhotoUploadUrl.ts', 'write', { environment: galleryEnv });
+    galleryBucket.grantPut(uploadUrlFn);
+
+    const listPhotosFn = route('ListPhotos', apigw.HttpMethod.GET, '/events/{eventId}/photos', 'listPhotos.ts', 'read', { environment: galleryEnv });
+    galleryBucket.grantRead(listPhotosFn);
+
+    route('LikePhoto', apigw.HttpMethod.POST, '/events/{eventId}/photos/{photoId}/like', 'likePhoto.ts', 'write');
+
+    const deletePhotoFn = route('DeletePhoto', apigw.HttpMethod.DELETE, '/events/{eventId}/photos/{photoId}', 'deletePhoto.ts', 'write', { environment: galleryEnv });
+    galleryBucket.grantDelete(deletePhotoFn);
+
+    const adminListPhotosFn = route('AdminListPhotos', apigw.HttpMethod.GET, '/admin/events/{eventId}/photos', 'adminListPhotos.ts', 'read', { environment: galleryEnv });
+    galleryBucket.grantRead(adminListPhotosFn);
+
+    route('AdminModeratePhoto', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/photos/{photoId}', 'adminModeratePhoto.ts', 'write');
+
+    // S3 ObjectCreated -> finalize photo metadata (thumbnail/moderation hook).
+    const photoProcessFn = makeHandler(this, 'PhotoProcessFn', {
+      entry: 'photoProcess.ts',
+      config,
+      table,
+      access: 'write',
+      environment: galleryEnv,
+    });
+    galleryBucket.grantRead(photoProcessFn);
+    galleryBucket.addEventNotification(
+      s3.EventType.OBJECT_CREATED,
+      new s3n.LambdaDestination(photoProcessFn)
+    );
   }
 }
 

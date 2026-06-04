@@ -30,7 +30,7 @@ V1 scope. **P2** = spec "optional/later". Each epic lists the spec section(s) it
 | ⬜ | Attendee yearbook | directory, search/filter, privacy projections | §4.8 |
 | ⬜ | FAQ | categories, search, featured | §4.9 |
 | ⬜ | Maps & navigation | static/interactive, pins, external nav links | §4.12 |
-| ⬜ | Photos & gallery | pre-signed upload, thumbnails, moderation, albums | §4.14, §18.5 |
+| 🟡 | Photos & gallery | ✅ pre-signed S3 upload, S3-trigger processor, moderation queue (approve/hide/reject/feature), gallery (grid, like, lazy-load), admin moderation UI, mobile upload (camera/library); ⬜ real thumbnailing (sharp/Object Lambda), Rekognition auto-moderation, albums UI, download/export | §4.14, §18.5 |
 | ⬜ | Help / concierge | contacts, help requests → admin | §4.15 |
 | ⬜ | Feedback | forms attached to items, one per item, export | §4.16 |
 | ⬜ | Weather | live API or admin notes, alerts | §4.17 |

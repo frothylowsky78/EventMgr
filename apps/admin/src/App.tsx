@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { Login } from './components/Login';
 import { AgendaPage } from './components/AgendaPage';
 import { NotificationsPage } from './components/NotificationsPage';
+import { PhotosPage } from './components/PhotosPage';
 import { getCurrentSession, signOut, type AdminSession } from './auth';
 import { setToken } from './api';
 import { config } from './config';
 
-type Tab = 'agenda' | 'notifications';
+type Tab = 'agenda' | 'notifications' | 'photos';
 
 export function App() {
   const [session, setSession] = useState<AdminSession | null>(null);
@@ -54,9 +55,14 @@ export function App() {
           onClick={() => setTab('notifications')}>
           Notifications
         </button>
+        <button className={tab === 'photos' ? '' : 'secondary'} onClick={() => setTab('photos')}>
+          Photos
+        </button>
       </nav>
       <main className="container">
-        {tab === 'agenda' ? <AgendaPage /> : <NotificationsPage />}
+        {tab === 'agenda' && <AgendaPage />}
+        {tab === 'notifications' && <NotificationsPage />}
+        {tab === 'photos' && <PhotosPage />}
       </main>
     </>
   );
