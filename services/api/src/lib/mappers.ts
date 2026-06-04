@@ -1,16 +1,19 @@
 import type {
   AgendaItem,
   Attendee,
+  AttendeeCard,
   DeviceTokenRecord,
   DiningItem,
   DiningSeat,
   EventProfile,
+  FaqItem,
   ItineraryItem,
   NotificationCenterItem,
   NotificationRecord,
   Photo,
   TransportationItem,
   TravelDetail,
+  WeatherInfo,
 } from '@eventmgr/shared-types';
 
 /**
@@ -182,6 +185,36 @@ export const toPhoto = (i: Item): Photo => ({
   likeCount: i.likeCount ?? 0,
   contentType: i.contentType ?? 'image/jpeg',
   createdAt: i.createdAt,
+});
+
+export const toFaqItem = (i: Item): FaqItem => ({
+  id: i.id,
+  eventId: i.eventId,
+  category: i.category,
+  question: i.question,
+  answer: i.answer,
+  featured: i.featured ?? false,
+  order: i.order ?? 0,
+  published: i.published ?? true,
+});
+
+export const toWeather = (i: Item): WeatherInfo => ({
+  current: i.current ?? null,
+  daily: i.daily ?? [],
+  notes: i.notes ?? [],
+  updatedAt: i.updatedAt,
+});
+
+/** Public yearbook card — excludes private fields (phone, dietary, accessibility, email). */
+export const toAttendeeCard = (i: Item): AttendeeCard => ({
+  id: i.id,
+  firstName: i.firstName,
+  lastName: i.lastName,
+  company: i.company ?? '',
+  title: i.title ?? '',
+  city: i.city ?? '',
+  profilePhotoUrl: i.profilePhotoUrl ?? '',
+  guestName: i.guestName ?? '',
 });
 
 /** Full attendee — only for the owner (/me) or admins. */

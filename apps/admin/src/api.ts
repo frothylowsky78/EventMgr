@@ -10,6 +10,9 @@ import type {
   Photo,
   PhotoModeration,
   PhotoStatus,
+  FaqItem,
+  FaqItemCreate,
+  FaqItemUpdate,
 } from '@eventmgr/shared-types';
 import { config } from './config';
 
@@ -67,4 +70,11 @@ export const adminApi = {
     request<Photo[]>('GET', `/admin/events/${ev()}/photos?status=${status}`),
   moderatePhoto: (photoId: string, patch: PhotoModeration) =>
     request<Photo>('PATCH', `/admin/events/${ev()}/photos/${photoId}`, patch),
+
+  // FAQ
+  listFaq: () => request<FaqItem[]>('GET', `/admin/events/${ev()}/faq`),
+  createFaq: (input: FaqItemCreate) =>
+    request<FaqItem>('POST', `/admin/events/${ev()}/faq`, input),
+  updateFaq: (id: string, patch: FaqItemUpdate) =>
+    request<FaqItem>('PATCH', `/admin/events/${ev()}/faq/${id}`, patch),
 };

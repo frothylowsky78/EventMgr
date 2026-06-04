@@ -48,6 +48,8 @@ class HomeScreen extends ConsumerWidget {
                   _InfoRow(
                       icon: Icons.place_outlined,
                       text: '${event.locationName}\n${event.address}'),
+                  const SizedBox(height: 16),
+                  const _WeatherSnapshot(),
                   const SizedBox(height: 20),
                   Text('Up next', style: theme.textTheme.titleLarge),
                   const SizedBox(height: 8),
@@ -74,6 +76,43 @@ class HomeScreen extends ConsumerWidget {
     } catch (_) {
       return '$start – $end';
     }
+  }
+}
+
+class _WeatherSnapshot extends ConsumerWidget {
+  const _WeatherSnapshot();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final w = ref.watch(weatherProvider).valueOrNull;
+    if (w == null || !w.hasData) return const SizedBox.shrink();
+    final scheme = Theme.of(context).colorScheme;
+    final hasAlert = w.notes.isNotEmpty;
+    final subtitle = w.currentTempF != null
+        ? '${w.currentTempF!.round()}°F · ${w.currentCondition ?? ''}'
+        : (w.daily.isNotEmpty ? w.daily.first.condition : '');
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => context.go('/weather'),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Icon(hasAlert ? Icons.warning_amber : Icons.wb_sunny,
+                  color: hasAlert ? Colors.orange : scheme.secondary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  hasAlert ? w.notes.first.title : 'Weather · $subtitle',
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -119,6 +119,11 @@ export class Api extends Construct {
     route('GetMyTransportation', apigw.HttpMethod.GET, '/me/transportation', 'getMyTransportation.ts', 'read');
     route('GetMyDining', apigw.HttpMethod.GET, '/me/dining', 'getMyDining.ts', 'read');
 
+    // Content modules — FAQ, yearbook directory, weather
+    route('ListFaq', apigw.HttpMethod.GET, '/events/{eventId}/faq', 'listFaq.ts', 'read');
+    route('ListAttendees', apigw.HttpMethod.GET, '/events/{eventId}/attendees', 'listAttendees.ts', 'read');
+    route('GetWeather', apigw.HttpMethod.GET, '/events/{eventId}/weather', 'getWeather.ts', 'read');
+
     // Admin — agenda CRUD (role enforced inside the handler in addition to the authorizer)
     route('AdminListAgenda', apigw.HttpMethod.GET, '/admin/events/{eventId}/agenda', 'adminListAgenda.ts', 'read');
     route('AdminCreateAgenda', apigw.HttpMethod.POST, '/admin/events/{eventId}/agenda', 'adminCreateAgenda.ts', 'write');
@@ -132,6 +137,12 @@ export class Api extends Construct {
     route('AdminUpsertTravel', apigw.HttpMethod.PUT, '/admin/events/{eventId}/attendees/{attendeeId}/travel', 'adminUpsertTravel.ts', 'write');
     route('AdminCreateTransportation', apigw.HttpMethod.POST, '/admin/events/{eventId}/transportation', 'adminCreateTransportation.ts', 'write');
     route('AdminUpdateTransportation', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/transportation/{attendeeId}/{transportId}', 'adminUpdateTransportation.ts', 'write');
+
+    // Admin — FAQ + weather management
+    route('AdminListFaq', apigw.HttpMethod.GET, '/admin/events/{eventId}/faq', 'adminListFaq.ts', 'read');
+    route('AdminCreateFaq', apigw.HttpMethod.POST, '/admin/events/{eventId}/faq', 'adminCreateFaq.ts', 'write');
+    route('AdminUpdateFaq', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/faq/{faqId}', 'adminUpdateFaq.ts', 'write');
+    route('AdminUpsertWeather', apigw.HttpMethod.PUT, '/admin/events/{eventId}/weather', 'adminUpsertWeather.ts', 'write');
 
     // Attendee — device tokens + in-app notification center
     route('RegisterDeviceToken', apigw.HttpMethod.POST, '/me/device-tokens', 'registerDeviceToken.ts', 'write');

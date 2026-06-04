@@ -450,3 +450,87 @@ export interface PhotoModeration {
   featured?: boolean;
   albumId?: string | null;
 }
+
+// ---------------------------------------------------------------------------
+// FAQ (spec §4.9)
+// ---------------------------------------------------------------------------
+export type FaqCategory =
+  | 'event_overview'
+  | 'travel'
+  | 'hotel'
+  | 'dining'
+  | 'activities'
+  | 'dress_code'
+  | 'transportation'
+  | 'weather'
+  | 'registration'
+  | 'accessibility'
+  | 'emergency'
+  | 'app_support';
+
+export interface FaqItem {
+  id: string;
+  eventId: string;
+  category: FaqCategory;
+  question: string;
+  answer: string;
+  featured: boolean;
+  order: number;
+  published: boolean;
+}
+
+export interface FaqItemCreate {
+  category: FaqCategory;
+  question: string;
+  answer: string;
+  featured?: boolean;
+  order?: number;
+  published?: boolean;
+}
+export type FaqItemUpdate = Partial<FaqItemCreate>;
+
+export const FAQ_CATEGORIES: FaqCategory[] = [
+  'event_overview',
+  'travel',
+  'hotel',
+  'dining',
+  'activities',
+  'dress_code',
+  'transportation',
+  'weather',
+  'registration',
+  'accessibility',
+  'emergency',
+  'app_support',
+];
+
+// ---------------------------------------------------------------------------
+// Weather (spec §4.17)
+// ---------------------------------------------------------------------------
+export interface WeatherDay {
+  date: string; // YYYY-MM-DD
+  highF: number;
+  lowF: number;
+  condition: string;
+  precipChance?: number;
+}
+
+export interface WeatherNote {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+}
+
+export interface WeatherInfo {
+  current?: { tempF: number; condition: string } | null;
+  daily: WeatherDay[];
+  notes: WeatherNote[];
+  updatedAt?: string;
+}
+
+export interface WeatherUpsert {
+  current?: { tempF: number; condition: string } | null;
+  daily?: WeatherDay[];
+  notes?: WeatherNote[];
+}

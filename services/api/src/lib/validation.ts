@@ -148,6 +148,54 @@ export const transportationUpdateSchema = transportationCreateSchema
   .omit({ attendeeId: true })
   .partial();
 
+// --- FAQ (spec §4.9) ---
+const faqCategory = z.enum([
+  'event_overview',
+  'travel',
+  'hotel',
+  'dining',
+  'activities',
+  'dress_code',
+  'transportation',
+  'weather',
+  'registration',
+  'accessibility',
+  'emergency',
+  'app_support',
+]);
+export const faqCreateSchema = z.object({
+  category: faqCategory,
+  question: z.string().min(1).max(500),
+  answer: z.string().min(1).max(5000),
+  featured: z.boolean().optional(),
+  order: z.number().int().min(0).optional(),
+  published: z.boolean().optional(),
+});
+export const faqUpdateSchema = faqCreateSchema.partial();
+
+// --- Weather (spec §4.17) ---
+const weatherDay = z.object({
+  date: dateStr,
+  highF: z.number(),
+  lowF: z.number(),
+  condition: z.string().max(100),
+  precipChance: z.number().min(0).max(100).optional(),
+});
+const weatherNote = z.object({
+  id: z.string(),
+  title: z.string().max(150),
+  body: z.string().max(2000),
+  createdAt: z.string(),
+});
+export const weatherUpsertSchema = z.object({
+  current: z
+    .object({ tempF: z.number(), condition: z.string().max(100) })
+    .nullable()
+    .optional(),
+  daily: z.array(weatherDay).optional(),
+  notes: z.array(weatherNote).optional(),
+});
+
 export function parseBody<T>(schema: z.ZodSchema<T>, raw: string | undefined): T {
   let json: unknown;
   try {

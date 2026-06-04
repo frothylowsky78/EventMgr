@@ -7,16 +7,20 @@ import '../data/repositories/agenda_repository.dart';
 import '../data/repositories/event_repository.dart';
 import '../data/repositories/itinerary_repository.dart';
 import '../data/repositories/notifications_repository.dart';
+import '../data/repositories/content_repository.dart';
 import '../data/repositories/personal_repository.dart';
 import '../data/repositories/photos_repository.dart';
 import '../domain/agenda_item.dart';
+import '../domain/attendee_card.dart';
 import '../domain/dining_item.dart';
 import '../domain/event.dart';
+import '../domain/faq_item.dart';
 import '../domain/itinerary_item.dart';
 import '../domain/notification_item.dart';
 import '../domain/photo.dart';
 import '../domain/transportation_item.dart';
 import '../domain/travel_detail.dart';
+import '../domain/weather.dart';
 import 'auth_controller.dart';
 
 /// Overridden in main() with the initialized instance.
@@ -51,6 +55,9 @@ final personalRepositoryProvider = Provider<PersonalRepository>(
 );
 final photosRepositoryProvider = Provider<PhotosRepository>(
   (ref) => PhotosRepository(ref.watch(apiClientProvider)),
+);
+final contentRepositoryProvider = Provider<ContentRepository>(
+  (ref) => ContentRepository(ref.watch(apiClientProvider), ref.watch(localCacheProvider)),
 );
 
 /// Stale-while-revalidate: try the network; on failure fall back to the offline cache.
@@ -133,4 +140,37 @@ final diningProvider = FutureProvider<List<DiningItem>>((ref) async {
 
 final galleryProvider = FutureProvider<List<Photo>>((ref) async {
   return ref.watch(photosRepositoryProvider).fetch();
+});
+
+final faqProvider = FutureProvider<List<FaqItem>>((ref) async {
+  final repo = ref.watch(contentRepositoryProvider);
+  try {
+    return await repo.fetchFaq();
+  } catch (e) {
+    final cached = repo.cachedFaq();
+    if (cached.isNotEmpty) return cached;
+    rethrow;
+  }
+});
+
+final attendeesProvider = FutureProvider<List<AttendeeCard>>((ref) async {
+  final repo = ref.watch(contentRepositoryProvider);
+  try {
+    return await repo.fetchAttendees();
+  } catch (e) {
+    final cached = repo.cachedAttendees();
+    if (cached.isNotEmpty) return cached;
+    rethrow;
+  }
+});
+
+final weatherProvider = FutureProvider<WeatherInfo>((ref) async {
+  final repo = ref.watch(contentRepositoryProvider);
+  try {
+    return await repo.fetchWeather();
+  } catch (e) {
+    final cached = repo.cachedWeather();
+    if (cached != null) return cached;
+    rethrow;
+  }
 });

@@ -257,6 +257,79 @@ async function main() {
     createdAt: notifTs,
   });
 
+  // FAQ items.
+  const faqs = [
+    { category: 'event_overview', question: 'What time does the welcome reception start?',
+      answer: 'The welcome reception begins at 6:00 PM on September 12 on the Lakeview Terrace.',
+      featured: true, order: 0 },
+    { category: 'dress_code', question: 'What is the dress code?',
+      answer: 'Resort casual for daytime; cocktail casual for dinners. See each agenda item for specifics.',
+      featured: false, order: 0 },
+    { category: 'travel', question: 'Is airport transportation provided?',
+      answer: 'Yes — shuttle assignments are in your Travel and Transportation sections.',
+      featured: true, order: 0 },
+    { category: 'app_support', question: 'I can’t see my itinerary — what should I do?',
+      answer: 'Pull to refresh on the My Trip screen. If it persists, contact the app support desk in Help.',
+      featured: false, order: 0 },
+  ];
+  for (const f of faqs) {
+    const fid = `faq_${f.category}_${f.order}`;
+    await put({
+      ...keys.faqItem(EVENT_ID, fid),
+      GSI1PK: keys.faqList(EVENT_ID).GSI1PK,
+      GSI1SK: keys.faqGsi1Sk(f.category, f.order),
+      entity: 'FaqItem',
+      id: fid,
+      eventId: EVENT_ID,
+      published: true,
+      ...f,
+    });
+  }
+
+  // Weather snapshot + a manual alert note.
+  await put({
+    ...keys.weather(EVENT_ID),
+    entity: 'Weather',
+    eventId: EVENT_ID,
+    current: { tempF: 72, condition: 'Sunny' },
+    daily: [
+      { date: '2026-09-12', highF: 74, lowF: 58, condition: 'Sunny', precipChance: 5 },
+      { date: '2026-09-13', highF: 76, lowF: 60, condition: 'Partly cloudy', precipChance: 10 },
+      { date: '2026-09-14', highF: 71, lowF: 57, condition: 'Coastal fog AM', precipChance: 20 },
+      { date: '2026-09-15', highF: 73, lowF: 59, condition: 'Sunny', precipChance: 5 },
+    ],
+    notes: [
+      { id: 'wn_1', title: 'Bring a light layer', body: 'Evenings on the coast get cool — pack a jacket for dinners.',
+        createdAt: '2026-09-10T12:00:00-07:00' },
+    ],
+    updatedAt: '2026-09-10T12:00:00-07:00',
+  });
+
+  // A second directory-visible attendee so the yearbook isn't a single card.
+  const ATTENDEE_2 = 'attendee_002';
+  await put({
+    ...keys.attendeeProfile(ATTENDEE_2),
+    ...keys.attendeeList(EVENT_ID),
+    GSI1SK: 'Doe#John',
+    GSI2PK: keys.attendeeByEmail('john@example.com').GSI2PK,
+    GSI2SK: 'ATTENDEE',
+    entity: 'Attendee',
+    id: ATTENDEE_2,
+    eventId: EVENT_ID,
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john@example.com',
+    company: 'Globex',
+    title: 'Director of Ops',
+    city: 'San Francisco, CA',
+    directoryVisible: true,
+    contactSharingOptIn: true,
+    registrationStatus: 'submitted',
+    tags: ['vip'],
+    enabled: true,
+    accessCodeHash: hashAccessCode('john@example.com', ACCESS_CODE),
+  });
+
   console.log('Seed complete.');
   console.log(`  Table:       ${TABLE_NAME}`);
   console.log(`  Event:       ${EVENT_ID}`);

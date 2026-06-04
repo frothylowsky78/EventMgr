@@ -46,9 +46,10 @@ custom-auth flow (handled inside Cognito).
 | ⬜ | GET | `/events/{eventId}/agenda/{agendaId}` |
 | ⬜ | GET | `/events/{eventId}/activities` |
 | ✅ | GET | `/events/{eventId}/dining` |
-| ⬜ | GET | `/events/{eventId}/faq` |
+| ✅ | GET | `/events/{eventId}/faq` |
+| ✅ | GET | `/events/{eventId}/attendees` (yearbook, card projection) |
 | ⬜ | GET | `/events/{eventId}/maps` |
-| ⬜ | GET | `/events/{eventId}/weather` |
+| ✅ | GET | `/events/{eventId}/weather` |
 | ⬜ | GET | `/events/{eventId}/announcements` |
 | ✅ | GET | `/events/{eventId}/photos` (approved, pre-signed URLs) |
 | ✅ | POST | `/events/{eventId}/photos/upload-url` |
@@ -82,6 +83,8 @@ custom-auth flow (handled inside Cognito).
 | ✅ | POST | `…/notifications/{id}/duplicate` | Clone to new draft |
 | ✅ | GET | `/admin/events/{eventId}/photos?status=` | Moderation queue by status |
 | ✅ | PATCH | `/admin/events/{eventId}/photos/{photoId}` | Approve / hide / reject / feature / album |
+| ✅ | GET/POST/PATCH | `/admin/events/{eventId}/faq …` | FAQ list / create / edit |
+| ✅ | PUT | `/admin/events/{eventId}/weather` | Upsert weather snapshot + notes |
 | ⬜ | GET | `…/feedback/export` `…/photos/export` | Exports |
 
 ## Implemented request/response examples

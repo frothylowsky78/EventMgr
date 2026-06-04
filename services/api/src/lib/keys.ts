@@ -122,6 +122,23 @@ export const keys = {
     GSI2PK: `ALBUM#${albumId}`,
   }),
 
+  // --- FAQ (event-scoped; GSI1 lists by category#order) ---
+  faqItem: (eventId: string, faqId: string) => ({
+    PK: eventPk(eventId),
+    SK: `FAQ#${faqId}`,
+  }),
+  faqList: (eventId: string) => ({
+    GSI1PK: `EVENT#${eventId}#FAQ`,
+  }),
+  faqGsi1Sk: (category: string, order: number) =>
+    `${category}#${String(order).padStart(4, '0')}`,
+
+  // --- Weather (one per event) ---
+  weather: (eventId: string) => ({
+    PK: eventPk(eventId),
+    SK: 'WEATHER',
+  }),
+
   // --- Audit log ---
   audit: (eventId: string, ts: string, id: string) => ({
     PK: eventPk(eventId),

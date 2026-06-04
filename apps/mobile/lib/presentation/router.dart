@@ -7,10 +7,13 @@ import '../application/providers.dart';
 import 'screens/agenda_detail_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/dining_screen.dart';
+import 'screens/faq_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/notification_center_screen.dart';
 import 'screens/transportation_screen.dart';
 import 'screens/travel_screen.dart';
+import 'screens/weather_screen.dart';
+import 'screens/yearbook_screen.dart';
 
 /// App router. Redirects to /login when signed out; supports deep links to agenda items
 /// (the foundation for notification deep linking).
@@ -44,6 +47,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/travel', builder: (_, __) => const TravelScreen()),
       GoRoute(path: '/transportation', builder: (_, __) => const TransportationScreen()),
       GoRoute(path: '/dining', builder: (_, __) => const DiningScreen()),
+      GoRoute(path: '/faq', builder: (_, __) => const FaqScreen()),
+      GoRoute(path: '/attendees', builder: (_, __) => const YearbookScreen()),
+      GoRoute(path: '/weather', builder: (_, __) => const WeatherScreen()),
     ],
   );
 });
