@@ -62,9 +62,11 @@ land in the moderation queue. Required native permissions before release:
 - **iOS** `Info.plist`: `NSPhotoLibraryUsageDescription`, `NSCameraUsageDescription`.
 - **Android**: camera permission is requested at runtime by `image_picker`.
 
-## Store readiness (P1)
-App icon, splash (flutter_native_splash), bundle ids per env, iOS privacy manifest, Android
-release signing, and store listings are tracked in `docs/backlog.md`.
+## Store readiness
+Launcher icon + splash config (`pubspec.yaml`), brand assets (`assets/icon`, `assets/splash`),
+per-env build config (`config/`), and ready-to-apply native permission overlays (`store/`) are in
+place. Full step-by-step (generate platforms, icons/splash, permissions, signing, privacy
+declarations, launch checklist) is in **[`docs/store-readiness.md`](../../docs/store-readiness.md)**.
 
 ## Test
 ```bash

@@ -1,0 +1,8 @@
+{
+  "ENV": "dev",
+  "API_URL": "https://xxxxxx.execute-api.us-west-2.amazonaws.com",
+  "REGION": "us-west-2",
+  "USER_POOL_ID": "us-west-2_xxxxxxxxx",
+  "APP_CLIENT_ID": "xxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "EVENT_ID": "event_001"
+}

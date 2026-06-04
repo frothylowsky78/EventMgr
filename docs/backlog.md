@@ -42,7 +42,7 @@ V1 scope. **P2** = spec "optional/later". Each epic lists the spec section(s) it
 | ⬜ | Backup/retention/archive procedures | §18.11 |
 | ⬜ | Analytics events | installs, DAU, views, opens, etc. | §10 |
 | ⬜ | Accessibility pass (dynamic text, screen reader, contrast) | §8.5 |
-| ⬜ | Store readiness: icons, splash, privacy manifests, store listings | §16 |
+| 🟡 | Store readiness | ✅ launcher icon + splash config & brand assets, per-env build config, native permission overlays (iOS Info.plist / Android manifest), flavor + signing snippets, full `docs/store-readiness.md` (privacy declarations + launch checklist). ⬜ final branded artwork, screenshots, signed builds, listing copy | §16, §18.15 |
 | ⬜ | QA test plan execution | §14 |
 
 ## P2 — Later / optional
