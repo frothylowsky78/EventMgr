@@ -174,6 +174,14 @@ export class Api extends Construct {
     route('AdminExportAttendees', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees/export', 'adminExportAttendees.ts', 'read');
     route('AdminExportFeedback', apigw.HttpMethod.GET, '/admin/events/{eventId}/feedback/export', 'adminExportFeedback.ts', 'read');
 
+    // Admin — per-attendee management (itinerary / travel / transportation)
+    route('AdminListItinerary', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees/{attendeeId}/itinerary', 'adminListItinerary.ts', 'read');
+    route('AdminCreateItinerary', apigw.HttpMethod.POST, '/admin/events/{eventId}/attendees/{attendeeId}/itinerary', 'adminCreateItinerary.ts', 'write');
+    route('AdminUpdateItinerary', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/attendees/{attendeeId}/itinerary/{itemId}', 'adminUpdateItinerary.ts', 'write');
+    route('AdminDeleteItinerary', apigw.HttpMethod.DELETE, '/admin/events/{eventId}/attendees/{attendeeId}/itinerary/{itemId}', 'adminDeleteItinerary.ts', 'write');
+    route('AdminGetTravel', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees/{attendeeId}/travel', 'adminGetTravel.ts', 'read');
+    route('AdminListTransportation', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees/{attendeeId}/transportation', 'adminListTransportation.ts', 'read');
+
     // Admin — maps
     route('AdminListMaps', apigw.HttpMethod.GET, '/admin/events/{eventId}/maps', 'adminListMaps.ts', 'read');
     route('AdminCreateMap', apigw.HttpMethod.POST, '/admin/events/{eventId}/maps', 'adminCreateMap.ts', 'write');

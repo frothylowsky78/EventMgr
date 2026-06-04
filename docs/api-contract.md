@@ -76,6 +76,10 @@ custom-auth flow (handled inside Cognito).
 | ✅ | PATCH | `/admin/events/{eventId}/transportation/{attendeeId}/{transportId}` | Update transportation |
 | ⬜ | PATCH | `/admin/events/{eventId}` | Edit event profile / branding |
 | ✅ | GET | `/admin/events/{eventId}/attendees` | Full attendee records |
+| ✅ | GET/POST | `…/attendees/{attendeeId}/itinerary` | List / assign itinerary items |
+| ✅ | PATCH/DELETE | `…/attendees/{attendeeId}/itinerary/{itemId}` | Edit / remove itinerary item |
+| ✅ | GET | `…/attendees/{attendeeId}/travel` | Read attendee travel (admin) |
+| ✅ | GET | `…/attendees/{attendeeId}/transportation` | Read attendee transport (admin) |
 | ✅ | POST | `/admin/events/{eventId}/attendees/import` | CSV import (upsert by email) |
 | ✅ | POST | `/admin/events/{eventId}/agenda/import` | CSV agenda import |
 | ✅ | GET | `/admin/events/{eventId}/attendees/export` | Attendees CSV |

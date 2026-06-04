@@ -9,12 +9,14 @@ import { DiningPage } from './components/DiningPage';
 import { MapsPage } from './components/MapsPage';
 import { WeatherPage } from './components/WeatherPage';
 import { DataPage } from './components/DataPage';
+import { AttendeesPage } from './components/AttendeesPage';
 import { getCurrentSession, signOut, type AdminSession } from './auth';
 import { setToken } from './api';
 import { config } from './config';
 
 type Tab =
   | 'agenda'
+  | 'attendees'
   | 'dining'
   | 'notifications'
   | 'photos'
@@ -26,6 +28,7 @@ type Tab =
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'agenda', label: 'Agenda' },
+  { id: 'attendees', label: 'Attendees' },
   { id: 'dining', label: 'Dining' },
   { id: 'maps', label: 'Maps' },
   { id: 'weather', label: 'Weather' },
@@ -84,6 +87,7 @@ export function App() {
       </nav>
       <main className="container">
         {tab === 'agenda' && <AgendaPage />}
+        {tab === 'attendees' && <AttendeesPage />}
         {tab === 'dining' && <DiningPage />}
         {tab === 'maps' && <MapsPage />}
         {tab === 'weather' && <WeatherPage />}
