@@ -34,6 +34,69 @@ export const agendaCreateSchema = z.object({
 
 export const agendaUpdateSchema = agendaCreateSchema.partial();
 
+// --- Notifications (spec §18.16) ---
+const deepLinkSchema = z.object({
+  type: z.enum([
+    'agenda',
+    'itinerary',
+    'dining',
+    'transportation',
+    'travel',
+    'announcement',
+    'photos',
+    'faq',
+    'help',
+  ]),
+  id: z.string().optional(),
+});
+
+const targetSchema = z.object({
+  type: z.enum([
+    'all',
+    'individuals',
+    'tag',
+    'activity',
+    'transportation',
+    'dining',
+    'incomplete_registration',
+    'missing_travel',
+    'staff',
+  ]),
+  criteria: z
+    .object({
+      attendeeIds: z.array(z.string()).optional(),
+      tags: z.array(z.string()).optional(),
+      activityId: z.string().nullable().optional(),
+      transportationGroup: z.string().nullable().optional(),
+      diningId: z.string().nullable().optional(),
+    })
+    .optional(),
+});
+
+export const notificationCreateSchema = z
+  .object({
+    title: z.string().min(1).max(150),
+    body: z.string().min(1).max(2000),
+    target: targetSchema,
+    deepLink: deepLinkSchema.nullable().optional(),
+    priority: z.enum(['normal', 'important', 'urgent']).optional(),
+    sendMode: z.enum(['now', 'scheduled']).optional(),
+    sendAt: z.string().datetime({ offset: true }).nullable().optional(),
+    expiresAt: z.string().datetime({ offset: true }).nullable().optional(),
+    internalNote: z.string().max(1000).optional(),
+  })
+  .refine((d) => d.sendMode !== 'scheduled' || Boolean(d.sendAt), {
+    message: 'sendAt is required when sendMode is "scheduled"',
+    path: ['sendAt'],
+  });
+
+export const previewSchema = z.object({ target: targetSchema });
+
+export const deviceTokenSchema = z.object({
+  platform: z.enum(['ios', 'android']),
+  deviceToken: z.string().min(1).max(512),
+});
+
 export function parseBody<T>(schema: z.ZodSchema<T>, raw: string | undefined): T {
   let json: unknown;
   try {

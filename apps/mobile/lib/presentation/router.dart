@@ -7,6 +7,7 @@ import '../application/providers.dart';
 import 'screens/agenda_detail_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/login_screen.dart';
+import 'screens/notification_center_screen.dart';
 
 /// App router. Redirects to /login when signed out; supports deep links to agenda items
 /// (the foundation for notification deep linking).
@@ -32,6 +33,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/agenda/:id',
         builder: (_, state) =>
             AgendaDetailScreen(agendaId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/notifications',
+        builder: (_, __) => const NotificationCenterScreen(),
       ),
     ],
   );

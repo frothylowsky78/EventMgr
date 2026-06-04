@@ -147,6 +147,45 @@ async function main() {
     });
   }
 
+  // Sample notification (sent) + in-app receipt for the test attendee.
+  const NOTIF_ID = 'notif_seed001';
+  const notifTs = '2026-09-12T16:45:00-07:00';
+  await put({
+    ...keys.notification(EVENT_ID, NOTIF_ID),
+    GSI1PK: keys.notificationList(EVENT_ID).GSI1PK,
+    GSI1SK: notifTs,
+    entity: 'Notification',
+    id: NOTIF_ID,
+    eventId: EVENT_ID,
+    title: 'Welcome to VIP Summit 2026',
+    body: 'Your itinerary is ready — tap My Trip to see what is next.',
+    target: { type: 'all', criteria: {} },
+    deepLink: { type: 'itinerary' },
+    priority: 'normal',
+    status: 'sent',
+    sendMode: 'now',
+    sendAt: notifTs,
+    createdByAdminId: 'admin_seed',
+    createdAt: notifTs,
+    updatedAt: notifTs,
+    recipientCount: 1,
+    successCount: 1,
+    failureCount: 0,
+  });
+  await put({
+    ...keys.notificationReceipt(ATTENDEE_ID, NOTIF_ID),
+    entity: 'NotificationReceipt',
+    notificationId: NOTIF_ID,
+    attendeeId: ATTENDEE_ID,
+    eventId: EVENT_ID,
+    title: 'Welcome to VIP Summit 2026',
+    body: 'Your itinerary is ready — tap My Trip to see what is next.',
+    deepLink: { type: 'itinerary' },
+    priority: 'normal',
+    read: false,
+    createdAt: notifTs,
+  });
+
   console.log('Seed complete.');
   console.log(`  Table:       ${TABLE_NAME}`);
   console.log(`  Event:       ${EVENT_ID}`);

@@ -49,4 +49,33 @@ export const keys = {
   accessCodeByHash: (codeHash: string) => ({
     GSI2PK: `CODE#${codeHash}`,
   }),
+
+  // --- Notifications (event-scoped record + history listing) ---
+  notification: (eventId: string, notificationId: string) => ({
+    PK: eventPk(eventId),
+    SK: `NOTIF#${notificationId}`,
+  }),
+  notificationList: (eventId: string) => ({
+    GSI1PK: `EVENT#${eventId}#NOTIF`,
+  }),
+
+  // --- Device tokens (per attendee; one row per device) ---
+  devicePrefix: 'DEVICE#',
+  deviceToken: (attendeeId: string, tokenId: string) => ({
+    PK: attendeePk(attendeeId),
+    SK: `DEVICE#${tokenId}`,
+  }),
+
+  // --- Notification receipts (in-app center, one per attendee per notification) ---
+  receiptPrefix: 'NOTIFRX#',
+  notificationReceipt: (attendeeId: string, notificationId: string) => ({
+    PK: attendeePk(attendeeId),
+    SK: `NOTIFRX#${notificationId}`,
+  }),
+
+  // --- Audit log ---
+  audit: (eventId: string, ts: string, id: string) => ({
+    PK: eventPk(eventId),
+    SK: `AUDIT#${ts}#${id}`,
+  }),
 };

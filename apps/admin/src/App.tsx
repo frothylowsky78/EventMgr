@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Login } from './components/Login';
 import { AgendaPage } from './components/AgendaPage';
+import { NotificationsPage } from './components/NotificationsPage';
 import { getCurrentSession, signOut, type AdminSession } from './auth';
 import { setToken } from './api';
 import { config } from './config';
 
+type Tab = 'agenda' | 'notifications';
+
 export function App() {
   const [session, setSession] = useState<AdminSession | null>(null);
   const [ready, setReady] = useState(false);
+  const [tab, setTab] = useState<Tab>('agenda');
 
   useEffect(() => {
     getCurrentSession().then((s) => {
@@ -42,8 +46,17 @@ export function App() {
           <button className="secondary" onClick={handleSignOut}>Sign out</button>
         </div>
       </header>
+      <nav className="container" style={{ display: 'flex', gap: 8, marginTop: 16, marginBottom: 0 }}>
+        <button className={tab === 'agenda' ? '' : 'secondary'} onClick={() => setTab('agenda')}>
+          Agenda
+        </button>
+        <button className={tab === 'notifications' ? '' : 'secondary'}
+          onClick={() => setTab('notifications')}>
+          Notifications
+        </button>
+      </nav>
       <main className="container">
-        <AgendaPage />
+        {tab === 'agenda' ? <AgendaPage /> : <NotificationsPage />}
       </main>
     </>
   );

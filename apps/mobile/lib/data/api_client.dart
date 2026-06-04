@@ -35,6 +35,24 @@ class ApiClient {
     }
   }
 
+  Future<dynamic> postData(String path, [Object? body]) async {
+    try {
+      final res = await _dio.post(path, data: body);
+      return res.data is Map ? res.data['data'] : null;
+    } on DioException catch (e) {
+      throw _toApiError(e);
+    }
+  }
+
+  Future<dynamic> patchData(String path, [Object? body]) async {
+    try {
+      final res = await _dio.patch(path, data: body);
+      return res.data is Map ? res.data['data'] : null;
+    } on DioException catch (e) {
+      throw _toApiError(e);
+    }
+  }
+
   Exception _toApiError(DioException e) {
     final data = e.response?.data;
     if (data is Map && data['error'] is Map) {

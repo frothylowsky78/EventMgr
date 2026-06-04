@@ -11,6 +11,14 @@ const app = new cdk.App();
 const envName = app.node.tryGetContext('env') as string | undefined;
 const config = resolveEnv(envName);
 
+// Optional push platform application ARNs supplied at deploy time once APNs/FCM are configured:
+//   cdk deploy --context env=prod --context pushIosArn=arn:... --context pushAndroidArn=arn:...
+config.pushPlatformAppArnIos =
+  (app.node.tryGetContext('pushIosArn') as string | undefined) ?? config.pushPlatformAppArnIos;
+config.pushPlatformAppArnAndroid =
+  (app.node.tryGetContext('pushAndroidArn') as string | undefined) ??
+  config.pushPlatformAppArnAndroid;
+
 new EventAppStack(app, `EventApp-${config.envName}`, {
   config,
   env: { account: config.account, region: config.region },

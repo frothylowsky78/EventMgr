@@ -25,8 +25,8 @@ V1 scope. **P2** = spec "optional/later". Each epic lists the spec section(s) it
 | ⬜ | Activity detail pages | full fields + images | §4.5 |
 | ⬜ | Personal travel & transportation | `/me/travel`, `/me/transportation`, admin assign | §4.10, §4.11 |
 | ⬜ | Dining | schedule, menus, seating, dietary (private) | §4.13 |
-| ⬜ | Push notifications | device tokens, SNS/Pinpoint, segments, scheduled, in-app center | §4.7, §18.7, §18.16 |
-| ⬜ | Admin push composer | targeting, preview, test send, confirm, history, audit | §18.16 |
+| 🟡 | Push notifications | ✅ device tokens, in-app center, immediate + scheduled send (EventBridge), SNS publish; ⬜ live APNs/FCM creds, full segment set (activity/dining/transport) | §4.7, §18.7, §18.16 |
+| 🟡 | Admin push composer | ✅ compose, audience preview, test send, send-now/scheduled, confirm (extra for urgent/all), history, duplicate, cancel, audit log; ⬜ resend-failed, export | §18.16 |
 | ⬜ | Attendee yearbook | directory, search/filter, privacy projections | §4.8 |
 | ⬜ | FAQ | categories, search, featured | §4.9 |
 | ⬜ | Maps & navigation | static/interactive, pins, external nav links | §4.12 |

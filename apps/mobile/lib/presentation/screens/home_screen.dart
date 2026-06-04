@@ -29,6 +29,7 @@ class HomeScreen extends ConsumerWidget {
               SliverAppBar(
                 expandedHeight: 200,
                 pinned: true,
+                actions: const [_NotificationBell()],
                 flexibleSpace: FlexibleSpaceBar(
                   title: Text(event.name,
                       style: const TextStyle(
@@ -73,6 +74,39 @@ class HomeScreen extends ConsumerWidget {
     } catch (_) {
       return '$start – $end';
     }
+  }
+}
+
+class _NotificationBell extends ConsumerWidget {
+  const _NotificationBell();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unread = ref.watch(notificationsProvider).valueOrNull?.unread ?? 0;
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined),
+          tooltip: 'Notifications',
+          onPressed: () => context.go('/notifications'),
+        ),
+        if (unread > 0)
+          Positioned(
+            right: 8,
+            top: 8,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.error,
+                  shape: BoxShape.circle),
+              constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+              child: Text('$unread',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white, fontSize: 10)),
+            ),
+          ),
+      ],
+    );
   }
 }
 

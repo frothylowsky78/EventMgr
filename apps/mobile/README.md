@@ -46,6 +46,14 @@ lib/
 Agenda, itinerary, and the event profile are cached in Hive and shown when the network fails.
 (Travel, dining, FAQ, help contacts, static maps join the cache in P1.)
 
+## Push notifications
+
+The **in-app notification center** is implemented (`/notifications`, bell with unread badge on
+Home, deep-link to agenda/itinerary) and works without any push setup. To enable **native** push:
+1. Add `firebase_messaging` (+ APNs capability on iOS) and obtain the device token.
+2. Call `NotificationsRepository.registerDeviceToken('ios'|'android', token)` after sign-in.
+3. Configure SNS platform applications and deploy with the push ARNs (see `services/api/README.md`).
+
 ## Store readiness (P1)
 App icon, splash (flutter_native_splash), bundle ids per env, iOS privacy manifest, Android
 release signing, and store listings are tracked in `docs/backlog.md`.

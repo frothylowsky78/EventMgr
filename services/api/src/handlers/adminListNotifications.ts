@@ -1,0 +1,34 @@
+import type {
+  APIGatewayProxyEventV2WithJWTAuthorizer,
+  APIGatewayProxyResultV2,
+} from 'aws-lambda';
+import { QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { ddb } from '../lib/dynamo';
+import { ApiException, fail, getAuth, ok, requireAdmin } from '../lib/http';
+import { TABLE_NAME, keys } from '../lib/keys';
+import { toNotification } from '../lib/mappers';
+
+/** GET /admin/events/{eventId}/notifications — history, newest first. */
+export const handler = async (
+  event: APIGatewayProxyEventV2WithJWTAuthorizer
+): Promise<APIGatewayProxyResultV2> => {
+  try {
+    requireAdmin(getAuth(event));
+    const eventId = event.pathParameters?.eventId;
+    if (!eventId) throw new ApiException('VALIDATION', 'eventId is required');
+
+    const res = await ddb.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: 'GSI1',
+        KeyConditionExpression: 'GSI1PK = :pk',
+        ExpressionAttributeValues: { ':pk': keys.notificationList(eventId).GSI1PK },
+        ScanIndexForward: false, // newest first
+      })
+    );
+
+    return ok((res.Items ?? []).map(toNotification));
+  } catch (e) {
+    return fail(e);
+  }
+};

@@ -5,6 +5,8 @@ import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations
 import { HttpJwtAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2-authorizers';
 import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import type { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { EnvConfig } from '../config';
 import { makeHandler } from './function-factory';
 
@@ -46,21 +48,54 @@ export class Api extends Construct {
       }
     );
 
+    const pushEnv = {
+      PUSH_PLATFORM_APP_ARN_IOS: config.pushPlatformAppArnIos ?? '',
+      PUSH_PLATFORM_APP_ARN_ANDROID: config.pushPlatformAppArnAndroid ?? '',
+    };
+
+    // --- Scheduled-send job (invoked by EventBridge Scheduler, not on the public API) ---
+    const sendJobFn = makeHandler(this, 'NotificationSendJobFn', {
+      entry: 'notificationSendJob.ts',
+      config,
+      table,
+      access: 'write',
+      environment: pushEnv,
+    });
+    grantPush(sendJobFn);
+
+    // Role assumed by EventBridge Scheduler to invoke the send-job Lambda at sendAt.
+    const schedulerRole = new iam.Role(this, 'SchedulerInvokeRole', {
+      assumedBy: new iam.ServicePrincipal('scheduler.amazonaws.com'),
+    });
+    sendJobFn.grantInvoke(schedulerRole);
+
+    const schedulingEnv = {
+      SEND_JOB_FUNCTION_ARN: sendJobFn.functionArn,
+      SCHEDULER_ROLE_ARN: schedulerRole.roleArn,
+    };
+
     const route = (
-      id: string,
+      routeId: string,
       method: apigw.HttpMethod,
       routePath: string,
       entry: string,
       access: 'read' | 'write',
-      opts: { secured?: boolean } = {}
-    ) => {
-      const fn = makeHandler(this, id, { entry, config, table, access });
+      opts: { secured?: boolean; environment?: Record<string, string> } = {}
+    ): NodejsFunction => {
+      const fn = makeHandler(this, routeId, {
+        entry,
+        config,
+        table,
+        access,
+        environment: opts.environment,
+      });
       this.httpApi.addRoutes({
         path: routePath,
         methods: [method],
-        integration: new HttpLambdaIntegration(`${id}Int`, fn),
+        integration: new HttpLambdaIntegration(`${routeId}Int`, fn),
         authorizer: opts.secured === false ? undefined : authorizer,
       });
+      return fn;
     };
 
     // Public
@@ -78,5 +113,69 @@ export class Api extends Construct {
     route('AdminListAgenda', apigw.HttpMethod.GET, '/admin/events/{eventId}/agenda', 'adminListAgenda.ts', 'read');
     route('AdminCreateAgenda', apigw.HttpMethod.POST, '/admin/events/{eventId}/agenda', 'adminCreateAgenda.ts', 'write');
     route('AdminUpdateAgenda', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/agenda/{agendaId}', 'adminUpdateAgenda.ts', 'write');
+
+    // Attendee — device tokens + in-app notification center
+    route('RegisterDeviceToken', apigw.HttpMethod.POST, '/me/device-tokens', 'registerDeviceToken.ts', 'write');
+    route('DeleteDeviceToken', apigw.HttpMethod.DELETE, '/me/device-tokens/{id}', 'deleteDeviceToken.ts', 'write');
+    route('GetMyNotifications', apigw.HttpMethod.GET, '/me/notifications', 'getMyNotifications.ts', 'read');
+    route('MarkNotificationRead', apigw.HttpMethod.PATCH, '/me/notifications/{id}/read', 'markNotificationRead.ts', 'write');
+    route('MarkAllNotificationsRead', apigw.HttpMethod.PATCH, '/me/notifications/read-all', 'markNotificationRead.ts', 'write');
+
+    // Admin — notifications (ad-hoc push composer, spec §18.16)
+    route('AdminListNotifications', apigw.HttpMethod.GET, '/admin/events/{eventId}/notifications', 'adminListNotifications.ts', 'read');
+    route('AdminCreateNotification', apigw.HttpMethod.POST, '/admin/events/{eventId}/notifications', 'adminCreateNotification.ts', 'write');
+    route('AdminPreviewAudience', apigw.HttpMethod.POST, '/admin/events/{eventId}/notifications/preview', 'adminPreviewAudience.ts', 'read');
+    route('AdminGetNotification', apigw.HttpMethod.GET, '/admin/events/{eventId}/notifications/{notificationId}', 'adminGetNotification.ts', 'read');
+    const testFn = route('AdminSendTestNotification', apigw.HttpMethod.POST, '/admin/events/{eventId}/notifications/{notificationId}/send-test', 'adminSendTestNotification.ts', 'write', { environment: pushEnv });
+    grantPush(testFn);
+    route('AdminDuplicateNotification', apigw.HttpMethod.POST, '/admin/events/{eventId}/notifications/{notificationId}/duplicate', 'adminDuplicateNotification.ts', 'write');
+
+    // Send + cancel need push delivery and EventBridge Scheduler access.
+    const sendFn = route(
+      'AdminSendNotification',
+      apigw.HttpMethod.POST,
+      '/admin/events/{eventId}/notifications/{notificationId}/send',
+      'adminSendNotification.ts',
+      'write',
+      { environment: { ...pushEnv, ...schedulingEnv } }
+    );
+    grantPush(sendFn);
+    grantScheduling(sendFn, schedulerRole.roleArn);
+
+    const cancelFn = route(
+      'AdminCancelNotification',
+      apigw.HttpMethod.POST,
+      '/admin/events/{eventId}/notifications/{notificationId}/cancel',
+      'adminCancelNotification.ts',
+      'write',
+      { environment: schedulingEnv }
+    );
+    grantScheduling(cancelFn, schedulerRole.roleArn);
   }
+}
+
+/** SNS permissions for creating platform endpoints + publishing native push. */
+function grantPush(fn: NodejsFunction): void {
+  fn.addToRolePolicy(
+    new iam.PolicyStatement({
+      actions: ['sns:CreatePlatformEndpoint', 'sns:Publish'],
+      resources: ['*'], // platform application + endpoint ARNs are dynamic
+    })
+  );
+}
+
+/** EventBridge Scheduler permissions + ability to pass the scheduler role. */
+function grantScheduling(fn: NodejsFunction, schedulerRoleArn: string): void {
+  fn.addToRolePolicy(
+    new iam.PolicyStatement({
+      actions: ['scheduler:CreateSchedule', 'scheduler:DeleteSchedule', 'scheduler:GetSchedule'],
+      resources: ['*'],
+    })
+  );
+  fn.addToRolePolicy(
+    new iam.PolicyStatement({
+      actions: ['iam:PassRole'],
+      resources: [schedulerRoleArn],
+    })
+  );
 }

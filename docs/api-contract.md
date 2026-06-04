@@ -32,10 +32,11 @@ custom-auth flow (handled inside Cognito).
 | ⬜ | GET | `/me/dining` | Caller's dining (incl. seating) |
 | ⬜ | PATCH | `/me/profile` | Update editable profile fields |
 | ⬜ | POST | `/me/profile-photo/upload-url` | Pre-signed S3 upload URL |
-| ⬜ | GET | `/me/notifications` | In-app notification center |
-| ⬜ | PATCH | `/me/notifications/{id}/read` | Mark read |
-| ⬜ | POST | `/me/device-tokens` | Register push token |
-| ⬜ | DELETE | `/me/device-tokens/{id}` | Remove push token |
+| ✅ | GET | `/me/notifications` | In-app notification center (`{ items, unread }`) |
+| ✅ | PATCH | `/me/notifications/{id}/read` | Mark read |
+| ✅ | PATCH | `/me/notifications/read-all` | Mark all read |
+| ✅ | POST | `/me/device-tokens` | Register push token |
+| ✅ | DELETE | `/me/device-tokens/{id}` | Remove push token |
 
 ### Event content (attendee-readable)
 | | Method | Path |
@@ -64,8 +65,14 @@ custom-auth flow (handled inside Cognito).
 | ⬜ | PATCH | `/admin/events/{eventId}` | Edit event profile / branding |
 | ⬜ | GET / PATCH | `/admin/events/{eventId}/attendees …` | Manage attendees |
 | ⬜ | POST | `/admin/events/{eventId}/attendees/import` | CSV/XLSX import |
-| ⬜ | POST | `/admin/events/{eventId}/notifications` | Compose push |
-| ⬜ | POST | `…/notifications/{id}/send` `…/send-test` `…/cancel` `…/duplicate` | Push lifecycle |
+| ✅ | GET | `/admin/events/{eventId}/notifications` | History (newest first) |
+| ✅ | POST | `/admin/events/{eventId}/notifications` | Compose (creates draft) |
+| ✅ | POST | `…/notifications/preview` | Audience count + description |
+| ✅ | GET | `…/notifications/{id}` | Notification detail |
+| ✅ | POST | `…/notifications/{id}/send` | Send now or register schedule |
+| ✅ | POST | `…/notifications/{id}/send-test` | Test send to self/test attendee |
+| ✅ | POST | `…/notifications/{id}/cancel` | Cancel draft/scheduled |
+| ✅ | POST | `…/notifications/{id}/duplicate` | Clone to new draft |
 | ⬜ | PATCH | `/admin/photos/{photoId}/approve` `…/hide` | Moderation |
 | ⬜ | GET | `…/feedback/export` `…/photos/export` | Exports |
 

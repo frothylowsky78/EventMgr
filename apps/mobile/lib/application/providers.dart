@@ -6,9 +6,11 @@ import '../data/local_cache.dart';
 import '../data/repositories/agenda_repository.dart';
 import '../data/repositories/event_repository.dart';
 import '../data/repositories/itinerary_repository.dart';
+import '../data/repositories/notifications_repository.dart';
 import '../domain/agenda_item.dart';
 import '../domain/event.dart';
 import '../domain/itinerary_item.dart';
+import '../domain/notification_item.dart';
 import 'auth_controller.dart';
 
 /// Overridden in main() with the initialized instance.
@@ -34,6 +36,9 @@ final agendaRepositoryProvider = Provider<AgendaRepository>(
 );
 final itineraryRepositoryProvider = Provider<ItineraryRepository>(
   (ref) => ItineraryRepository(ref.watch(apiClientProvider), ref.watch(localCacheProvider)),
+);
+final notificationsRepositoryProvider = Provider<NotificationsRepository>(
+  (ref) => NotificationsRepository(ref.watch(apiClientProvider), ref.watch(localCacheProvider)),
 );
 
 /// Stale-while-revalidate: try the network; on failure fall back to the offline cache.
@@ -66,6 +71,17 @@ final itineraryProvider = FutureProvider<List<ItineraryItem>>((ref) async {
   } catch (e) {
     final cached = repo.cached();
     if (cached.isNotEmpty) return cached;
+    rethrow;
+  }
+});
+
+final notificationsProvider = FutureProvider<NotificationCenter>((ref) async {
+  final repo = ref.watch(notificationsRepositoryProvider);
+  try {
+    return await repo.fetch();
+  } catch (e) {
+    final cached = repo.cached();
+    if (cached.items.isNotEmpty) return cached;
     rethrow;
   }
 });

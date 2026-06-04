@@ -55,6 +55,25 @@ DYNAMODB_ENDPOINT=http://localhost:8000 TABLE_NAME=EventApp-local npm run seed -
 - `/admin/*` requires the `event_admin` or `super_admin` Cognito group.
 - All handlers return the envelope `{ data }` / `{ error: { code, message, details } }`.
 
+## Push notifications (spec §18.16)
+
+Ad-hoc push composer + in-app notification center are implemented:
+- Attendee: `POST/DELETE /me/device-tokens`, `GET /me/notifications`, `PATCH /me/notifications/{id}/read`, `…/read-all`.
+- Admin: create / preview / send / send-test / cancel / duplicate / history under `…/notifications`.
+- Immediate sends publish via SNS (`createPlatformEndpoint` + `publish`) and always write an in-app
+  receipt. Scheduled sends register a one-time **EventBridge Scheduler** job that invokes the
+  `notificationSendJob` Lambda at `sendAt`.
+
+The in-app center works with **no APNs/FCM setup**. To enable native push, create SNS platform
+applications with your APNs key + FCM credentials, then pass the ARNs at deploy time:
+```bash
+npx cdk deploy --context env=prod \
+  --context pushIosArn=arn:aws:sns:...:app/APNS/eventmgr-ios \
+  --context pushAndroidArn=arn:aws:sns:...:app/GCM/eventmgr-android
+```
+Supported audience segments today: `all`, `tag`, `individuals`, `incomplete_registration`.
+`activity` / `dining` / `transportation` segments land with those data slices.
+
 ## Creating the Cognito user for the seeded attendee
 After `cdk deploy`, create the matching user so the seeded access code works end-to-end:
 ```bash

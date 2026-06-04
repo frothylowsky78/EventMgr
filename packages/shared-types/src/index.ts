@@ -178,3 +178,127 @@ export const AGENDA_CATEGORIES: AgendaCategory[] = [
   'optional_event',
   'private_appointment',
 ];
+
+// ---------------------------------------------------------------------------
+// Push notifications (spec §4.7, §18.7, §18.16)
+// ---------------------------------------------------------------------------
+export type NotificationPriority = 'normal' | 'important' | 'urgent';
+
+export type NotificationStatus =
+  | 'draft'
+  | 'scheduled'
+  | 'sending'
+  | 'sent'
+  | 'failed'
+  | 'cancelled';
+
+/** Deep-link destinations a notification can open (spec §9). */
+export type DeepLinkType =
+  | 'agenda'
+  | 'itinerary'
+  | 'dining'
+  | 'transportation'
+  | 'travel'
+  | 'announcement'
+  | 'photos'
+  | 'faq'
+  | 'help';
+
+export interface DeepLink {
+  type: DeepLinkType;
+  id?: string;
+}
+
+/** How an audience is selected. Not all are resolvable from attendee fields yet — see API. */
+export type NotificationTargetType =
+  | 'all'
+  | 'individuals'
+  | 'tag'
+  | 'activity'
+  | 'transportation'
+  | 'dining'
+  | 'incomplete_registration'
+  | 'missing_travel'
+  | 'staff';
+
+export interface NotificationTargetCriteria {
+  attendeeIds?: string[];
+  tags?: string[];
+  activityId?: string | null;
+  transportationGroup?: string | null;
+  diningId?: string | null;
+}
+
+export interface NotificationTarget {
+  type: NotificationTargetType;
+  criteria?: NotificationTargetCriteria;
+}
+
+export interface NotificationRecord {
+  id: string;
+  eventId: string;
+  title: string;
+  body: string;
+  target: NotificationTarget;
+  deepLink?: DeepLink | null;
+  priority: NotificationPriority;
+  status: NotificationStatus;
+  sendMode: 'now' | 'scheduled';
+  sendAt?: string | null; // ISO-8601, required when scheduled
+  expiresAt?: string | null;
+  internalNote?: string;
+  createdByAdminId: string;
+  createdAt: string;
+  updatedAt: string;
+  recipientCount: number;
+  successCount: number;
+  failureCount: number;
+}
+
+/** Admin compose payload. */
+export interface NotificationCreate {
+  title: string;
+  body: string;
+  target: NotificationTarget;
+  deepLink?: DeepLink | null;
+  priority?: NotificationPriority;
+  sendMode?: 'now' | 'scheduled';
+  sendAt?: string | null;
+  expiresAt?: string | null;
+  internalNote?: string;
+}
+
+/** Audience preview shown before sending (spec §18.16 Notification Preview). */
+export interface AudiencePreview {
+  recipientCount: number;
+  description: string;
+}
+
+/** In-app notification center item (per attendee). */
+export interface NotificationCenterItem {
+  notificationId: string;
+  title: string;
+  body: string;
+  deepLink?: DeepLink | null;
+  priority: NotificationPriority;
+  createdAt: string;
+  read: boolean;
+}
+
+export type DevicePlatform = 'ios' | 'android';
+
+export interface DeviceTokenRecord {
+  id: string;
+  attendeeId: string;
+  eventId: string;
+  platform: DevicePlatform;
+  deviceToken: string;
+  enabled: boolean;
+  createdAt: string;
+  lastSeenAt: string;
+}
+
+export interface DeviceTokenRegister {
+  platform: DevicePlatform;
+  deviceToken: string;
+}

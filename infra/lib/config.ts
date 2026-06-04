@@ -14,6 +14,13 @@ export interface EnvConfig {
   /** CORS allowlist for the admin portal origin(s). */
   adminPortalOrigins: string[];
   logRetentionDays: number;
+  /**
+   * SNS platform application ARNs for native push (created during AWS setup with APNs/FCM
+   * credentials, then supplied via `--context pushIosArn=... pushAndroidArn=...` or env).
+   * When absent the in-app notification center still works; native push is skipped.
+   */
+  pushPlatformAppArnIos?: string;
+  pushPlatformAppArnAndroid?: string;
 }
 
 const base = {

@@ -1,4 +1,12 @@
-import type { AgendaItem, Attendee, EventProfile, ItineraryItem } from '@eventmgr/shared-types';
+import type {
+  AgendaItem,
+  Attendee,
+  DeviceTokenRecord,
+  EventProfile,
+  ItineraryItem,
+  NotificationCenterItem,
+  NotificationRecord,
+} from '@eventmgr/shared-types';
 
 /**
  * Map raw DynamoDB items (which carry PK/SK/GSI* attributes) to clean domain shapes
@@ -57,6 +65,48 @@ export const toItineraryItem = (i: Item): ItineraryItem => ({
   transportationNote: i.transportationNote ?? '',
   reminderEnabled: i.reminderEnabled ?? true,
   visibility: i.visibility ?? 'private',
+});
+
+export const toNotification = (i: Item): NotificationRecord => ({
+  id: i.id,
+  eventId: i.eventId,
+  title: i.title,
+  body: i.body,
+  target: i.target ?? { type: 'all', criteria: {} },
+  deepLink: i.deepLink ?? null,
+  priority: i.priority ?? 'normal',
+  status: i.status ?? 'draft',
+  sendMode: i.sendMode ?? 'now',
+  sendAt: i.sendAt ?? null,
+  expiresAt: i.expiresAt ?? null,
+  internalNote: i.internalNote ?? '',
+  createdByAdminId: i.createdByAdminId ?? '',
+  createdAt: i.createdAt,
+  updatedAt: i.updatedAt ?? i.createdAt,
+  recipientCount: i.recipientCount ?? 0,
+  successCount: i.successCount ?? 0,
+  failureCount: i.failureCount ?? 0,
+});
+
+export const toDeviceToken = (i: Item): DeviceTokenRecord => ({
+  id: i.id,
+  attendeeId: i.attendeeId,
+  eventId: i.eventId,
+  platform: i.platform,
+  deviceToken: i.deviceToken,
+  enabled: i.enabled ?? true,
+  createdAt: i.createdAt,
+  lastSeenAt: i.lastSeenAt ?? i.createdAt,
+});
+
+export const toCenterItem = (i: Item): NotificationCenterItem => ({
+  notificationId: i.notificationId,
+  title: i.title,
+  body: i.body,
+  deepLink: i.deepLink ?? null,
+  priority: i.priority ?? 'normal',
+  createdAt: i.createdAt,
+  read: i.read ?? false,
 });
 
 /** Full attendee — only for the owner (/me) or admins. */
