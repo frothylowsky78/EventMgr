@@ -36,7 +36,8 @@ V1 scope. **P2** = spec "optional/later". Each epic lists the spec section(s) it
 | 🟡 | Weather | ✅ admin-entered current + daily forecast + alert notes, `/weather` API, mobile screen + home snapshot, admin upsert API; ⬜ live weather API integration, admin weather editor UI | §4.17 |
 | 🟡 | Calendar sync | ✅ single agenda item via native add-to-calendar (add_2_calendar), full-itinerary `.ics` export endpoint; ⬜ per-itinerary add-all, change-warning on updated items | §4.18 |
 | ✅ | Profile self-edit + profile photo upload | `PATCH /me/profile`, pre-signed photo upload, privacy toggles, mobile profile screen | §4.1, §4.8 |
-| 🟡 | Admin content mgmt + import/export | ✅ admin UIs for agenda, dining, maps, weather, FAQ, photos, support; CSV import (attendees, agenda) + export (attendees, feedback); attendees list. ⬜ per-attendee itinerary/travel/transportation mgmt UI, XLSX | §5, §18.8 |
+| ✅ | Admin content mgmt + import/export | admin UIs for agenda, attendees (per-attendee itinerary/travel/transportation), dining, maps, weather, FAQ, photos, support; CSV import (attendees, agenda) + export (attendees, feedback). ⬜ XLSX (optional) | §5, §18.8 |
+| ✅ | Admin: per-attendee itinerary/travel/transportation mgmt UI | Attendees tab → manage itinerary (add/edit/delete), travel (upsert), transportation (add/status) | §4.6, §5 |
 | ⬜ | Observability: alarms, X-Ray, audit log, DLQs | §18.10 |
 | ⬜ | Backup/retention/archive procedures | §18.11 |
 | ⬜ | Analytics events | installs, DAU, views, opens, etc. | §10 |

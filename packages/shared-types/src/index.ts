@@ -114,6 +114,19 @@ export interface ItineraryItem {
   visibility: 'private' | 'shared';
 }
 
+export interface ItineraryItemCreate {
+  agendaItemId?: string;
+  customTitle?: string;
+  startDateTime: string;
+  endDateTime?: string;
+  locationId?: string;
+  notes?: string;
+  transportationNote?: string;
+  reminderEnabled?: boolean;
+  visibility?: 'private' | 'shared';
+}
+export type ItineraryItemUpdate = Partial<ItineraryItemCreate>;
+
 export type RegistrationStatus =
   | 'not_started'
   | 'in_progress'

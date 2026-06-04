@@ -252,6 +252,20 @@ export const profilePhotoSchema = z.object({
   contentType: z.string().min(1),
 });
 
+// --- Admin itinerary assignment (spec §4.6) ---
+export const itineraryCreateSchema = z.object({
+  agendaItemId: z.string().optional(),
+  customTitle: z.string().max(200).optional(),
+  startDateTime: z.string().datetime({ offset: true }),
+  endDateTime: z.string().datetime({ offset: true }).optional(),
+  locationId: z.string().optional(),
+  notes: z.string().max(2000).optional(),
+  transportationNote: z.string().max(500).optional(),
+  reminderEnabled: z.boolean().optional(),
+  visibility: z.enum(['private', 'shared']).optional(),
+});
+export const itineraryUpdateSchema = itineraryCreateSchema.partial();
+
 export const helpContentUpsertSchema = z.object({
   contacts: z
     .array(

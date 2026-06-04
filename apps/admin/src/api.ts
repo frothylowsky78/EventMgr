@@ -24,6 +24,15 @@ import type {
   MapLocationUpdate,
   WeatherInfo,
   WeatherUpsert,
+  Attendee,
+  ItineraryItem,
+  ItineraryItemCreate,
+  ItineraryItemUpdate,
+  TravelDetail,
+  TravelDetailUpsert,
+  TransportationItem,
+  TransportationCreate,
+  TransportationUpdate,
 } from '@eventmgr/shared-types';
 
 interface ImportResult {
@@ -108,6 +117,27 @@ export const adminApi = {
     request<HelpRequest>('PATCH', `/admin/events/${ev()}/help-requests/${attendeeId}/${requestId}`, patch),
   listFeedback: (targetId: string) =>
     request<FeedbackSummary>('GET', `/admin/events/${ev()}/feedback?targetId=${encodeURIComponent(targetId)}`),
+
+  // Attendees + per-attendee management
+  listAttendees: () => request<Attendee[]>('GET', `/admin/events/${ev()}/attendees`),
+  getItinerary: (attendeeId: string) =>
+    request<ItineraryItem[]>('GET', `/admin/events/${ev()}/attendees/${attendeeId}/itinerary`),
+  createItinerary: (attendeeId: string, input: ItineraryItemCreate) =>
+    request<ItineraryItem>('POST', `/admin/events/${ev()}/attendees/${attendeeId}/itinerary`, input),
+  updateItinerary: (attendeeId: string, itemId: string, patch: ItineraryItemUpdate) =>
+    request<ItineraryItem>('PATCH', `/admin/events/${ev()}/attendees/${attendeeId}/itinerary/${itemId}`, patch),
+  deleteItinerary: (attendeeId: string, itemId: string) =>
+    request<unknown>('DELETE', `/admin/events/${ev()}/attendees/${attendeeId}/itinerary/${itemId}`),
+  getTravel: (attendeeId: string) =>
+    request<TravelDetail | null>('GET', `/admin/events/${ev()}/attendees/${attendeeId}/travel`),
+  upsertTravel: (attendeeId: string, input: TravelDetailUpsert) =>
+    request<TravelDetail>('PUT', `/admin/events/${ev()}/attendees/${attendeeId}/travel`, input),
+  getTransportation: (attendeeId: string) =>
+    request<TransportationItem[]>('GET', `/admin/events/${ev()}/attendees/${attendeeId}/transportation`),
+  createTransportation: (input: TransportationCreate) =>
+    request<TransportationItem>('POST', `/admin/events/${ev()}/transportation`, input),
+  updateTransportation: (attendeeId: string, transportId: string, patch: TransportationUpdate) =>
+    request<TransportationItem>('PATCH', `/admin/events/${ev()}/transportation/${attendeeId}/${transportId}`, patch),
 
   // Dining
   listDining: () => request<DiningItem[]>('GET', `/admin/events/${ev()}/dining`),
