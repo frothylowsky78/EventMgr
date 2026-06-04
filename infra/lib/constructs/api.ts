@@ -28,6 +28,9 @@ interface ApiProps {
  */
 export class Api extends Construct {
   readonly httpApi: apigw.HttpApi;
+  /** Async (non-API) functions — exposed so Observability can alarm on their errors/DLQs. */
+  readonly sendJobFn: NodejsFunction;
+  readonly photoProcessFn: NodejsFunction;
 
   constructor(scope: Construct, id: string, props: ApiProps) {
     super(scope, id);
@@ -67,8 +70,10 @@ export class Api extends Construct {
       table,
       access: 'write',
       environment: pushEnv,
+      deadLetterQueueEnabled: true,
     });
     grantPush(sendJobFn);
+    this.sendJobFn = sendJobFn;
 
     // Role assumed by EventBridge Scheduler to invoke the send-job Lambda at sendAt.
     const schedulerRole = new iam.Role(this, 'SchedulerInvokeRole', {
@@ -249,12 +254,14 @@ export class Api extends Construct {
       table,
       access: 'write',
       environment: galleryEnv,
+      deadLetterQueueEnabled: true,
     });
     galleryBucket.grantRead(photoProcessFn);
     galleryBucket.addEventNotification(
       s3.EventType.OBJECT_CREATED,
       new s3n.LambdaDestination(photoProcessFn)
     );
+    this.photoProcessFn = photoProcessFn;
   }
 }
 

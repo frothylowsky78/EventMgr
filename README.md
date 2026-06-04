@@ -81,6 +81,8 @@ npm run build          # build shared-types, api, infra, admin
 - [Data model](docs/data-model.md)
 - [API contract](docs/api-contract.md) · [OpenAPI](docs/openapi.yaml)
 - [Infrastructure-as-code plan](docs/iac-plan.md)
+- [Backup, retention & archive](docs/backup-retention.md)
+- [App Store / Play readiness](docs/store-readiness.md)
 - [Development backlog](docs/backlog.md)
 - [Vertical-slice plan](docs/vertical-slice.md)
 - [Open questions & assumptions](docs/open-questions.md)

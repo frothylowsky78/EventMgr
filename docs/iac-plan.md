@@ -26,7 +26,8 @@ with env-specific removal policies, capacity, and protections:
 | `Functions` | One Lambda per route group (NodejsFunction, esbuild bundling), least-privilege IAM |
 | `Messaging` | SNS platform applications (APNs/FCM) / Pinpoint project, EventBridge Scheduler role |
 | `Web` | S3 + CloudFront (OAC) for the admin SPA |
-| `Observability` | Log groups, metric alarms (5xx, p95 latency, push/photo failures), optional dashboard |
+| `Observability` | Alarm SNS topic (+ optional email), alarms (API 5xx, p95 latency, async-Lambda errors, DLQ depth), CloudWatch dashboard; X-Ray on all functions |
+| `Backups` | AWS Backup vault + daily DynamoDB plan (staging/prod), retention per env |
 
 ## Environment config (`infra/lib/config.ts`)
 

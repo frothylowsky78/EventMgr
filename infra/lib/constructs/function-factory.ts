@@ -18,6 +18,8 @@ interface HandlerOptions {
   /** read = read+query, write = read+write. Defaults to read. */
   access?: 'read' | 'write';
   environment?: Record<string, string>;
+  /** Auto-create an SQS dead-letter queue for failed async invocations (S3/EventBridge). */
+  deadLetterQueueEnabled?: boolean;
 }
 
 /**
@@ -36,6 +38,7 @@ export function makeHandler(scope: Construct, id: string, opts: HandlerOptions):
     timeout: Duration.seconds(10),
     tracing: lambda.Tracing.ACTIVE,
     logRetention: config.logRetentionDays as logs.RetentionDays,
+    deadLetterQueueEnabled: opts.deadLetterQueueEnabled,
     bundling: { minify: true, sourceMap: true, target: 'node20' },
     environment: {
       NODE_OPTIONS: '--enable-source-maps',
