@@ -1,3 +1,4 @@
+import 'package:add_2_calendar/add_2_calendar.dart' as cal;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -64,10 +65,7 @@ class _Detail extends StatelessWidget {
         ],
         const SizedBox(height: 24),
         OutlinedButton.icon(
-          // Calendar sync wired in P1 (ICS export); placeholder keeps the slice premium.
-          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Add to calendar coming soon')),
-          ),
+          onPressed: () => _addToCalendar(context),
           icon: const Icon(Icons.calendar_month),
           label: const Text('Add to calendar'),
         ),
@@ -85,6 +83,34 @@ class _Detail extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  void _addToCalendar(BuildContext context) {
+    final start = _parse(item.date, item.startTime);
+    if (start == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This item has no scheduled time.')),
+      );
+      return;
+    }
+    final end = _parse(item.date, item.endTime) ?? start.add(const Duration(hours: 1));
+    cal.Add2Calendar.addEvent2Cal(cal.Event(
+      title: item.title,
+      description: item.description,
+      location: item.mapLink,
+      startDate: start,
+      endDate: end,
+    ));
+  }
+
+  /// Builds a local DateTime from "YYYY-MM-DD" + "HH:mm" (device timezone).
+  static DateTime? _parse(String date, String? time) {
+    if (time == null || time.isEmpty) return null;
+    final d = DateTime.tryParse(date);
+    final parts = time.split(':');
+    if (d == null || parts.length != 2) return null;
+    return DateTime(d.year, d.month, d.day,
+        int.tryParse(parts[0]) ?? 0, int.tryParse(parts[1]) ?? 0);
   }
 }
 

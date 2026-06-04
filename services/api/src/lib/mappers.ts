@@ -11,6 +11,7 @@ import type {
   HelpContent,
   HelpRequest,
   ItineraryItem,
+  MapLocation,
   NotificationCenterItem,
   NotificationRecord,
   Photo,
@@ -189,6 +190,21 @@ export const toPhoto = (i: Item): Photo => ({
   likeCount: i.likeCount ?? 0,
   contentType: i.contentType ?? 'image/jpeg',
   createdAt: i.createdAt,
+});
+
+export const toMapLocation = (i: Item): MapLocation => ({
+  id: i.id,
+  eventId: i.eventId,
+  title: i.title,
+  type: i.type,
+  imageUrl: i.imageUrl ?? '',
+  description: i.description ?? '',
+  address: i.address ?? '',
+  latitude: i.latitude ?? null,
+  longitude: i.longitude ?? null,
+  pins: i.pins ?? [],
+  order: i.order ?? 0,
+  published: i.published ?? true,
 });
 
 export const toFaqItem = (i: Item): FaqItem => ({

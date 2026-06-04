@@ -218,6 +218,40 @@ export const helpRequestUpdateSchema = z.object({
   status: z.enum(['open', 'assigned', 'resolved']).optional(),
   assignedTo: z.string().nullable().optional(),
 });
+// --- Maps (spec §4.12) ---
+export const mapCreateSchema = z.object({
+  title: z.string().min(1).max(200),
+  type: z.enum(['property', 'meeting_room', 'dining', 'activity', 'transportation', 'local_area']),
+  imageUrl: z.string().url().optional().or(z.literal('')),
+  description: z.string().max(2000).optional(),
+  address: z.string().max(300).optional(),
+  latitude: z.number().min(-90).max(90).nullable().optional(),
+  longitude: z.number().min(-180).max(180).nullable().optional(),
+  pins: z.array(z.object({ label: z.string().max(150), note: z.string().max(300).optional() })).optional(),
+  order: z.number().int().min(0).optional(),
+  published: z.boolean().optional(),
+});
+export const mapUpdateSchema = mapCreateSchema.partial();
+
+// --- Profile self-edit (spec §4.1) ---
+export const profileUpdateSchema = z.object({
+  phone: z.string().max(50).optional(),
+  company: z.string().max(200).optional(),
+  title: z.string().max(200).optional(),
+  city: z.string().max(200).optional(),
+  bio: z.string().max(1000).optional(),
+  linkedinUrl: z.string().url().optional().or(z.literal('')),
+  dietaryRestrictions: z.array(z.string()).optional(),
+  accessibilityNeeds: z.string().max(500).optional(),
+  guestName: z.string().max(200).optional(),
+  directoryVisible: z.boolean().optional(),
+  contactSharingOptIn: z.boolean().optional(),
+});
+
+export const profilePhotoSchema = z.object({
+  contentType: z.string().min(1),
+});
+
 export const helpContentUpsertSchema = z.object({
   contacts: z
     .array(

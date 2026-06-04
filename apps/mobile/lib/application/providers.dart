@@ -18,6 +18,7 @@ import '../domain/event.dart';
 import '../domain/faq_item.dart';
 import '../domain/help.dart';
 import '../domain/itinerary_item.dart';
+import '../domain/map_location.dart';
 import '../domain/me.dart';
 import '../domain/notification_item.dart';
 import '../domain/photo.dart';
@@ -188,6 +189,17 @@ final meProvider = FutureProvider<AttendeeMe>((ref) async {
   } catch (e) {
     final cached = repo.cachedMe();
     if (cached != null) return cached;
+    rethrow;
+  }
+});
+
+final mapsProvider = FutureProvider<List<MapLocation>>((ref) async {
+  final repo = ref.watch(contentRepositoryProvider);
+  try {
+    return await repo.fetchMaps();
+  } catch (e) {
+    final cached = repo.cachedMaps();
+    if (cached.isNotEmpty) return cached;
     rethrow;
   }
 });

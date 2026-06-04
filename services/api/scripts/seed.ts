@@ -360,6 +360,34 @@ async function main() {
     updatedAt: '2026-09-10T12:00:00-07:00',
   });
 
+  // Map locations.
+  const maps = [
+    { id: 'map_property', title: 'Resort Property Map', type: 'property', order: 0,
+      description: 'Overview of the resort grounds, meeting spaces, and dining.',
+      address: '123 Ocean Drive, Big Sur, CA', latitude: 36.2704, longitude: -121.8081,
+      pins: [
+        { label: 'Main Lobby', note: 'Check-in & concierge' },
+        { label: 'Lakeview Terrace', note: 'Welcome reception & dinners' },
+        { label: 'Cypress Ballroom', note: 'General sessions' },
+      ] },
+    { id: 'map_golf', title: 'Championship Golf Course', type: 'activity', order: 1,
+      description: 'Meet at the pro shop 15 minutes before your tee time.',
+      address: 'Cliffside Golf Club, Big Sur, CA', latitude: 36.2719, longitude: -121.8102,
+      pins: [] },
+  ];
+  for (const m of maps) {
+    await put({
+      ...keys.mapLocation(EVENT_ID, m.id),
+      GSI1PK: keys.mapList(EVENT_ID).GSI1PK,
+      GSI1SK: keys.mapGsi1Sk(m.order),
+      entity: 'MapLocation',
+      eventId: EVENT_ID,
+      imageUrl: '',
+      published: true,
+      ...m,
+    });
+  }
+
   console.log('Seed complete.');
   console.log(`  Table:       ${TABLE_NAME}`);
   console.log(`  Event:       ${EVENT_ID}`);

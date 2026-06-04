@@ -12,6 +12,7 @@ class MoreMenuScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final entries = <_MoreEntry>[
+      const _MoreEntry('My Profile', Icons.person_outline, route: '/profile'),
       const _MoreEntry('Travel', Icons.flight_takeoff, route: '/travel'),
       const _MoreEntry('Transportation', Icons.directions_bus, route: '/transportation'),
       const _MoreEntry('Dining', Icons.restaurant, route: '/dining'),
@@ -22,7 +23,7 @@ class MoreMenuScreen extends ConsumerWidget {
       const _MoreEntry('Registration', Icons.how_to_reg_outlined, route: '/registration'),
       const _MoreEntry('Help', Icons.support_agent, route: '/help'),
       const _MoreEntry('Feedback', Icons.rate_review_outlined, route: '/feedback'),
-      const _MoreEntry('Maps', Icons.map_outlined),
+      const _MoreEntry('Maps', Icons.map_outlined, route: '/maps'),
     ];
 
     return Scaffold(
