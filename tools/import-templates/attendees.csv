@@ -1,0 +1,3 @@
+firstName,lastName,email,phone,company,title,city,dietaryRestrictions,accessibilityNeeds,guestName,tags,accessCode,directoryVisible,contactSharingOptIn
+Jane,Smith,jane@example.com,+1-206-555-0100,Acme Corp,VP Product,"Seattle, WA","gluten-free",,John Smith,"golf;early_arrival",VIP2026,true,false
+John,Doe,john@example.com,+1-415-555-0142,Globex,Director,"San Francisco, CA","vegetarian;nut allergy",Wheelchair access,,"vip;late_departure",VIP2026,true,true

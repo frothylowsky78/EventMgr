@@ -1,0 +1,21 @@
+{
+  "name": "eventmgr",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Premium event app — Flutter mobile, React admin portal, AWS serverless backend.",
+  "workspaces": [
+    "packages/shared-types",
+    "services/api",
+    "infra",
+    "apps/admin"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
