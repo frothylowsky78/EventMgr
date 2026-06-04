@@ -1,0 +1,4 @@
+title,date,startTime,endTime,category,locationId,description,speaker,dressCode,required,capacity,eligibleTags,published
+Welcome Reception,2026-09-12,18:00,20:00,meal,location_001,Kick off with cocktails and hors d'oeuvres.,,Resort casual,true,,,true
+Opening Keynote,2026-09-13,09:00,10:00,general_session,location_002,Vision and roadmap for the year ahead.,CEO,Business casual,true,,,true
+Coastal Golf Outing,2026-09-13,13:00,17:00,activity,location_003,18 holes on the championship course.,,Golf attire,false,40,golf,true

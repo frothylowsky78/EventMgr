@@ -1,0 +1,222 @@
+openapi: 3.0.3
+info:
+  title: EventMgr API
+  version: 0.1.0
+  description: >
+    Backend API for the EventMgr platform. Phase 1 documents the implemented vertical-slice
+    routes; remaining routes are described in docs/api-contract.md and added incrementally.
+servers:
+  - url: https://{apiId}.execute-api.{region}.amazonaws.com
+    variables:
+      apiId: { default: replace-me }
+      region: { default: us-west-2 }
+components:
+  securitySchemes:
+    cognitoJwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object }
+    Event:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        startDate: { type: string }
+        endDate: { type: string }
+        locationName: { type: string }
+        address: { type: string }
+        timezone: { type: string }
+        registrationDeadline: { type: string, nullable: true }
+        branding:
+          type: object
+          properties:
+            logoUrl: { type: string }
+            heroImageUrl: { type: string }
+            primaryColor: { type: string }
+            secondaryColor: { type: string }
+    AgendaItem:
+      type: object
+      required: [id, eventId, title, date, startTime, category]
+      properties:
+        id: { type: string }
+        eventId: { type: string }
+        title: { type: string }
+        date: { type: string, example: "2026-09-12" }
+        startTime: { type: string, example: "18:00" }
+        endTime: { type: string, example: "20:00" }
+        locationId: { type: string, nullable: true }
+        category:
+          type: string
+          enum: [general_session, meal, activity, transportation, free_time, optional_event, private_appointment]
+        description: { type: string }
+        speaker: { type: string }
+        dressCode: { type: string }
+        mapLink: { type: string }
+        required: { type: boolean }
+        capacity: { type: integer, nullable: true }
+        eligibleTags: { type: array, items: { type: string } }
+        reminderEnabled: { type: boolean }
+    AgendaItemCreate:
+      type: object
+      required: [title, date, startTime, category]
+      properties:
+        title: { type: string }
+        date: { type: string }
+        startTime: { type: string }
+        endTime: { type: string }
+        locationId: { type: string }
+        category: { type: string }
+        description: { type: string }
+        speaker: { type: string }
+        dressCode: { type: string }
+        required: { type: boolean }
+        capacity: { type: integer, nullable: true }
+        eligibleTags: { type: array, items: { type: string } }
+        reminderEnabled: { type: boolean }
+    ItineraryItem:
+      type: object
+      properties:
+        id: { type: string }
+        attendeeId: { type: string }
+        agendaItemId: { type: string, nullable: true }
+        customTitle: { type: string, nullable: true }
+        startDateTime: { type: string }
+        endDateTime: { type: string }
+        locationId: { type: string, nullable: true }
+        notes: { type: string }
+        reminderEnabled: { type: boolean }
+    Attendee:
+      type: object
+      properties:
+        id: { type: string }
+        eventId: { type: string }
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string }
+        company: { type: string }
+        title: { type: string }
+        city: { type: string }
+        dietaryRestrictions: { type: array, items: { type: string } }
+        tags: { type: array, items: { type: string } }
+        registrationStatus:
+          type: string
+          enum: [not_started, in_progress, submitted, past_due]
+security:
+  - cognitoJwt: []
+paths:
+  /health:
+    get:
+      summary: Liveness probe
+      security: []
+      responses:
+        "200": { description: OK }
+  /me:
+    get:
+      summary: Current attendee profile
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: "#/components/schemas/Attendee" } }
+        "401": { description: Unauthenticated, content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /me/itinerary:
+    get:
+      summary: Current attendee itinerary (own data only)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/ItineraryItem" } }
+  /events/{eventId}:
+    get:
+      summary: Event profile / config
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: "#/components/schemas/Event" } }
+        "404": { description: Not found }
+  /events/{eventId}/agenda:
+    get:
+      summary: List agenda items (published) by day/time
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/AgendaItem" } }
+  /admin/events/{eventId}/agenda:
+    get:
+      summary: List agenda items (admin, includes unpublished)
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+      responses:
+        "200": { description: OK }
+        "403": { description: Forbidden }
+    post:
+      summary: Create an agenda item
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AgendaItemCreate" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: "#/components/schemas/AgendaItem" } }
+        "400": { description: Validation error }
+        "403": { description: Forbidden }
+  /admin/events/{eventId}/agenda/{agendaId}:
+    patch:
+      summary: Update an agenda item (partial)
+      parameters:
+        - { name: eventId, in: path, required: true, schema: { type: string } }
+        - { name: agendaId, in: path, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AgendaItemCreate" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { data: { $ref: "#/components/schemas/AgendaItem" } }
+        "403": { description: Forbidden }
+        "404": { description: Not found }
