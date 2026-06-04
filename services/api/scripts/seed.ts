@@ -147,6 +147,77 @@ async function main() {
     });
   }
 
+  // Dining item + personal seat for the test attendee.
+  const DINING_ID = 'dining_001';
+  await put({
+    ...keys.diningItem(EVENT_ID, DINING_ID),
+    GSI1PK: keys.diningList(EVENT_ID).GSI1PK,
+    GSI1SK: keys.diningGsi1Sk('2026-09-12', '19:00', DINING_ID),
+    entity: 'DiningItem',
+    id: DINING_ID,
+    eventId: EVENT_ID,
+    title: 'Welcome Dinner',
+    date: '2026-09-12',
+    startTime: '19:00',
+    endTime: '21:00',
+    description: 'Seated dinner on the Lakeview Terrace.',
+    menu: ['Heirloom tomato salad', 'Pan-seared salmon', 'Vegetarian risotto', 'Vanilla panna cotta'],
+    dressCode: 'Cocktail casual',
+    dietaryNotes: 'Gluten-free and vegetarian options available on request.',
+    seatingAssignmentEnabled: true,
+    published: true,
+  });
+  await put({
+    ...keys.diningSeat(ATTENDEE_ID, DINING_ID),
+    GSI1PK: keys.diningSeatByItem(EVENT_ID, DINING_ID).GSI1PK,
+    GSI1SK: ATTENDEE_ID,
+    entity: 'DiningSeat',
+    diningId: DINING_ID,
+    eventId: EVENT_ID,
+    attendeeId: ATTENDEE_ID,
+    table: '4',
+    seat: '2',
+    note: 'Gluten-free meal pre-ordered',
+  });
+
+  // Personal travel detail.
+  await put({
+    ...keys.travel(ATTENDEE_ID),
+    entity: 'TravelDetail',
+    attendeeId: ATTENDEE_ID,
+    eventId: EVENT_ID,
+    arrivalFlight: 'DL123',
+    arrivalDateTime: '2026-09-12T14:15:00-07:00',
+    departureFlight: 'DL456',
+    departureDateTime: '2026-09-15T10:30:00-07:00',
+    transferGroup: 'Shuttle A',
+    hotelName: 'Cliffside Resort & Spa',
+    hotelConfirmation: 'CR-88231',
+    checkInDate: '2026-09-12',
+    checkOutDate: '2026-09-15',
+  });
+
+  // Transportation assignment (group A) for the test attendee.
+  const TRANSPORT_ID = 'transport_001';
+  await put({
+    ...keys.transportation(ATTENDEE_ID, TRANSPORT_ID),
+    GSI1PK: keys.transportationByGroup(EVENT_ID, 'Shuttle A').GSI1PK,
+    GSI1SK: `2026-09-12T15:00:00-07:00#${ATTENDEE_ID}`,
+    entity: 'TransportationItem',
+    id: TRANSPORT_ID,
+    eventId: EVENT_ID,
+    attendeeId: ATTENDEE_ID,
+    transferType: 'Airport arrival shuttle',
+    group: 'Shuttle A',
+    pickupDateTime: '2026-09-12T15:00:00-07:00',
+    pickupLocation: 'SFO — Terminal 2, Door 5',
+    dropoffLocation: 'Cliffside Resort & Spa',
+    vendor: 'Coastal Black Car',
+    contactPhone: '+1-831-555-0190',
+    vehicleDescription: 'Black Mercedes Sprinter — "VIP Summit"',
+    status: 'scheduled',
+  });
+
   // Sample notification (sent) + in-app receipt for the test attendee.
   const NOTIF_ID = 'notif_seed001';
   const notifTs = '2026-09-12T16:45:00-07:00';

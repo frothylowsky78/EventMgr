@@ -302,3 +302,110 @@ export interface DeviceTokenRegister {
   platform: DevicePlatform;
   deviceToken: string;
 }
+
+// ---------------------------------------------------------------------------
+// Dining (spec §4.13)
+// ---------------------------------------------------------------------------
+export interface DiningItem {
+  id: string;
+  eventId: string;
+  title: string;
+  date: string; // YYYY-MM-DD
+  startTime: string; // HH:mm
+  endTime?: string;
+  locationId?: string | null;
+  description?: string;
+  menu: string[];
+  dressCode?: string;
+  dietaryNotes?: string;
+  seatingAssignmentEnabled: boolean;
+  mapLink?: string;
+  published: boolean;
+}
+
+export interface DiningItemCreate {
+  title: string;
+  date: string;
+  startTime: string;
+  endTime?: string;
+  locationId?: string;
+  description?: string;
+  menu?: string[];
+  dressCode?: string;
+  dietaryNotes?: string;
+  seatingAssignmentEnabled?: boolean;
+  mapLink?: string;
+  published?: boolean;
+}
+export type DiningItemUpdate = Partial<DiningItemCreate>;
+
+/** A diner's personal seat for a dining item (private to the attendee + admins). */
+export interface DiningSeat {
+  diningId: string;
+  attendeeId: string;
+  table?: string;
+  seat?: string;
+  note?: string;
+}
+
+/** Dining item with the caller's personal seating merged in (GET /me/dining). */
+export interface PersonalDiningItem extends DiningItem {
+  seating?: DiningSeat | null;
+}
+
+// ---------------------------------------------------------------------------
+// Travel (spec §4.10) — personal, owner/admin only
+// ---------------------------------------------------------------------------
+export interface TravelDetail {
+  attendeeId: string;
+  eventId: string;
+  arrivalFlight?: string;
+  arrivalDateTime?: string; // ISO-8601
+  departureFlight?: string;
+  departureDateTime?: string; // ISO-8601
+  transferGroup?: string;
+  hotelName?: string;
+  hotelConfirmation?: string;
+  checkInDate?: string;
+  checkOutDate?: string;
+  notes?: string;
+}
+export type TravelDetailUpsert = Omit<TravelDetail, 'attendeeId' | 'eventId'>;
+
+// ---------------------------------------------------------------------------
+// Transportation (spec §4.11) — per-attendee/group assignment
+// ---------------------------------------------------------------------------
+export type TransportationStatus = 'scheduled' | 'delayed' | 'changed' | 'completed';
+
+export interface TransportationItem {
+  id: string;
+  eventId: string;
+  attendeeId: string;
+  transferType: string; // e.g. "Airport arrival shuttle"
+  group?: string; // shuttle group label
+  pickupDateTime?: string; // ISO-8601
+  pickupLocation?: string;
+  dropoffLocation?: string;
+  vendor?: string;
+  contactPhone?: string;
+  vehicleDescription?: string;
+  notes?: string;
+  mapLink?: string;
+  status: TransportationStatus;
+}
+
+export interface TransportationCreate {
+  attendeeId: string;
+  transferType: string;
+  group?: string;
+  pickupDateTime?: string;
+  pickupLocation?: string;
+  dropoffLocation?: string;
+  vendor?: string;
+  contactPhone?: string;
+  vehicleDescription?: string;
+  notes?: string;
+  mapLink?: string;
+  status?: TransportationStatus;
+}
+export type TransportationUpdate = Partial<Omit<TransportationCreate, 'attendeeId'>>;

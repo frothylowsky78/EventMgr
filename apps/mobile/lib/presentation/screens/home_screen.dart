@@ -206,10 +206,10 @@ class _QuickLinks extends StatelessWidget {
     final links = <(_QL, VoidCallback)>[
       (const _QL('Agenda', Icons.event), () => context.go('/agenda')),
       (const _QL('My Itinerary', Icons.luggage), () => context.go('/itinerary')),
-      (const _QL('Travel', Icons.flight_takeoff), () {}),
-      (const _QL('Dining', Icons.restaurant), () {}),
-      (const _QL('Photos', Icons.photo_library), () {}),
-      (const _QL('Help', Icons.support_agent), () {}),
+      (const _QL('Travel', Icons.flight_takeoff), () => context.go('/travel')),
+      (const _QL('Dining', Icons.restaurant), () => context.go('/dining')),
+      (const _QL('Transport', Icons.directions_bus), () => context.go('/transportation')),
+      (const _QL('Notifications', Icons.notifications), () => context.go('/notifications')),
     ];
     return GridView.count(
       crossAxisCount: 3,

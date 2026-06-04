@@ -23,9 +23,9 @@ V1 scope. **P2** = spec "optional/later". Each epic lists the spec section(s) it
 | --- | --- | --- | --- |
 | ⬜ | Registration deadline | countdown, status, required action items | §4.3 |
 | ⬜ | Activity detail pages | full fields + images | §4.5 |
-| ⬜ | Personal travel & transportation | `/me/travel`, `/me/transportation`, admin assign | §4.10, §4.11 |
-| ⬜ | Dining | schedule, menus, seating, dietary (private) | §4.13 |
-| 🟡 | Push notifications | ✅ device tokens, in-app center, immediate + scheduled send (EventBridge), SNS publish; ⬜ live APNs/FCM creds, full segment set (activity/dining/transport) | §4.7, §18.7, §18.16 |
+| 🟡 | Personal travel & transportation | ✅ `/me/travel`, `/me/transportation`, admin upsert/assign, transport group push segment, mobile screens; ⬜ admin UI, transport status push automation | §4.10, §4.11 |
+| 🟡 | Dining | ✅ schedule, menus, dietary, private seating, `/me/dining`, admin create/edit + seat assign, dining push segment, mobile screen; ⬜ admin UI for seating grid | §4.13 |
+| 🟡 | Push notifications | ✅ device tokens, in-app center, immediate + scheduled send (EventBridge), SNS publish, segments (all/tag/individuals/incomplete-reg/dining/transport); ⬜ live APNs/FCM creds, activity segment | §4.7, §18.7, §18.16 |
 | 🟡 | Admin push composer | ✅ compose, audience preview, test send, send-now/scheduled, confirm (extra for urgent/all), history, duplicate, cancel, audit log; ⬜ resend-failed, export | §18.16 |
 | ⬜ | Attendee yearbook | directory, search/filter, privacy projections | §4.8 |
 | ⬜ | FAQ | categories, search, featured | §4.9 |

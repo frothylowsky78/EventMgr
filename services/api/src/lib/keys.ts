@@ -73,6 +73,43 @@ export const keys = {
     SK: `NOTIFRX#${notificationId}`,
   }),
 
+  // --- Dining (event-scoped item + GSI1 listing) ---
+  diningItem: (eventId: string, diningId: string) => ({
+    PK: eventPk(eventId),
+    SK: `DINING#${diningId}`,
+  }),
+  diningList: (eventId: string) => ({
+    GSI1PK: `EVENT#${eventId}#DINING`,
+  }),
+  diningGsi1Sk: (date: string, startTime: string, diningId: string) =>
+    `${date}#${startTime}#${diningId}`,
+
+  // --- Personal dining seat (per attendee; GSI1 lists all seats for a dining item) ---
+  diningSeatPrefix: 'DININGSEAT#',
+  diningSeat: (attendeeId: string, diningId: string) => ({
+    PK: attendeePk(attendeeId),
+    SK: `DININGSEAT#${diningId}`,
+  }),
+  diningSeatByItem: (eventId: string, diningId: string) => ({
+    GSI1PK: `EVENT#${eventId}#DININGSEAT#${diningId}`,
+  }),
+
+  // --- Travel (one per attendee) ---
+  travel: (attendeeId: string) => ({
+    PK: attendeePk(attendeeId),
+    SK: 'TRAVEL',
+  }),
+
+  // --- Transportation (per attendee; GSI1 lists a group across attendees) ---
+  transportPrefix: 'TRANSPORT#',
+  transportation: (attendeeId: string, transportId: string) => ({
+    PK: attendeePk(attendeeId),
+    SK: `TRANSPORT#${transportId}`,
+  }),
+  transportationByGroup: (eventId: string, group: string) => ({
+    GSI1PK: `EVENT#${eventId}#TRANSPORT#${group}`,
+  }),
+
   // --- Audit log ---
   audit: (eventId: string, ts: string, id: string) => ({
     PK: eventPk(eventId),

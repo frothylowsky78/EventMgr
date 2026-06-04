@@ -2,10 +2,14 @@ import type {
   AgendaItem,
   Attendee,
   DeviceTokenRecord,
+  DiningItem,
+  DiningSeat,
   EventProfile,
   ItineraryItem,
   NotificationCenterItem,
   NotificationRecord,
+  TransportationItem,
+  TravelDetail,
 } from '@eventmgr/shared-types';
 
 /**
@@ -107,6 +111,63 @@ export const toCenterItem = (i: Item): NotificationCenterItem => ({
   priority: i.priority ?? 'normal',
   createdAt: i.createdAt,
   read: i.read ?? false,
+});
+
+export const toDiningItem = (i: Item): DiningItem => ({
+  id: i.id,
+  eventId: i.eventId,
+  title: i.title,
+  date: i.date,
+  startTime: i.startTime,
+  endTime: i.endTime,
+  locationId: i.locationId ?? null,
+  description: i.description ?? '',
+  menu: i.menu ?? [],
+  dressCode: i.dressCode ?? '',
+  dietaryNotes: i.dietaryNotes ?? '',
+  seatingAssignmentEnabled: i.seatingAssignmentEnabled ?? false,
+  mapLink: i.mapLink ?? '',
+  published: i.published ?? true,
+});
+
+export const toDiningSeat = (i: Item): DiningSeat => ({
+  diningId: i.diningId,
+  attendeeId: i.attendeeId,
+  table: i.table ?? '',
+  seat: i.seat ?? '',
+  note: i.note ?? '',
+});
+
+export const toTravelDetail = (i: Item): TravelDetail => ({
+  attendeeId: i.attendeeId,
+  eventId: i.eventId,
+  arrivalFlight: i.arrivalFlight ?? '',
+  arrivalDateTime: i.arrivalDateTime ?? '',
+  departureFlight: i.departureFlight ?? '',
+  departureDateTime: i.departureDateTime ?? '',
+  transferGroup: i.transferGroup ?? '',
+  hotelName: i.hotelName ?? '',
+  hotelConfirmation: i.hotelConfirmation ?? '',
+  checkInDate: i.checkInDate ?? '',
+  checkOutDate: i.checkOutDate ?? '',
+  notes: i.notes ?? '',
+});
+
+export const toTransportationItem = (i: Item): TransportationItem => ({
+  id: i.id,
+  eventId: i.eventId,
+  attendeeId: i.attendeeId,
+  transferType: i.transferType ?? '',
+  group: i.group ?? '',
+  pickupDateTime: i.pickupDateTime ?? '',
+  pickupLocation: i.pickupLocation ?? '',
+  dropoffLocation: i.dropoffLocation ?? '',
+  vendor: i.vendor ?? '',
+  contactPhone: i.contactPhone ?? '',
+  vehicleDescription: i.vehicleDescription ?? '',
+  notes: i.notes ?? '',
+  mapLink: i.mapLink ?? '',
+  status: i.status ?? 'scheduled',
 });
 
 /** Full attendee — only for the owner (/me) or admins. */

@@ -97,6 +97,57 @@ export const deviceTokenSchema = z.object({
   deviceToken: z.string().min(1).max(512),
 });
 
+// --- Dining (spec §4.13) ---
+export const diningCreateSchema = z.object({
+  title: z.string().min(1).max(200),
+  date: dateStr,
+  startTime: timeStr,
+  endTime: timeStr.optional(),
+  locationId: z.string().optional(),
+  description: z.string().max(5000).optional(),
+  menu: z.array(z.string()).optional(),
+  dressCode: z.string().max(200).optional(),
+  dietaryNotes: z.string().max(2000).optional(),
+  seatingAssignmentEnabled: z.boolean().optional(),
+  mapLink: z.string().url().optional().or(z.literal('')),
+  published: z.boolean().optional(),
+});
+export const diningUpdateSchema = diningCreateSchema.partial();
+
+// --- Travel (spec §4.10) ---
+export const travelUpsertSchema = z.object({
+  arrivalFlight: z.string().max(50).optional(),
+  arrivalDateTime: z.string().datetime({ offset: true }).optional().or(z.literal('')),
+  departureFlight: z.string().max(50).optional(),
+  departureDateTime: z.string().datetime({ offset: true }).optional().or(z.literal('')),
+  transferGroup: z.string().max(100).optional(),
+  hotelName: z.string().max(200).optional(),
+  hotelConfirmation: z.string().max(100).optional(),
+  checkInDate: dateStr.optional().or(z.literal('')),
+  checkOutDate: dateStr.optional().or(z.literal('')),
+  notes: z.string().max(2000).optional(),
+});
+
+// --- Transportation (spec §4.11) ---
+const transportStatus = z.enum(['scheduled', 'delayed', 'changed', 'completed']);
+export const transportationCreateSchema = z.object({
+  attendeeId: z.string().min(1),
+  transferType: z.string().min(1).max(200),
+  group: z.string().max(100).optional(),
+  pickupDateTime: z.string().datetime({ offset: true }).optional().or(z.literal('')),
+  pickupLocation: z.string().max(300).optional(),
+  dropoffLocation: z.string().max(300).optional(),
+  vendor: z.string().max(200).optional(),
+  contactPhone: z.string().max(50).optional(),
+  vehicleDescription: z.string().max(300).optional(),
+  notes: z.string().max(2000).optional(),
+  mapLink: z.string().url().optional().or(z.literal('')),
+  status: transportStatus.optional(),
+});
+export const transportationUpdateSchema = transportationCreateSchema
+  .omit({ attendeeId: true })
+  .partial();
+
 export function parseBody<T>(schema: z.ZodSchema<T>, raw: string | undefined): T {
   let json: unknown;
   try {

@@ -21,13 +21,14 @@ export interface ResolvedAudience {
   description: string;
 }
 
-/** Target types resolvable purely from attendee fields today. The remaining types
- * (activity / transportation / dining) are resolved once those slices land their data. */
+/** Target types resolvable today. `activity` lands with itinerary-by-activity indexing. */
 const SUPPORTED: NotificationTargetType[] = [
   'all',
   'individuals',
   'tag',
   'incomplete_registration',
+  'transportation',
+  'dining',
 ];
 
 async function allEventAttendees(eventId: string): Promise<ResolvedAttendee[]> {
@@ -67,6 +68,20 @@ export async function resolveAudience(
   const everyone = await allEventAttendees(eventId);
   const criteria = target.criteria ?? {};
 
+  /** Resolves attendee ids from a GSI1 partition (transportation group / dining seats). */
+  const attendeesFromIndex = async (gsi1pk: string): Promise<ResolvedAttendee[]> => {
+    const res = await ddb.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: 'GSI1',
+        KeyConditionExpression: 'GSI1PK = :pk',
+        ExpressionAttributeValues: { ':pk': gsi1pk },
+      })
+    );
+    const ids = new Set((res.Items ?? []).map((i) => i.attendeeId as string));
+    return everyone.filter((a) => ids.has(a.id));
+  };
+
   switch (target.type) {
     case 'all':
       return { attendees: everyone, description: 'All attendees' };
@@ -89,6 +104,24 @@ export async function resolveAudience(
     case 'incomplete_registration': {
       const attendees = everyone.filter((a) => a.registrationStatus !== 'submitted');
       return { attendees, description: 'Attendees with incomplete registration' };
+    }
+
+    case 'transportation': {
+      const group = criteria.transportationGroup ?? '';
+      if (!group) throw new ApiException('VALIDATION', 'transportationGroup is required');
+      const attendees = await attendeesFromIndex(
+        keys.transportationByGroup(eventId, group).GSI1PK
+      );
+      return { attendees, description: `Transportation group: ${group}` };
+    }
+
+    case 'dining': {
+      const diningId = criteria.diningId ?? '';
+      if (!diningId) throw new ApiException('VALIDATION', 'diningId is required');
+      const attendees = await attendeesFromIndex(
+        keys.diningSeatByItem(eventId, diningId).GSI1PK
+      );
+      return { attendees, description: `Dining group: ${diningId}` };
     }
 
     default:

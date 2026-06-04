@@ -27,9 +27,9 @@ custom-auth flow (handled inside Cognito).
 | --- | --- | --- | --- |
 | ✅ | GET | `/me` | Full private profile of the caller |
 | ✅ | GET | `/me/itinerary` | Caller's itinerary items (own only) |
-| ⬜ | GET | `/me/travel` | Caller's travel detail |
-| ⬜ | GET | `/me/transportation` | Caller's transport assignments |
-| ⬜ | GET | `/me/dining` | Caller's dining (incl. seating) |
+| ✅ | GET | `/me/travel` | Caller's travel detail (null if none) |
+| ✅ | GET | `/me/transportation` | Caller's transport assignments |
+| ✅ | GET | `/me/dining` | Caller's dining (incl. seating) |
 | ⬜ | PATCH | `/me/profile` | Update editable profile fields |
 | ⬜ | POST | `/me/profile-photo/upload-url` | Pre-signed S3 upload URL |
 | ✅ | GET | `/me/notifications` | In-app notification center (`{ items, unread }`) |
@@ -45,7 +45,7 @@ custom-auth flow (handled inside Cognito).
 | ✅ | GET | `/events/{eventId}/agenda` |
 | ⬜ | GET | `/events/{eventId}/agenda/{agendaId}` |
 | ⬜ | GET | `/events/{eventId}/activities` |
-| ⬜ | GET | `/events/{eventId}/dining` |
+| ✅ | GET | `/events/{eventId}/dining` |
 | ⬜ | GET | `/events/{eventId}/faq` |
 | ⬜ | GET | `/events/{eventId}/maps` |
 | ⬜ | GET | `/events/{eventId}/weather` |
@@ -62,6 +62,11 @@ custom-auth flow (handled inside Cognito).
 | ✅ | POST | `/admin/events/{eventId}/agenda` | Create agenda item |
 | ✅ | PATCH | `/admin/events/{eventId}/agenda/{agendaId}` | Edit agenda item |
 | ⬜ | DELETE | `/admin/events/{eventId}/agenda/{agendaId}` | Delete agenda item |
+| ✅ | GET/POST/PATCH | `/admin/events/{eventId}/dining …` | Dining list / create / edit |
+| ✅ | POST | `/admin/events/{eventId}/dining/{diningId}/seats` | Assign personal seat |
+| ✅ | PUT | `/admin/events/{eventId}/attendees/{attendeeId}/travel` | Upsert travel detail |
+| ✅ | POST | `/admin/events/{eventId}/transportation` | Assign transportation |
+| ✅ | PATCH | `/admin/events/{eventId}/transportation/{attendeeId}/{transportId}` | Update transportation |
 | ⬜ | PATCH | `/admin/events/{eventId}` | Edit event profile / branding |
 | ⬜ | GET / PATCH | `/admin/events/{eventId}/attendees …` | Manage attendees |
 | ⬜ | POST | `/admin/events/{eventId}/attendees/import` | CSV/XLSX import |

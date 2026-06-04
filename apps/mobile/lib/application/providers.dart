@@ -7,10 +7,14 @@ import '../data/repositories/agenda_repository.dart';
 import '../data/repositories/event_repository.dart';
 import '../data/repositories/itinerary_repository.dart';
 import '../data/repositories/notifications_repository.dart';
+import '../data/repositories/personal_repository.dart';
 import '../domain/agenda_item.dart';
+import '../domain/dining_item.dart';
 import '../domain/event.dart';
 import '../domain/itinerary_item.dart';
 import '../domain/notification_item.dart';
+import '../domain/transportation_item.dart';
+import '../domain/travel_detail.dart';
 import 'auth_controller.dart';
 
 /// Overridden in main() with the initialized instance.
@@ -39,6 +43,9 @@ final itineraryRepositoryProvider = Provider<ItineraryRepository>(
 );
 final notificationsRepositoryProvider = Provider<NotificationsRepository>(
   (ref) => NotificationsRepository(ref.watch(apiClientProvider), ref.watch(localCacheProvider)),
+);
+final personalRepositoryProvider = Provider<PersonalRepository>(
+  (ref) => PersonalRepository(ref.watch(apiClientProvider), ref.watch(localCacheProvider)),
 );
 
 /// Stale-while-revalidate: try the network; on failure fall back to the offline cache.
@@ -82,6 +89,39 @@ final notificationsProvider = FutureProvider<NotificationCenter>((ref) async {
   } catch (e) {
     final cached = repo.cached();
     if (cached.items.isNotEmpty) return cached;
+    rethrow;
+  }
+});
+
+final travelProvider = FutureProvider<TravelDetail?>((ref) async {
+  final repo = ref.watch(personalRepositoryProvider);
+  try {
+    return await repo.fetchTravel();
+  } catch (e) {
+    final cached = repo.cachedTravel();
+    if (cached != null) return cached;
+    rethrow;
+  }
+});
+
+final transportationProvider = FutureProvider<List<TransportationItem>>((ref) async {
+  final repo = ref.watch(personalRepositoryProvider);
+  try {
+    return await repo.fetchTransportation();
+  } catch (e) {
+    final cached = repo.cachedTransportation();
+    if (cached.isNotEmpty) return cached;
+    rethrow;
+  }
+});
+
+final diningProvider = FutureProvider<List<DiningItem>>((ref) async {
+  final repo = ref.watch(personalRepositoryProvider);
+  try {
+    return await repo.fetchDining();
+  } catch (e) {
+    final cached = repo.cachedDining();
+    if (cached.isNotEmpty) return cached;
     rethrow;
   }
 });

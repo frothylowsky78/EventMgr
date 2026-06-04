@@ -108,11 +108,26 @@ export class Api extends Construct {
     // Event content
     route('GetEvent', apigw.HttpMethod.GET, '/events/{eventId}', 'getEvent.ts', 'read');
     route('ListAgenda', apigw.HttpMethod.GET, '/events/{eventId}/agenda', 'listAgenda.ts', 'read');
+    route('ListDining', apigw.HttpMethod.GET, '/events/{eventId}/dining', 'listDining.ts', 'read');
+
+    // Attendee — personalized travel / transportation / dining (own data only)
+    route('GetMyTravel', apigw.HttpMethod.GET, '/me/travel', 'getMyTravel.ts', 'read');
+    route('GetMyTransportation', apigw.HttpMethod.GET, '/me/transportation', 'getMyTransportation.ts', 'read');
+    route('GetMyDining', apigw.HttpMethod.GET, '/me/dining', 'getMyDining.ts', 'read');
 
     // Admin — agenda CRUD (role enforced inside the handler in addition to the authorizer)
     route('AdminListAgenda', apigw.HttpMethod.GET, '/admin/events/{eventId}/agenda', 'adminListAgenda.ts', 'read');
     route('AdminCreateAgenda', apigw.HttpMethod.POST, '/admin/events/{eventId}/agenda', 'adminCreateAgenda.ts', 'write');
     route('AdminUpdateAgenda', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/agenda/{agendaId}', 'adminUpdateAgenda.ts', 'write');
+
+    // Admin — dining, travel, transportation management
+    route('AdminListDining', apigw.HttpMethod.GET, '/admin/events/{eventId}/dining', 'adminListDining.ts', 'read');
+    route('AdminCreateDining', apigw.HttpMethod.POST, '/admin/events/{eventId}/dining', 'adminCreateDining.ts', 'write');
+    route('AdminUpdateDining', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/dining/{diningId}', 'adminUpdateDining.ts', 'write');
+    route('AdminAssignDiningSeat', apigw.HttpMethod.POST, '/admin/events/{eventId}/dining/{diningId}/seats', 'adminAssignDiningSeat.ts', 'write');
+    route('AdminUpsertTravel', apigw.HttpMethod.PUT, '/admin/events/{eventId}/attendees/{attendeeId}/travel', 'adminUpsertTravel.ts', 'write');
+    route('AdminCreateTransportation', apigw.HttpMethod.POST, '/admin/events/{eventId}/transportation', 'adminCreateTransportation.ts', 'write');
+    route('AdminUpdateTransportation', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/transportation/{attendeeId}/{transportId}', 'adminUpdateTransportation.ts', 'write');
 
     // Attendee — device tokens + in-app notification center
     route('RegisterDeviceToken', apigw.HttpMethod.POST, '/me/device-tokens', 'registerDeviceToken.ts', 'write');

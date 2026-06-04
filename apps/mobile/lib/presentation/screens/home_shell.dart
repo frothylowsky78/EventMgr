@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'agenda_screen.dart';
 import 'home_screen.dart';
 import 'itinerary_screen.dart';
+import 'more_menu_screen.dart';
 import 'placeholder_screen.dart';
 
 /// Bottom navigation per spec §7: Home · Agenda · My Trip · Photos · More.
@@ -23,7 +24,7 @@ class _HomeShellState extends State<HomeShell> {
     AgendaScreen(),
     ItineraryScreen(),
     PlaceholderScreen(title: 'Photos', icon: Icons.photo_library_outlined),
-    PlaceholderScreen(title: 'More', icon: Icons.more_horiz),
+    MoreMenuScreen(),
   ];
 
   @override
