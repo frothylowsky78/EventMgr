@@ -75,8 +75,11 @@ custom-auth flow (handled inside Cognito).
 | ✅ | POST | `/admin/events/{eventId}/transportation` | Assign transportation |
 | ✅ | PATCH | `/admin/events/{eventId}/transportation/{attendeeId}/{transportId}` | Update transportation |
 | ⬜ | PATCH | `/admin/events/{eventId}` | Edit event profile / branding |
-| ⬜ | GET / PATCH | `/admin/events/{eventId}/attendees …` | Manage attendees |
-| ⬜ | POST | `/admin/events/{eventId}/attendees/import` | CSV/XLSX import |
+| ✅ | GET | `/admin/events/{eventId}/attendees` | Full attendee records |
+| ✅ | POST | `/admin/events/{eventId}/attendees/import` | CSV import (upsert by email) |
+| ✅ | POST | `/admin/events/{eventId}/agenda/import` | CSV agenda import |
+| ✅ | GET | `/admin/events/{eventId}/attendees/export` | Attendees CSV |
+| ✅ | GET | `/admin/events/{eventId}/feedback/export` | Feedback CSV |
 | ✅ | GET | `/admin/events/{eventId}/notifications` | History (newest first) |
 | ✅ | POST | `/admin/events/{eventId}/notifications` | Compose (creates draft) |
 | ✅ | POST | `…/notifications/preview` | Audience count + description |

@@ -81,6 +81,28 @@ export function getAuth(event: APIGatewayProxyEventV2WithJWTAuthorizer): AuthCon
   };
 }
 
+/** Raw request body as text, decoding base64 if API Gateway marked it binary. */
+export function getRawBody(event: APIGatewayProxyEventV2WithJWTAuthorizer): string {
+  if (!event.body) return '';
+  return event.isBase64Encoded ? Buffer.from(event.body, 'base64').toString('utf8') : event.body;
+}
+
+/** A text response (e.g. CSV / ICS export) with the right content-type + download filename. */
+export function text(
+  body: string,
+  contentType: string,
+  filename?: string
+): APIGatewayProxyResultV2 {
+  return {
+    statusCode: 200,
+    headers: {
+      'content-type': contentType,
+      ...(filename ? { 'content-disposition': `attachment; filename="${filename}"` } : {}),
+    },
+    body,
+  };
+}
+
 export const isAdmin = (auth: AuthContext): boolean =>
   auth.roles.includes('event_admin') || auth.roles.includes('super_admin');
 
