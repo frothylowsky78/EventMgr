@@ -4,11 +4,12 @@ import { AgendaPage } from './components/AgendaPage';
 import { NotificationsPage } from './components/NotificationsPage';
 import { PhotosPage } from './components/PhotosPage';
 import { FaqPage } from './components/FaqPage';
+import { SupportPage } from './components/SupportPage';
 import { getCurrentSession, signOut, type AdminSession } from './auth';
 import { setToken } from './api';
 import { config } from './config';
 
-type Tab = 'agenda' | 'notifications' | 'photos' | 'faq';
+type Tab = 'agenda' | 'notifications' | 'photos' | 'faq' | 'support';
 
 export function App() {
   const [session, setSession] = useState<AdminSession | null>(null);
@@ -62,12 +63,16 @@ export function App() {
         <button className={tab === 'faq' ? '' : 'secondary'} onClick={() => setTab('faq')}>
           FAQ
         </button>
+        <button className={tab === 'support' ? '' : 'secondary'} onClick={() => setTab('support')}>
+          Support
+        </button>
       </nav>
       <main className="container">
         {tab === 'agenda' && <AgendaPage />}
         {tab === 'notifications' && <NotificationsPage />}
         {tab === 'photos' && <PhotosPage />}
         {tab === 'faq' && <FaqPage />}
+        {tab === 'support' && <SupportPage />}
       </main>
     </>
   );

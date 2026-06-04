@@ -13,7 +13,17 @@ import type {
   FaqItem,
   FaqItemCreate,
   FaqItemUpdate,
+  HelpRequest,
+  HelpRequestStatus,
+  HelpRequestUpdate,
 } from '@eventmgr/shared-types';
+
+interface FeedbackSummary {
+  targetId: string;
+  count: number;
+  averageRating: number;
+  items: { attendeeId: string; rating: number; comments?: string; createdAt: string }[];
+}
 import { config } from './config';
 
 let token: string | null = null;
@@ -77,4 +87,12 @@ export const adminApi = {
     request<FaqItem>('POST', `/admin/events/${ev()}/faq`, input),
   updateFaq: (id: string, patch: FaqItemUpdate) =>
     request<FaqItem>('PATCH', `/admin/events/${ev()}/faq/${id}`, patch),
+
+  // Help desk + feedback
+  listHelpRequests: (status: HelpRequestStatus) =>
+    request<HelpRequest[]>('GET', `/admin/events/${ev()}/help-requests?status=${status}`),
+  updateHelpRequest: (attendeeId: string, requestId: string, patch: HelpRequestUpdate) =>
+    request<HelpRequest>('PATCH', `/admin/events/${ev()}/help-requests/${attendeeId}/${requestId}`, patch),
+  listFeedback: (targetId: string) =>
+    request<FeedbackSummary>('GET', `/admin/events/${ev()}/feedback?targetId=${encodeURIComponent(targetId)}`),
 };

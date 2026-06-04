@@ -52,6 +52,11 @@ export interface Branding {
   secondaryColor: string;
 }
 
+export interface RegistrationAction {
+  id: string;
+  label: string;
+}
+
 export interface EventProfile {
   id: string;
   name: string;
@@ -61,6 +66,8 @@ export interface EventProfile {
   address: string;
   timezone: string; // IANA, e.g. America/Los_Angeles
   registrationDeadline?: string | null; // ISO-8601
+  /** Pre-event action items shown on the registration card (spec §4.3). */
+  registrationActions: RegistrationAction[];
   branding: Branding;
 }
 
@@ -130,6 +137,8 @@ export interface Attendee {
   directoryVisible: boolean;
   contactSharingOptIn: boolean;
   registrationStatus: RegistrationStatus;
+  /** IDs of completed registration actions (subset of event.registrationActions). */
+  completedRegistrationActions: string[];
   tags: string[];
   enabled: boolean;
 }
@@ -533,4 +542,82 @@ export interface WeatherUpsert {
   current?: { tempF: number; condition: string } | null;
   daily?: WeatherDay[];
   notes?: WeatherNote[];
+}
+
+// ---------------------------------------------------------------------------
+// Feedback (spec §4.16)
+// ---------------------------------------------------------------------------
+export type FeedbackType = 'event' | 'session' | 'activity' | 'meal' | 'nps';
+
+export interface FeedbackSubmission {
+  id: string;
+  eventId: string;
+  attendeeId: string;
+  type: FeedbackType;
+  /** Target item id (agenda/dining/activity); 'event' for overall feedback. */
+  targetId: string;
+  rating: number; // 1–5 (or 0–10 for NPS)
+  comments?: string;
+  wouldRecommend?: boolean;
+  issueFlag?: boolean;
+  anonymous: boolean;
+  createdAt: string;
+}
+
+export interface FeedbackCreate {
+  type: FeedbackType;
+  targetId: string;
+  rating: number;
+  comments?: string;
+  wouldRecommend?: boolean;
+  issueFlag?: boolean;
+  anonymous?: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Help / concierge (spec §4.15)
+// ---------------------------------------------------------------------------
+export interface HelpContact {
+  label: string;
+  phone?: string;
+  email?: string;
+  note?: string;
+}
+
+export interface HelpContent {
+  eventId: string;
+  contacts: HelpContact[];
+  topics: { title: string; body: string }[];
+  emergencyText?: string;
+  lostAndFound?: string;
+}
+
+export type HelpRequestStatus = 'open' | 'assigned' | 'resolved';
+export type HelpUrgency = 'low' | 'normal' | 'high';
+
+export interface HelpRequest {
+  id: string;
+  eventId: string;
+  attendeeId: string;
+  category: string;
+  message: string;
+  urgency: HelpUrgency;
+  contactPreference?: string;
+  photoKey?: string | null;
+  status: HelpRequestStatus;
+  assignedTo?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HelpRequestCreate {
+  category: string;
+  message: string;
+  urgency?: HelpUrgency;
+  contactPreference?: string;
+}
+
+export interface HelpRequestUpdate {
+  status?: HelpRequestStatus;
+  assignedTo?: string | null;
 }

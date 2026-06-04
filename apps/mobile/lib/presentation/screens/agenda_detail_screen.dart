@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/providers.dart';
 import '../../domain/agenda_item.dart';
+import 'feedback_screen.dart';
 
 /// Agenda item detail — also the target of agenda deep links (e.g. push notifications).
 class AgendaDetailScreen extends ConsumerWidget {
@@ -69,6 +70,18 @@ class _Detail extends StatelessWidget {
           ),
           icon: const Icon(Icons.calendar_month),
           label: const Text('Add to calendar'),
+        ),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
+            builder: (_) => FeedbackScreen(
+              type: 'session',
+              targetId: item.id,
+              title: 'Feedback: ${item.title}',
+            ),
+          )),
+          icon: const Icon(Icons.rate_review_outlined),
+          label: const Text('Leave feedback'),
         ),
       ],
     );
