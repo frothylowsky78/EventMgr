@@ -61,6 +61,9 @@ after `event.endDate` to export-then-purge per the confirmed policy.
 
 ## Monitoring (see `docs/architecture.md` §3.7 and the `Observability` construct)
 CloudWatch alarms publish to the `eventmgr-alarms-{env}` SNS topic (subscribe ops via
-`--context alarmEmail=`): API 5xx, API p95 latency, async-Lambda errors, and **DLQ depth**
-(failed photo processing / scheduled notification sends). A `EventMgr-{env}` dashboard charts
+`--context alarmEmail=`): API 5xx, API p95 latency, async-Lambda errors, and **DLQ depth** —
+the `photoProcess` async DLQ (failed photo processing) and the **EventBridge Scheduler target
+DLQ** `eventmgr-scheduler-dlq-{env}` (a scheduled send that failed after retries). The schedule
+target uses a retry policy (3 attempts / 1h max age) before dead-lettering, so scheduled
+notifications are never silently dropped. A `EventMgr-{env}` dashboard charts
 API traffic/latency and async error rates. X-Ray tracing is enabled on all functions.

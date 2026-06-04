@@ -5,6 +5,7 @@ import * as cw from 'aws-cdk-lib/aws-cloudwatch';
 import * as cwActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
+import type { IQueue } from 'aws-cdk-lib/aws-sqs';
 import type { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { EnvConfig } from '../config';
 
@@ -13,6 +14,8 @@ interface ObservabilityProps {
   httpApi: apigw.HttpApi;
   /** Async functions whose errors + DLQ depth we watch. */
   asyncFunctions: { name: string; fn: NodejsFunction }[];
+  /** Standalone dead-letter queues to alarm on (e.g. the Scheduler target DLQ). */
+  deadLetterQueues?: { name: string; queue: IQueue }[];
 }
 
 /**
@@ -25,7 +28,7 @@ export class Observability extends Construct {
 
   constructor(scope: Construct, id: string, props: ObservabilityProps) {
     super(scope, id);
-    const { config, httpApi, asyncFunctions } = props;
+    const { config, httpApi, asyncFunctions, deadLetterQueues = [] } = props;
 
     this.alarmTopic = new sns.Topic(this, 'AlarmTopic', {
       topicName: `eventmgr-alarms-${config.envName}`,
@@ -86,6 +89,20 @@ export class Observability extends Construct {
           })
         );
       }
+    }
+
+    for (const { name, queue } of deadLetterQueues) {
+      alarms.push(
+        new cw.Alarm(this, `${name}DlqAlarm`, {
+          alarmName: `eventmgr-${config.envName}-${name}-dlq`,
+          metric: queue.metricApproximateNumberOfMessagesVisible({ period: Duration.minutes(5) }),
+          threshold: 1,
+          evaluationPeriods: 1,
+          comparisonOperator: cw.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+          treatMissingData: cw.TreatMissingData.NOT_BREACHING,
+          alarmDescription: `${name} dead-letter queue has messages`,
+        })
+      );
     }
 
     alarms.forEach((a) => a.addAlarmAction(action));
