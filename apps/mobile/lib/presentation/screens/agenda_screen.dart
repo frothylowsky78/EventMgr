@@ -93,7 +93,7 @@ class _AgendaTile extends StatelessWidget {
                 label: Text('Required', style: TextStyle(fontSize: 11)),
                 visualDensity: VisualDensity.compact)
             : const Icon(Icons.chevron_right),
-        onTap: () => context.go('/agenda/${item.id}'),
+        onTap: () => context.push('/agenda/${item.id}'),
       ),
     );
   }

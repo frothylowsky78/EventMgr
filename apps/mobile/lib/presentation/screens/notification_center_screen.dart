@@ -66,7 +66,7 @@ class NotificationCenterScreen extends ConsumerWidget {
   void _followDeepLink(BuildContext context, NotificationItem n) {
     switch (n.deepLinkType) {
       case 'agenda':
-        if (n.deepLinkId != null) context.go('/agenda/${n.deepLinkId}');
+        if (n.deepLinkId != null) context.push('/agenda/${n.deepLinkId}');
         break;
       case 'itinerary':
         context.go('/itinerary');
