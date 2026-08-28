@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type {
   AudiencePreview,
   NotificationCreate,
@@ -23,20 +23,39 @@ export function NotificationComposer({ onDone }: { onDone: () => void }) {
   const [body, setBody] = useState('');
   const [priority, setPriority] = useState<NotificationPriority>('normal');
   const [targetType, setTargetType] = useState<NotificationTargetType>('all');
-  const [tags, setTags] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagDraft, setTagDraft] = useState('');
+  /** Tag vocabulary in use, from the existing attendees endpoint — no new API needed. */
+  const [knownTags, setKnownTags] = useState<string[]>([]);
   const [attendeeIds, setAttendeeIds] = useState('');
   const [scheduled, setScheduled] = useState(false);
   const [sendAt, setSendAt] = useState('');
   const [internalNote, setInternalNote] = useState('');
 
+  useEffect(() => {
+    adminApi
+      .listAttendees()
+      .then((list) => setKnownTags([...new Set(list.flatMap((a) => a.tags))].sort()))
+      .catch(() => {}); // suggestions are a convenience; composing still works without them
+  }, []);
+
   const [preview, setPreview] = useState<AudiencePreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  function addTag() {
+    const value = tagDraft.trim();
+    if (value && !tags.includes(value)) {
+      setTags([...tags, value]);
+      setPreview(null); // audience changed; the old count no longer applies
+    }
+    setTagDraft('');
+  }
+
   function buildTarget(): NotificationTarget {
     const criteria: NotificationTarget['criteria'] = {};
     if (targetType === 'tag') {
-      criteria.tags = tags.split(',').map((t) => t.trim()).filter(Boolean);
+      criteria.tags = tags;
     }
     if (targetType === 'individuals') {
       criteria.attendeeIds = attendeeIds.split(',').map((t) => t.trim()).filter(Boolean);
@@ -139,8 +158,49 @@ export function NotificationComposer({ onDone }: { onDone: () => void }) {
 
       {targetType === 'tag' && (
         <>
-          <label>Tags (comma-separated)</label>
-          <input value={tags} placeholder="golf, early_arrival" onChange={(e) => setTags(e.target.value)} />
+          <label>Tags</label>
+          <p className="muted" style={{ margin: '0 0 6px' }}>
+            Reaches anyone with <strong>any</strong> of these tags. Matching is exact and
+            case-sensitive, so pick from the suggestions where you can.
+          </p>
+          <div style={{ marginBottom: 6 }}>
+            {tags.length === 0 && <span className="muted">No tags selected.</span>}
+            {tags.map((t) => (
+              <span key={t} className="tag" style={{ marginRight: 6 }}>
+                {t}{' '}
+                <button className="secondary" type="button" aria-label={`Remove ${t}`}
+                  onClick={() => { setTags(tags.filter((x) => x !== t)); setPreview(null); }}>
+                  ✕
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="row">
+            <div style={{ flex: 1 }}>
+              <input
+                list="composer-tag-options"
+                value={tagDraft}
+                placeholder="e.g. golf"
+                onChange={(e) => setTagDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } }}
+              />
+              <datalist id="composer-tag-options">
+                {knownTags.filter((t) => !tags.includes(t)).map((t) => (
+                  <option key={t} value={t} />
+                ))}
+              </datalist>
+            </div>
+            <div style={{ flex: '0 0 auto', alignSelf: 'end' }}>
+              <button className="secondary" type="button" onClick={addTag} disabled={!tagDraft.trim()}>
+                Add
+              </button>
+            </div>
+          </div>
+          {knownTags.length > 0 && (
+            <p className="muted" style={{ marginTop: 6 }}>
+              In use: {knownTags.join(', ')}
+            </p>
+          )}
         </>
       )}
       {targetType === 'individuals' && (

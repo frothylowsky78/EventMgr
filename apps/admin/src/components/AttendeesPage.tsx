@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type {
   Attendee,
+  AttendeeUpdate,
   ItineraryItem,
   TransportationItem,
   TravelDetail,
@@ -22,8 +23,23 @@ export function AttendeesPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  /** Every tag already in use, for reuse suggestions. Tag matching is case-sensitive. */
+  const allTags = [...new Set(attendees.flatMap((a) => a.tags))].sort();
+
+  function applySaved(updated: Attendee) {
+    setAttendees((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+    setSelected(updated);
+  }
+
   if (selected) {
-    return <AttendeeDetail attendee={selected} onBack={() => setSelected(null)} />;
+    return (
+      <AttendeeDetail
+        attendee={selected}
+        allTags={allTags}
+        onSaved={applySaved}
+        onBack={() => setSelected(null)}
+      />
+    );
   }
 
   const filtered = query
@@ -41,7 +57,7 @@ export function AttendeesPage() {
       {error && <div className="error">{error}</div>}
       {!loading && !error && (
         <table>
-          <thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Registration</th><th></th></tr></thead>
+          <thead><tr><th>Name</th><th>Company</th><th>Email</th><th>Registration</th><th>Tags</th><th></th></tr></thead>
           <tbody>
             {filtered.map((a) => (
               <tr key={a.id}>
@@ -49,10 +65,11 @@ export function AttendeesPage() {
                 <td>{a.company}</td>
                 <td>{a.email}</td>
                 <td>{a.registrationStatus.replace(/_/g, ' ')}</td>
+                <td>{a.tags.length ? a.tags.join(', ') : <span className="muted">—</span>}</td>
                 <td><button className="secondary" onClick={() => setSelected(a)}>Manage</button></td>
               </tr>
             ))}
-            {filtered.length === 0 && <tr><td colSpan={5} className="muted">No attendees.</td></tr>}
+            {filtered.length === 0 && <tr><td colSpan={6} className="muted">No attendees.</td></tr>}
           </tbody>
         </table>
       )}
@@ -60,14 +77,142 @@ export function AttendeesPage() {
   );
 }
 
-function AttendeeDetail({ attendee, onBack }: { attendee: Attendee; onBack: () => void }) {
+function AttendeeDetail({
+  attendee,
+  allTags,
+  onSaved,
+  onBack,
+}: {
+  attendee: Attendee;
+  allTags: string[];
+  onSaved: (a: Attendee) => void;
+  onBack: () => void;
+}) {
   return (
     <div>
       <button className="secondary" onClick={onBack}>← Back to attendees</button>
       <h2>{attendee.firstName} {attendee.lastName} <span className="muted" style={{ fontSize: 14 }}>{attendee.email}</span></h2>
+      <TagsSection attendee={attendee} allTags={allTags} onSaved={onSaved} />
       <ItinerarySection attendeeId={attendee.id} />
       <TravelSection attendeeId={attendee.id} />
       <TransportationSection attendeeId={attendee.id} />
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Tags — drive notification audience targeting (services/api/src/lib/audience.ts)
+// ---------------------------------------------------------------------------
+function TagsSection({
+  attendee,
+  allTags,
+  onSaved,
+}: {
+  attendee: Attendee;
+  allTags: string[];
+  onSaved: (a: Attendee) => void;
+}) {
+  const [tags, setTags] = useState<string[]>(attendee.tags);
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const dirty =
+    tags.length !== attendee.tags.length || tags.some((t, i) => t !== attendee.tags[i]);
+
+  function add() {
+    const value = draft.trim();
+    if (!value || tags.includes(value)) {
+      setDraft('');
+      return;
+    }
+    setTags([...tags, value]);
+    setDraft('');
+    setMsg(null);
+  }
+
+  async function save() {
+    setError(null);
+    setMsg(null);
+    setBusy(true);
+    try {
+      const patch: AttendeeUpdate = { tags };
+      const updated = await adminApi.updateAttendee(attendee.id, patch);
+      setTags(updated.tags);
+      onSaved(updated);
+      setMsg('Tags saved.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Save failed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Existing tags this attendee doesn't have yet — offered for reuse, since audience
+  // matching is exact and a near-miss silently targets nobody.
+  const suggestions = allTags.filter((t) => !tags.includes(t));
+
+  return (
+    <div className="card">
+      <h3 style={{ marginTop: 0 }}>Tags</h3>
+      <p className="muted" style={{ marginTop: 0 }}>
+        Used to target notifications. Matching is exact and case-sensitive — reuse an existing
+        tag rather than inventing a variant.
+      </p>
+
+      <div style={{ margin: '8px 0' }}>
+        {tags.length === 0 && <span className="muted">No tags.</span>}
+        {tags.map((t) => (
+          <span key={t} className="tag" style={{ marginRight: 6 }}>
+            {t}{' '}
+            <button
+              className="secondary"
+              type="button"
+              aria-label={`Remove ${t}`}
+              onClick={() => setTags(tags.filter((x) => x !== t))}
+            >
+              ✕
+            </button>
+          </span>
+        ))}
+      </div>
+
+      <div className="row">
+        <div style={{ flex: 1 }}>
+          <label>Add tag</label>
+          <input
+            list="attendee-tag-options"
+            value={draft}
+            placeholder="e.g. golf"
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                add();
+              }
+            }}
+          />
+          <datalist id="attendee-tag-options">
+            {suggestions.map((t) => (
+              <option key={t} value={t} />
+            ))}
+          </datalist>
+        </div>
+        <div style={{ flex: '0 0 auto', alignSelf: 'end' }}>
+          <button className="secondary" type="button" onClick={add} disabled={!draft.trim()}>
+            Add
+          </button>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 12 }}>
+        <button type="button" onClick={save} disabled={busy || !dirty}>
+          {busy ? 'Saving…' : 'Save tags'}
+        </button>
+        {msg && <span className="muted" style={{ marginLeft: 12 }}>{msg}</span>}
+      </div>
+      {error && <div className="error">{error}</div>}
     </div>
   );
 }
@@ -116,8 +261,8 @@ function ItinerarySection({ attendeeId }: { attendeeId: string }) {
           <label>Title</label>
           <input value={title} onChange={(e) => setTitle(e.target.value)} />
           <div className="row">
-            <div><label>Start</label><input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} /></div>
-            <div><label>End</label><input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} /></div>
+            <div><label>Start</label><input type="datetime-local" step={900} value={start} onChange={(e) => setStart(e.target.value)} /></div>
+            <div><label>End</label><input type="datetime-local" step={900} value={end} onChange={(e) => setEnd(e.target.value)} /></div>
           </div>
           <label>Notes</label>
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />

@@ -25,6 +25,7 @@ import type {
   WeatherInfo,
   WeatherUpsert,
   Attendee,
+  AttendeeUpdate,
   ItineraryItem,
   ItineraryItemCreate,
   ItineraryItemUpdate,
@@ -120,6 +121,8 @@ export const adminApi = {
 
   // Attendees + per-attendee management
   listAttendees: () => request<Attendee[]>('GET', `/admin/events/${ev()}/attendees`),
+  updateAttendee: (attendeeId: string, patch: AttendeeUpdate) =>
+    request<Attendee>('PATCH', `/admin/events/${ev()}/attendees/${attendeeId}`, patch),
   getItinerary: (attendeeId: string) =>
     request<ItineraryItem[]>('GET', `/admin/events/${ev()}/attendees/${attendeeId}/itinerary`),
   createItinerary: (attendeeId: string, input: ItineraryItemCreate) =>
