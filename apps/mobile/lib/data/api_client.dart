@@ -54,10 +54,28 @@ class ApiClient {
   }
 
   Exception _toApiError(DioException e) {
-    final data = e.response?.data;
+    final res = e.response;
+    final data = res?.data;
+
+    // Our own envelope: { error: { code, message } }.
     if (data is Map && data['error'] is Map) {
       return Exception(data['error']['message']?.toString() ?? 'Request failed');
     }
-    return Exception('Network error. Showing cached data if available.');
+
+    // No response at all — genuinely offline / timed out.
+    final status = res?.statusCode;
+    if (status == null) {
+      return Exception('Network unavailable. Showing cached data if available.');
+    }
+
+    // API Gateway rejects before reaching a handler and answers {"message":"Unauthorized"},
+    // which is not our envelope. Reporting that as a network error hid every auth failure.
+    if (status == 401 || status == 403) {
+      return Exception('Not authorized ($status). Try signing out and back in.');
+    }
+    final message = data is Map ? data['message']?.toString() : null;
+    return Exception(
+      message == null ? 'Request failed ($status).' : '$message ($status).',
+    );
   }
 }

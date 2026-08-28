@@ -34,8 +34,14 @@ final localCacheProvider = Provider<LocalCache>((ref) {
 
 final cognitoServiceProvider = Provider<CognitoService>((ref) => CognitoService());
 
-final apiClientProvider =
-    Provider<ApiClient>((ref) => ApiClient(ref.watch(cognitoServiceProvider)));
+final apiClientProvider = Provider<ApiClient>((ref) {
+  // Rebuild whenever the user becomes signed in (or signs out). Every repository watches this
+  // provider and every data FutureProvider watches a repository, so one dependency here makes
+  // the whole tree re-fetch after login. Without it, the fetches that ran while signed out kept
+  // their 401 error state until the app was restarted — the "nothing loads after sign-in" bug.
+  ref.watch(authControllerProvider.select((s) => s.status == AuthStatus.signedIn));
+  return ApiClient(ref.watch(cognitoServiceProvider));
+});
 
 final authControllerProvider =
     StateNotifierProvider<AuthController, AuthState>((ref) {
