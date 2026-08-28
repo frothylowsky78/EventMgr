@@ -66,7 +66,7 @@ class CognitoService {
     await _storage.write(key: _kEmail, value: email);
   }
 
-  Future<String?> currentAccessToken() => _storage.read(key: _kAccess);
+  Future<String?> currentAccessToken() => _storage.read(key: _kId);
 
   Future<bool> hasValidSession() async {
     final access = await _storage.read(key: _kAccess);
