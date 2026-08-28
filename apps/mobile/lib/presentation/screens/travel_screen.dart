@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../application/providers.dart';
 import '../../domain/travel_detail.dart';
 
+/// Standalone Travel screen. Travel content now also lives inside the My Trip tab (CF-5);
+/// this route is kept so existing deep links and notification targets keep resolving.
 class TravelScreen extends ConsumerWidget {
   const TravelScreen({super.key});
 
@@ -35,32 +37,45 @@ class TravelScreen extends ConsumerWidget {
             },
             child: ListView(
               padding: const EdgeInsets.all(16),
-              children: [
-                _Section(title: 'Arrival', children: [
-                  _row(Icons.flight_land, 'Flight', travel.arrivalFlight),
-                  _row(Icons.schedule, 'Arrives', _fmt(travel.arrivalDateTime)),
-                ]),
-                _Section(title: 'Departure', children: [
-                  _row(Icons.flight_takeoff, 'Flight', travel.departureFlight),
-                  _row(Icons.schedule, 'Departs', _fmt(travel.departureDateTime)),
-                ]),
-                _Section(title: 'Lodging', children: [
-                  _row(Icons.hotel, 'Hotel', travel.hotelName),
-                  _row(Icons.confirmation_number_outlined, 'Confirmation',
-                      travel.hotelConfirmation),
-                  _row(Icons.login, 'Check-in', travel.checkInDate),
-                  _row(Icons.logout, 'Check-out', travel.checkOutDate),
-                ]),
-                _Section(title: 'Transfer', children: [
-                  _row(Icons.directions_bus, 'Group', travel.transferGroup),
-                  if ((travel.notes ?? '').isNotEmpty)
-                    _row(Icons.notes, 'Notes', travel.notes),
-                ]),
-              ],
+              children: [TravelSections(travel: travel)],
             ),
           );
         },
       ),
+    );
+  }
+}
+
+/// Arrival / departure / lodging / transfer cards. Shared by the Travel route and the My Trip
+/// tab so the two can never drift apart.
+class TravelSections extends StatelessWidget {
+  const TravelSections({super.key, required this.travel});
+  final TravelDetail travel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _Section(title: 'Arrival', children: [
+          _row(Icons.flight_land, 'Flight', travel.arrivalFlight),
+          _row(Icons.schedule, 'Arrives', _fmt(travel.arrivalDateTime)),
+        ]),
+        _Section(title: 'Departure', children: [
+          _row(Icons.flight_takeoff, 'Flight', travel.departureFlight),
+          _row(Icons.schedule, 'Departs', _fmt(travel.departureDateTime)),
+        ]),
+        _Section(title: 'Lodging', children: [
+          _row(Icons.hotel, 'Hotel', travel.hotelName),
+          _row(Icons.confirmation_number_outlined, 'Confirmation', travel.hotelConfirmation),
+          _row(Icons.login, 'Check-in', travel.checkInDate),
+          _row(Icons.logout, 'Check-out', travel.checkOutDate),
+        ]),
+        _Section(title: 'Transfer', children: [
+          _row(Icons.directions_bus, 'Group', travel.transferGroup),
+          if ((travel.notes ?? '').isNotEmpty) _row(Icons.notes, 'Notes', travel.notes),
+        ]),
+      ],
     );
   }
 
