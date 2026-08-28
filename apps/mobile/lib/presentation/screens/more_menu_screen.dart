@@ -37,7 +37,7 @@ class MoreMenuScreen extends ConsumerWidget {
               title: Text(e.label),
               trailing: const Icon(Icons.chevron_right),
               onTap: e.route != null
-                  ? () => context.go(e.route!)
+                  ? () => context.push(e.route!)
                   : () => ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('${e.label} coming soon')),
                       ),

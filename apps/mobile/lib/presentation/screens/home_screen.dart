@@ -93,7 +93,7 @@ class _RegistrationBanner extends ConsumerWidget {
         color: scheme.secondary.withOpacity(0.12),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => context.go('/registration'),
+          onTap: () => context.push('/registration'),
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Row(
@@ -128,7 +128,7 @@ class _WeatherSnapshot extends ConsumerWidget {
     return Card(
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap: () => context.go('/weather'),
+        onTap: () => context.push('/weather'),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
@@ -162,7 +162,7 @@ class _NotificationBell extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.notifications_outlined),
           tooltip: 'Notifications',
-          onPressed: () => context.go('/notifications'),
+          onPressed: () => context.push('/notifications'),
         ),
         if (unread > 0)
           Positioned(
@@ -280,10 +280,10 @@ class _QuickLinks extends StatelessWidget {
     final links = <(_QL, VoidCallback)>[
       (const _QL('Agenda', Icons.event), () => context.go('/agenda')),
       (const _QL('My Itinerary', Icons.luggage), () => context.go('/itinerary')),
-      (const _QL('Travel', Icons.flight_takeoff), () => context.go('/travel')),
-      (const _QL('Dining', Icons.restaurant), () => context.go('/dining')),
-      (const _QL('Transport', Icons.directions_bus), () => context.go('/transportation')),
-      (const _QL('Notifications', Icons.notifications), () => context.go('/notifications')),
+      (const _QL('Travel', Icons.flight_takeoff), () => context.push('/travel')),
+      (const _QL('Dining', Icons.restaurant), () => context.push('/dining')),
+      (const _QL('Transport', Icons.directions_bus), () => context.push('/transportation')),
+      (const _QL('Notifications', Icons.notifications), () => context.push('/notifications')),
     ];
     return GridView.count(
       crossAxisCount: 3,
