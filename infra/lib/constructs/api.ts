@@ -23,6 +23,7 @@ interface ApiProps {
   adminClient: cognito.UserPoolClient;
   galleryBucket: s3.Bucket;
   profilePhotosBucket: s3.Bucket;
+  assetsBucket: s3.Bucket;
 }
 
 /**
@@ -39,8 +40,9 @@ export class Api extends Construct {
 
   constructor(scope: Construct, id: string, props: ApiProps) {
     super(scope, id);
-    const { config, table, userPool, appClient, adminClient, galleryBucket, profilePhotosBucket } =
+    const { config, table, userPool, appClient, adminClient, galleryBucket, profilePhotosBucket, assetsBucket } =
       props;
+    const assetsEnv = { ASSETS_BUCKET: assetsBucket.bucketName };
     const galleryEnv = { GALLERY_BUCKET: galleryBucket.bucketName };
     const profileEnv = { PROFILE_BUCKET: profilePhotosBucket.bucketName };
 
@@ -150,7 +152,8 @@ export class Api extends Construct {
     profilePhotosBucket.grantPut(profilePhotoFn);
 
     // Content modules — FAQ, yearbook directory, weather, maps
-    route('ListMaps', apigw.HttpMethod.GET, '/events/{eventId}/maps', 'listMaps.ts', 'read');
+    const listMapsFn = route('ListMaps', apigw.HttpMethod.GET, '/events/{eventId}/maps', 'listMaps.ts', 'read', { environment: assetsEnv });
+    assetsBucket.grantRead(listMapsFn);
     route('ListFaq', apigw.HttpMethod.GET, '/events/{eventId}/faq', 'listFaq.ts', 'read');
     route('ListAttendees', apigw.HttpMethod.GET, '/events/{eventId}/attendees', 'listAttendees.ts', 'read');
     route('GetWeather', apigw.HttpMethod.GET, '/events/{eventId}/weather', 'getWeather.ts', 'read');
@@ -205,6 +208,7 @@ export class Api extends Construct {
       httpApi: this.httpApi,
       authorizer,
       galleryBucket,
+      assetsBucket,
       schedulerRoleArn: schedulerRole.roleArn,
       pushEnv,
       schedulingEnv,

@@ -37,6 +37,7 @@ import type {
   TransportationItem,
   TransportationCreate,
   TransportationUpdate,
+  UploadTicket,
 } from '@eventmgr/shared-types';
 
 interface ImportResult {
@@ -121,6 +122,10 @@ export const adminApi = {
     request<HelpRequest>('PATCH', `/admin/events/${ev()}/help-requests/${attendeeId}/${requestId}`, patch),
   listFeedback: (targetId: string) =>
     request<FeedbackSummary>('GET', `/admin/events/${ev()}/feedback?targetId=${encodeURIComponent(targetId)}`),
+
+  // Map images — pre-signed PUT straight to the private assets bucket
+  requestMapImageUrl: (mapId: string, contentType: string) =>
+    request<UploadTicket>('POST', `/admin/events/${ev()}/maps/${mapId}/image-url`, { contentType }),
 
   // Locations (named places referenced by agenda + dining)
   listLocations: () => request<EventLocation[]>('GET', `/admin/events/${ev()}/locations`),

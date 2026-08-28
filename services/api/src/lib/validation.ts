@@ -202,6 +202,11 @@ export const weatherUpsertSchema = z.object({
   location: weatherLocation.nullable().optional(),
 });
 
+// --- Map images (pre-signed upload into the assets bucket) ---
+export const mapImageSchema = z.object({
+  contentType: z.string().min(1).max(100),
+});
+
 // --- Locations (named places referenced by agenda/dining/itinerary) ---
 export const locationCreateSchema = z.object({
   name: z.string().min(1).max(200),

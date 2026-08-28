@@ -134,8 +134,20 @@ function MapForm({
         </div>
         <div><label>Order</label><input type="number" value={form.order} onChange={(e) => set('order', Number(e.target.value))} /></div>
       </div>
-      <label>Image URL (S3 asset)</label>
-      <input value={form.imageUrl} onChange={(e) => set('imageUrl', e.target.value)} />
+      <label>Image</label>
+      {initial ? (
+        <MapImageUpload map={initial} />
+      ) : (
+        <p className="muted" style={{ margin: '0 0 8px' }}>
+          Save the map first, then reopen it to upload an image.
+        </p>
+      )}
+      <label>Image URL (external, optional)</label>
+      <input value={form.imageUrl} placeholder="https://…"
+        onChange={(e) => set('imageUrl', e.target.value)} />
+      <p className="muted" style={{ margin: '4px 0 0' }}>
+        An uploaded image takes precedence over this URL.
+      </p>
       <label>Description</label>
       <textarea rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} />
       <label>Address</label>
@@ -154,5 +166,60 @@ function MapForm({
         <button type="button" className="secondary" onClick={onCancel}>Cancel</button>
       </div>
     </form>
+  );
+}
+
+/**
+ * Uploads a map image straight to the private assets bucket via a pre-signed PUT — the file
+ * never passes through Lambda or the API. The stored key is swapped for a temporary signed URL
+ * whenever maps are listed, so nothing needs a public bucket.
+ */
+function MapImageUpload({ map }: { map: MapLocation }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(map.imageUrl || null);
+
+  async function upload(file: File) {
+    setError(null);
+    setMsg(null);
+    setBusy(true);
+    try {
+      const ticket = await adminApi.requestMapImageUrl(map.id, file.type);
+      const res = await fetch(ticket.uploadUrl, {
+        method: 'PUT',
+        headers: { 'content-type': file.type },
+        body: file,
+      });
+      if (!res.ok) throw new Error(`Upload failed (${res.status})`);
+      setPreview(URL.createObjectURL(file));
+      setMsg('Uploaded. Reopen the list to see the stored image.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Upload failed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={{ marginBottom: 8 }}>
+      {preview && (
+        <img src={preview} alt={map.title}
+          style={{ maxWidth: '100%', maxHeight: 200, display: 'block', marginBottom: 8,
+                   borderRadius: 8, border: '1px solid #ddd' }} />
+      )}
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/heic"
+        disabled={busy}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void upload(file);
+        }}
+      />
+      {busy && <span className="muted" style={{ marginLeft: 8 }}>Uploading…</span>}
+      {msg && <span className="muted" style={{ marginLeft: 8 }}>{msg}</span>}
+      {error && <div className="error">{error}</div>}
+    </div>
   );
 }

@@ -17,6 +17,7 @@ interface AdminApiProps extends NestedStackProps {
   httpApi: apigw.HttpApi;
   authorizer: IHttpRouteAuthorizer;
   galleryBucket: s3.Bucket;
+  assetsBucket: s3.Bucket;
   schedulerRoleArn: string;
   pushEnv: Record<string, string>;
   schedulingEnv: Record<string, string>;
@@ -30,8 +31,9 @@ interface AdminApiProps extends NestedStackProps {
 export class AdminApi extends NestedStack {
   constructor(scope: Construct, id: string, props: AdminApiProps) {
     super(scope, id, props);
-    const { config, table, httpApi, authorizer, galleryBucket } = props;
+    const { config, table, httpApi, authorizer, galleryBucket, assetsBucket } = props;
     const galleryEnv = { GALLERY_BUCKET: galleryBucket.bucketName };
+    const assetsEnv = { ASSETS_BUCKET: assetsBucket.bucketName };
 
     const route = (
       routeId: string,
@@ -105,9 +107,12 @@ export class AdminApi extends NestedStack {
     route('AdminListTransportation', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees/{attendeeId}/transportation', 'adminListTransportation.ts', 'read');
 
     // Admin — maps
-    route('AdminListMaps', apigw.HttpMethod.GET, '/admin/events/{eventId}/maps', 'adminListMaps.ts', 'read');
+    const adminListMapsFn = route('AdminListMaps', apigw.HttpMethod.GET, '/admin/events/{eventId}/maps', 'adminListMaps.ts', 'read', { environment: assetsEnv });
+    assetsBucket.grantRead(adminListMapsFn);
     route('AdminCreateMap', apigw.HttpMethod.POST, '/admin/events/{eventId}/maps', 'adminCreateMap.ts', 'write');
     route('AdminUpdateMap', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/maps/{mapId}', 'adminUpdateMap.ts', 'write');
+    const mapImageFn = route('AdminRequestMapImageUrl', apigw.HttpMethod.POST, '/admin/events/{eventId}/maps/{mapId}/image-url', 'adminRequestMapImageUrl.ts', 'write', { environment: assetsEnv });
+    assetsBucket.grantPut(mapImageFn);
 
     // Admin — notifications (ad-hoc push composer, spec §18.16)
     route('AdminListNotifications', apigw.HttpMethod.GET, '/admin/events/{eventId}/notifications', 'adminListNotifications.ts', 'read');

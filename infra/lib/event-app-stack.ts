@@ -33,6 +33,7 @@ export class EventAppStack extends Stack {
       adminClient: auth.adminClient,
       galleryBucket: media.gallery,
       profilePhotosBucket: media.profilePhotos,
+      assetsBucket: media.assets,
     });
     const web = new Web(this, 'Web', config);
 

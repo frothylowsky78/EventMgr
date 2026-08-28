@@ -5,6 +5,7 @@ const s3 = new S3Client({});
 
 export const GALLERY_BUCKET = process.env.GALLERY_BUCKET ?? '';
 export const PROFILE_BUCKET = process.env.PROFILE_BUCKET ?? '';
+export const ASSETS_BUCKET = process.env.ASSETS_BUCKET ?? '';
 
 const UPLOAD_TTL = 300; // 5 min
 const DOWNLOAD_TTL = 3600; // 1 hour
@@ -38,3 +39,13 @@ export function presignDownloadFrom(bucket: string, key: string): Promise<string
 export const presignUpload = (key: string, contentType: string) =>
   presignUploadTo(GALLERY_BUCKET, key, contentType);
 export const presignDownload = (key: string) => presignDownloadFrom(GALLERY_BUCKET, key);
+
+/**
+ * Map images live in the private assets bucket, so a stored key must become a temporary signed
+ * URL on read. Falls back to `current` when there's no key — admins can still paste an external
+ * image URL instead of uploading one.
+ */
+export const presignAssetIfKey = async (
+  key: string | undefined,
+  current: string | undefined
+): Promise<string> => (key ? presignDownloadFrom(ASSETS_BUCKET, key) : (current ?? ''));

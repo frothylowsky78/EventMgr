@@ -7,6 +7,7 @@ import { ddb } from '../lib/dynamo';
 import { ApiException, fail, getAuth, ok } from '../lib/http';
 import { TABLE_NAME, keys } from '../lib/keys';
 import { toMapLocation } from '../lib/mappers';
+import { presignAssetIfKey } from '../lib/s3';
 
 /** GET /events/{eventId}/maps — published map locations, ordered. */
 export const handler = async (
@@ -25,8 +26,14 @@ export const handler = async (
         ExpressionAttributeValues: { ':pk': keys.mapList(eventId).GSI1PK },
       })
     );
-    const items = (res.Items ?? []).map(toMapLocation).filter((m) => m.published);
-    return ok(items);
+    const items = await Promise.all(
+      (res.Items ?? []).map(async (i) => {
+        const m = toMapLocation(i);
+        m.imageUrl = await presignAssetIfKey(i.imageKey, m.imageUrl);
+        return m;
+      })
+    );
+    return ok(items.filter((m) => m.published));
   } catch (e) {
     return fail(e);
   }
