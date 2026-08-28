@@ -131,8 +131,8 @@ function DiningForm({
       <input value={form.title} onChange={(e) => set('title', e.target.value)} required />
       <div className="row">
         <div><label>Date</label><input type="date" value={form.date} onChange={(e) => set('date', e.target.value)} required /></div>
-        <div><label>Start</label><input type="time" value={form.startTime} onChange={(e) => set('startTime', e.target.value)} required /></div>
-        <div><label>End</label><input type="time" value={form.endTime} onChange={(e) => set('endTime', e.target.value)} /></div>
+        <div><label>Start</label><input type="time" step={900} value={form.startTime} onChange={(e) => set('startTime', e.target.value)} required /></div>
+        <div><label>End</label><input type="time" step={900} value={form.endTime} onChange={(e) => set('endTime', e.target.value)} /></div>
       </div>
       <label>Menu (comma-separated)</label>
       <input value={form.menu} onChange={(e) => set('menu', e.target.value)} />

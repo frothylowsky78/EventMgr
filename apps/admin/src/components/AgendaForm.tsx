@@ -54,11 +54,11 @@ export function AgendaForm({ initial, onSubmit, onCancel }: Props) {
         </div>
         <div>
           <label>Start time</label>
-          <input type="time" value={form.startTime} onChange={(e) => set('startTime', e.target.value)} required />
+          <input type="time" step={900} value={form.startTime} onChange={(e) => set('startTime', e.target.value)} required />
         </div>
         <div>
           <label>End time</label>
-          <input type="time" value={form.endTime} onChange={(e) => set('endTime', e.target.value)} />
+          <input type="time" step={900} value={form.endTime} onChange={(e) => set('endTime', e.target.value)} />
         </div>
       </div>
 
