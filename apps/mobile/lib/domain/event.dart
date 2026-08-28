@@ -37,6 +37,30 @@ class RegistrationAction {
   Map<String, dynamic> toJson() => {'id': id, 'label': label};
 }
 
+/// A named person attendees can call or email from the Help screen (CF-4).
+class EventContact {
+  final String name;
+  final String role;
+  final String phone;
+  final String email;
+  const EventContact({
+    required this.name,
+    this.role = '',
+    this.phone = '',
+    this.email = '',
+  });
+
+  factory EventContact.fromJson(Map<String, dynamic> j) => EventContact(
+        name: j['name'] as String? ?? '',
+        role: j['role'] as String? ?? '',
+        phone: j['phone'] as String? ?? '',
+        email: j['email'] as String? ?? '',
+      );
+
+  Map<String, dynamic> toJson() =>
+      {'name': name, 'role': role, 'phone': phone, 'email': email};
+}
+
 class EventProfile {
   final String id;
   final String name;
@@ -47,6 +71,11 @@ class EventProfile {
   final String timezone;
   final String? registrationDeadline;
   final List<RegistrationAction> registrationActions;
+  /// Optional host note shown on Home (CF-3).
+  final String welcomeMessage;
+  final String welcomeMessageAuthor;
+  /// Optional named contacts shown on Help (CF-4).
+  final List<EventContact> eventContacts;
   final Branding branding;
 
   const EventProfile({
@@ -60,6 +89,9 @@ class EventProfile {
     required this.branding,
     this.registrationDeadline,
     this.registrationActions = const [],
+    this.welcomeMessage = '',
+    this.welcomeMessageAuthor = '',
+    this.eventContacts = const [],
   });
 
   factory EventProfile.fromJson(Map<String, dynamic> j) => EventProfile(
@@ -73,6 +105,12 @@ class EventProfile {
         registrationDeadline: j['registrationDeadline'] as String?,
         registrationActions: (j['registrationActions'] as List?)
                 ?.map((e) => RegistrationAction.fromJson((e as Map).cast<String, dynamic>()))
+                .toList() ??
+            const [],
+        welcomeMessage: j['welcomeMessage'] as String? ?? '',
+        welcomeMessageAuthor: j['welcomeMessageAuthor'] as String? ?? '',
+        eventContacts: (j['eventContacts'] as List?)
+                ?.map((e) => EventContact.fromJson((e as Map).cast<String, dynamic>()))
                 .toList() ??
             const [],
         branding: Branding.fromJson(
@@ -89,6 +127,9 @@ class EventProfile {
         'timezone': timezone,
         'registrationDeadline': registrationDeadline,
         'registrationActions': registrationActions.map((e) => e.toJson()).toList(),
+        'welcomeMessage': welcomeMessage,
+        'welcomeMessageAuthor': welcomeMessageAuthor,
+        'eventContacts': eventContacts.map((e) => e.toJson()).toList(),
         'branding': branding.toJson(),
       };
 }

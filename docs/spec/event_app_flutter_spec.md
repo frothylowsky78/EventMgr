@@ -2098,3 +2098,99 @@ Suggested permissions:
 - Failed sends are logged.
 - Admin actions are auditable.
 
+
+---
+
+# Client feedback — July 24 2026
+
+Received by email on 24 July 2026 and not folded into this spec until 28 August 2026.
+Sequenced deliberately: content and UI changes first, the My Trip / Travel merge second, and
+messaging last because it is the only item that adds backend surface area.
+
+Nothing here re-opens push notifications. Push remains cut from v1 (see §18.16 and
+`docs/open-questions.md`); messaging is poll-based for exactly that reason.
+
+## CF-1 Attendees in the Home quick links
+
+The attendee directory is currently reachable only from the More menu. Promote it to the Home
+screen quick links beside Agenda, My Itinerary and Travel.
+
+**Acceptance:** Attendees appears in the Home quick-link grid and opens the directory.
+
+## CF-2 Directory grouped by market
+
+Attendees should be grouped by market rather than presented as one flat list.
+
+Markets: San Diego, Bay Area, Boulder, Seattle, Boston, UK, Investments, BioMed Realty,
+Blackstone.
+
+Implemented on the **existing `tags` field** — no new schema field. An attendee whose tags match
+none of the markets appears under "Other". Tag matching is exact and case-sensitive
+(`services/api/src/lib/audience.ts`), so market tags must be applied consistently at import.
+
+**Acceptance:** The directory groups (or filters) by market; untagged attendees are reachable
+under "Other"; no attendee disappears from the list.
+
+## CF-3 Welcome message on Home
+
+An optional welcome note from the host, shown near the top of the Home screen.
+
+Adds `welcomeMessage` and `welcomeMessageAuthor` (both optional strings) to `EventProfile`,
+editable in the admin Event page. Hidden entirely when empty.
+
+**Acceptance:** Admin can set and clear the message; it renders on Home when present and takes
+no vertical space when absent.
+
+## CF-4 Event contacts
+
+A list of named contacts (name, role, phone, email) on the Help screen, tappable to call or
+email.
+
+Adds an optional `eventContacts` array to `EventProfile`, editable in the admin Event page.
+Uses `url_launcher` with `tel:` and `mailto:`; the Android `<queries>` block already declares
+both intents, and `LSApplicationQueriesSchemes` already lists both schemes on iOS.
+
+**Acceptance:** Contacts render on Help; tapping a phone opens the dialer and an email opens the
+mail composer on both platforms.
+
+## CF-5 Merge My Trip and Travel
+
+Attendees see "My Trip" and "Travel" as separate destinations and expect one place for
+everything about their trip.
+
+Travel content folds into the My Trip tab as sections. `/travel` stays routable so existing
+deep links and notification targets keep working, but Travel is removed from the More menu and
+the Home quick links. `/home`, `/agenda` and `/itinerary` continue to render `HomeShell`, and
+detail routes continue to use `context.push` so the back button behaves.
+
+**Acceptance:** My Trip shows itinerary and travel together; `/travel` still resolves; back
+navigation works from every entry point.
+
+## CF-6 Attendee ↔ staff messaging
+
+Attendees can message event staff and receive replies. Staff work from an inbox in the admin
+portal.
+
+## CF-7 Attendee ↔ attendee messaging
+
+Attendees can message each other, restricted to attendees who are **both**
+`directoryVisible` and `contactSharingOptIn` — the existing privacy flags are the gate, and no
+new consent surface is introduced.
+
+### Messaging design notes (CF-6 and CF-7)
+
+**Polling, not WebSockets.** No API Gateway WebSocket API. With push cut from v1 a real-time
+transport delivers nothing a user would notice: without a push notification, a message arriving
+over a socket cannot reach a backgrounded app anyway. The app polls unread counts on foreground
+and every 30s while a conversation is open.
+
+**Single table.** Conversations and their messages live in the existing DynamoDB table following
+the key patterns in `src/lib/keys.ts`. No second table.
+
+**Endpoint budget.** The parent CloudFormation stack has limited headroom (500-resource cap; see
+`CLAUDE.md`), so the endpoint set is deliberately small and the admin inbox reuses the attendee
+endpoints wherever it can.
+
+**Acceptance:** An attendee can start and continue a conversation with staff and with an
+eligible attendee; unread counts appear as a badge; staff can reply from the admin portal;
+attendees who have not opted in cannot be messaged.

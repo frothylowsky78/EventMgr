@@ -207,6 +207,16 @@ export const mapImageSchema = z.object({
   contentType: z.string().min(1).max(100),
 });
 
+// --- Messaging (CF-6 / CF-7) ---
+export const messageCreateSchema = z.object({
+  body: z.string().min(1).max(4000),
+});
+export const conversationCreateSchema = z.object({
+  /** Omit to start a thread with event staff. */
+  withAttendeeId: z.string().min(1).max(100).optional(),
+  body: z.string().min(1).max(4000),
+});
+
 // --- Event profile (admin edit) ---
 const hexColor = z
   .string()
@@ -263,6 +273,16 @@ export const eventUpdateSchema = z
     registrationDeadline: z.string().datetime({ offset: true }).nullable(),
     registrationActions: z.array(
       z.object({ id: z.string().min(1).max(100), label: z.string().min(1).max(200) })
+    ),
+    welcomeMessage: z.string().max(2000),
+    welcomeMessageAuthor: z.string().max(200),
+    eventContacts: z.array(
+      z.object({
+        name: z.string().min(1).max(200),
+        role: z.string().max(200).optional(),
+        phone: z.string().max(50).optional(),
+        email: z.string().max(200).optional(),
+      })
     ),
     // .partial() inside too: the handler merges branding field-by-field, so sending only
     // primaryColor must be accepted rather than demanding all four every time.

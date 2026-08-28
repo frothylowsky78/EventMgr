@@ -35,6 +35,7 @@ class HelpScreen extends ConsumerWidget {
                 ),
               ),
             const SizedBox(height: 8),
+            const _EventContacts(),
             Text('Contacts', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             for (final c in help.contacts) _ContactTile(contact: c),
@@ -225,6 +226,58 @@ class _HelpRequestSheetState extends State<_HelpRequestSheet> {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Named event contacts from the event profile (CF-4). Tapping a row calls or emails via
+/// url_launcher; the Android <queries> block and iOS LSApplicationQueriesSchemes already
+/// declare tel:/mailto:. Renders nothing when no contacts are configured.
+class _EventContacts extends ConsumerWidget {
+  const _EventContacts();
+
+  Future<void> _launch(String scheme, String value) async {
+    final uri = Uri(scheme: scheme, path: value);
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final contacts = ref.watch(eventProvider).valueOrNull?.eventContacts ?? const [];
+    if (contacts.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Event team', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        for (final c in contacts)
+          Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: ListTile(
+              title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Text([c.role, c.phone, c.email].where((s) => s.isNotEmpty).join(' · ')),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (c.phone.isNotEmpty)
+                    IconButton(
+                      tooltip: 'Call ${c.name}',
+                      icon: const Icon(Icons.phone_outlined),
+                      onPressed: () => _launch('tel', c.phone),
+                    ),
+                  if (c.email.isNotEmpty)
+                    IconButton(
+                      tooltip: 'Email ${c.name}',
+                      icon: const Icon(Icons.mail_outline),
+                      onPressed: () => _launch('mailto', c.email),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

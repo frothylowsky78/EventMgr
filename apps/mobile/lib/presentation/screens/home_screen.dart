@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../application/providers.dart';
+import '../../domain/event.dart';
 import '../../domain/itinerary_item.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -49,6 +50,7 @@ class HomeScreen extends ConsumerWidget {
                       icon: Icons.place_outlined,
                       text: '${event.locationName}\n${event.address}'),
                   const SizedBox(height: 16),
+                  _WelcomeCard(event: event),
                   const _RegistrationBanner(),
                   const _WeatherSnapshot(),
                   const SizedBox(height: 20),
@@ -280,7 +282,7 @@ class _QuickLinks extends StatelessWidget {
     final links = <(_QL, VoidCallback)>[
       (const _QL('Agenda', Icons.event), () => context.go('/agenda')),
       (const _QL('My Itinerary', Icons.luggage), () => context.go('/itinerary')),
-      (const _QL('Travel', Icons.flight_takeoff), () => context.push('/travel')),
+      (const _QL('Attendees', Icons.people_outline), () => context.push('/attendees')),
       (const _QL('Dining', Icons.restaurant), () => context.push('/dining')),
       (const _QL('Transport', Icons.directions_bus), () => context.push('/transportation')),
       (const _QL('Notifications', Icons.notifications), () => context.push('/notifications')),
@@ -338,6 +340,43 @@ class _ErrorState extends StatelessWidget {
               style: const TextStyle(color: Colors.black45, fontSize: 12)),
         ),
       ],
+    );
+  }
+}
+
+/// Host welcome note (CF-3). Renders nothing at all when unset, so the layout is unchanged for
+/// events that don't use it.
+class _WelcomeCard extends StatelessWidget {
+  const _WelcomeCard({required this.event});
+  final EventProfile event;
+
+  @override
+  Widget build(BuildContext context) {
+    if (event.welcomeMessage.trim().isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Icon(Icons.waving_hand_outlined, size: 20, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text('Welcome', style: theme.textTheme.titleMedium),
+            ]),
+            const SizedBox(height: 8),
+            Text(event.welcomeMessage, style: theme.textTheme.bodyMedium),
+            if (event.welcomeMessageAuthor.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text('— ${event.welcomeMessageAuthor}',
+                  style: theme.textTheme.bodySmall
+                      ?.copyWith(fontStyle: FontStyle.italic, color: Colors.black54)),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

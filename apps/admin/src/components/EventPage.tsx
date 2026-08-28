@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { EventProfile, RegistrationAction } from '@eventmgr/shared-types';
+import type { EventContact, EventProfile, RegistrationAction } from '@eventmgr/shared-types';
 import { adminApi } from '../api';
 
 /**
@@ -31,6 +31,14 @@ export function EventPage() {
     setForm({ ...form, [k]: v });
   const setBrand = (k: keyof EventProfile['branding'], v: string) =>
     setForm({ ...form, branding: { ...form.branding, [k]: v } });
+
+  function updateContact(i: number, patch: Partial<EventContact>) {
+    if (!form) return;
+    set(
+      'eventContacts',
+      (form.eventContacts ?? []).map((c, idx) => (idx === i ? { ...c, ...patch } : c))
+    );
+  }
 
   function updateAction(i: number, patch: Partial<RegistrationAction>) {
     if (!form) return;
@@ -103,6 +111,44 @@ export function EventPage() {
           set('registrationDeadline', e.target.value ? new Date(e.target.value).toISOString() : null)
         }
       />
+
+      <h3 style={{ marginTop: 20 }}>Welcome message</h3>
+      <p className="muted" style={{ marginTop: 0 }}>
+        Shown near the top of the mobile Home screen. Leave blank to hide the card entirely.
+      </p>
+      <label>Message</label>
+      <textarea rows={3} value={form.welcomeMessage ?? ''}
+        onChange={(e) => set('welcomeMessage', e.target.value)} />
+      <label>Signed by</label>
+      <input value={form.welcomeMessageAuthor ?? ''} placeholder="e.g. Jen Alvarez, Event Director"
+        onChange={(e) => set('welcomeMessageAuthor', e.target.value)} />
+
+      <h3 style={{ marginTop: 20 }}>Event contacts</h3>
+      <p className="muted" style={{ marginTop: 0 }}>
+        Shown on the Help screen. Attendees tap to call or email.
+      </p>
+      {(form.eventContacts ?? []).map((c, i) => (
+        <div className="row" key={i} style={{ marginBottom: 8 }}>
+          <div><label>Name</label>
+            <input value={c.name} onChange={(e) => updateContact(i, { name: e.target.value })} /></div>
+          <div><label>Role</label>
+            <input value={c.role ?? ''} onChange={(e) => updateContact(i, { role: e.target.value })} /></div>
+          <div><label>Phone</label>
+            <input value={c.phone ?? ''} onChange={(e) => updateContact(i, { phone: e.target.value })} /></div>
+          <div><label>Email</label>
+            <input value={c.email ?? ''} onChange={(e) => updateContact(i, { email: e.target.value })} /></div>
+          <div style={{ flex: '0 0 auto', alignSelf: 'end' }}>
+            <button className="secondary" type="button"
+              onClick={() => set('eventContacts', (form.eventContacts ?? []).filter((_, idx) => idx !== i))}>
+              ✕
+            </button>
+          </div>
+        </div>
+      ))}
+      <button className="secondary" type="button"
+        onClick={() => set('eventContacts', [...(form.eventContacts ?? []), { name: '' }])}>
+        + Add contact
+      </button>
 
       <h3 style={{ marginTop: 20 }}>Branding</h3>
       <label>Logo URL</label>

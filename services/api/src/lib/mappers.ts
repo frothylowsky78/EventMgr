@@ -1,3 +1,4 @@
+import { MARKETS } from '@eventmgr/shared-types';
 import type {
   AgendaItem,
   Attendee,
@@ -39,6 +40,9 @@ export const toEvent = (i: Item): EventProfile => ({
   timezone: i.timezone,
   registrationDeadline: i.registrationDeadline ?? null,
   registrationActions: i.registrationActions ?? [],
+  welcomeMessage: i.welcomeMessage ?? '',
+  welcomeMessageAuthor: i.welcomeMessageAuthor ?? '',
+  eventContacts: i.eventContacts ?? [],
   branding: {
     logoUrl: i.branding?.logoUrl ?? '',
     heroImageUrl: i.branding?.heroImageUrl ?? '',
@@ -242,6 +246,10 @@ export const toWeather = (i: Item): WeatherInfo => ({
 
 /** Public yearbook card — excludes private fields (phone, dietary, accessibility, email). */
 export const toAttendeeCard = (i: Item): AttendeeCard => ({
+  // Only market tags cross into the public projection; "vip"/"staff" and other internal
+  // segmentation stay server-side.
+  markets: ((i.tags as string[]) ?? []).filter((tag) => (MARKETS as readonly string[]).includes(tag)),
+  messageable: i.directoryVisible !== false && i.contactSharingOptIn === true,
   id: i.id,
   firstName: i.firstName,
   lastName: i.lastName,

@@ -7,6 +7,10 @@ class AttendeeCard {
   final String city;
   final String profilePhotoUrl;
   final String guestName;
+  /// Market tags for directory grouping (CF-2). Internal tags are filtered out server-side.
+  final List<String> markets;
+  /// Whether this attendee accepts messages from other guests (CF-7).
+  final bool messageable;
 
   const AttendeeCard({
     required this.id,
@@ -17,6 +21,8 @@ class AttendeeCard {
     this.city = '',
     this.profilePhotoUrl = '',
     this.guestName = '',
+    this.markets = const [],
+    this.messageable = false,
   });
 
   factory AttendeeCard.fromJson(Map<String, dynamic> j) => AttendeeCard(
@@ -28,6 +34,9 @@ class AttendeeCard {
         city: j['city'] as String? ?? '',
         profilePhotoUrl: j['profilePhotoUrl'] as String? ?? '',
         guestName: j['guestName'] as String? ?? '',
+        markets:
+            (j['markets'] as List?)?.map((e) => e.toString()).toList() ?? const [],
+        messageable: j['messageable'] as bool? ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -39,6 +48,8 @@ class AttendeeCard {
         'city': city,
         'profilePhotoUrl': profilePhotoUrl,
         'guestName': guestName,
+        'markets': markets,
+        'messageable': messageable,
       };
 
   String get fullName => '$firstName $lastName'.trim();

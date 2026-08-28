@@ -23,6 +23,21 @@
 | A10 | Region | Default `us-west-2` (event timezone is `America/Los_Angeles`); override per env. |
 | A11 | Push transport | Start with SNS direct (APNs+FCM); Pinpoint optional if campaign analytics needed. |
 | A12 | Deployment in this container | Code + IaC delivered and buildable; live AWS provisioning happens where credentials exist. |
+| A13 | Messaging transport | **Polling, not WebSockets.** Added late (client feedback, 24 Jul 2026 — see spec "Client feedback"). With push cut, a socket cannot wake a backgrounded app, so real-time transport buys nothing a user would notice. Unread counts poll on foreground and every 30s in an open conversation. |
+| A14 | Messaging scope | Attendee↔staff and attendee↔attendee. Attendee↔attendee is gated on the existing `directoryVisible` **and** `contactSharingOptIn` flags; no new consent surface. |
+
+## Late scope change — chat (24 July 2026)
+
+Two-way messaging was **not** in the original spec. It arrived in client feedback on 24 July
+2026 and was folded in on 28 August 2026, roughly two weeks before the event. It is the only
+piece of that feedback that adds backend surface area, so it is sequenced last and its endpoint
+count is kept deliberately small — the parent stack is near enough to the CloudFormation
+500-resource cap that this matters (see `CLAUDE.md`).
+
+**Push notifications remain cut from v1.** Chat does not re-open that decision. Without push,
+messages are seen when the app is opened; attendees should not be told to expect an alert. If
+the client wants message alerts, that is a push conversation with its own APNs/FCM prerequisites
+(still unanswered — see item 7 below), not a messaging one.
 
 ## Still open — do not block the foundation, but need answers before full build-out
 1. **Access code style:** one shared event code for everyone, or a unique per-attendee code? (We
@@ -40,3 +55,10 @@
 10. **Help requests routing** — email/SMS to staff, Slack, or admin-portal-only inbox?
 11. **Feedback anonymity** — is the "anonymous mode" required for V1?
 12. **Domain names** for the admin portal + any CloudFront custom domains (for CORS + certs).
+13. **Market tags** (CF-2) — who applies San Diego / Bay Area / Boulder / Seattle / Boston / UK /
+    Investments / BioMed Realty / Blackstone to the attendee CSV, and is one market per attendee
+    or several? Matching is exact and case-sensitive, so the import must be consistent.
+14. **Message retention** — are chat threads kept after the event, exported, or deleted with the
+    rest of the attendee data (§18.11)?
+15. **Staff inbox coverage** — is one shared staff inbox enough, or do messages need routing to
+    individual staff members? Related to open item 2 (admin role granularity).

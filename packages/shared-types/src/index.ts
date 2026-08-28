@@ -57,6 +57,32 @@ export interface RegistrationAction {
   label: string;
 }
 
+/**
+ * Markets used to group the attendee directory (client feedback CF-2). Implemented on the
+ * existing attendee `tags` field — there is no stored `market` column. Matching is exact and
+ * case-sensitive, matching lib/audience.ts.
+ */
+export const MARKETS = [
+  'San Diego',
+  'Bay Area',
+  'Boulder',
+  'Seattle',
+  'Boston',
+  'UK',
+  'Investments',
+  'BioMed Realty',
+  'Blackstone',
+] as const;
+export type Market = (typeof MARKETS)[number];
+
+/** A named person attendees can call or email from the Help screen (CF-4). */
+export interface EventContact {
+  name: string;
+  role?: string;
+  phone?: string;
+  email?: string;
+}
+
 export interface EventProfile {
   id: string;
   name: string;
@@ -68,6 +94,11 @@ export interface EventProfile {
   registrationDeadline?: string | null; // ISO-8601
   /** Pre-event action items shown on the registration card (spec §4.3). */
   registrationActions: RegistrationAction[];
+  /** Optional host note shown near the top of the mobile Home screen (CF-3). */
+  welcomeMessage?: string;
+  welcomeMessageAuthor?: string;
+  /** Optional named contacts rendered on the Help screen (CF-4). */
+  eventContacts?: EventContact[];
   branding: Branding;
 }
 
@@ -187,6 +218,18 @@ export interface AttendeeCard {
   city?: string;
   profilePhotoUrl?: string;
   guestName?: string;
+  /**
+   * The attendee's tags intersected with MARKETS, for directory grouping (CF-2). Deliberately
+   * NOT the raw tag list: tags also carry internal segmentation like "vip" and "staff", which
+   * must not be exposed to other guests through this public projection.
+   */
+  markets: string[];
+  /**
+   * Whether other guests may start a conversation with this attendee (CF-7): derived from
+   * directoryVisible AND contactSharingOptIn. Surfaced so the app can hide the Message action
+   * rather than letting people discover opt-in status by trial and error.
+   */
+  messageable: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -587,6 +630,55 @@ export interface WeatherUpsert {
   daily?: WeatherDay[];
   notes?: WeatherNote[];
   location?: WeatherLocation | null;
+}
+
+// ---------------------------------------------------------------------------
+// Messaging (client feedback CF-6 / CF-7)
+// ---------------------------------------------------------------------------
+/** 'staff' is a single shared inbox per event, not an individual admin. */
+export type ParticipantType = 'attendee' | 'staff';
+
+export interface ConversationParticipant {
+  type: ParticipantType;
+  /** attendeeId, or the eventId for staff. */
+  id: string;
+  name: string;
+}
+
+export interface Conversation {
+  id: string;
+  eventId: string;
+  participants: ConversationParticipant[];
+  lastMessageAt: string;
+  lastMessagePreview: string;
+  /** Unread for the caller only — read from their own participant pointer. */
+  unreadCount: number;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderType: ParticipantType;
+  senderId: string;
+  senderName: string;
+  body: string;
+  createdAt: string;
+}
+
+/** Start a conversation with staff, or with another attendee who has opted in. */
+export interface ConversationCreate {
+  /** Omit to start a conversation with event staff. */
+  withAttendeeId?: string;
+  /** First message. */
+  body: string;
+}
+
+export interface MessageCreate {
+  body: string;
+}
+
+export interface UnreadCount {
+  unread: number;
 }
 
 // ---------------------------------------------------------------------------
