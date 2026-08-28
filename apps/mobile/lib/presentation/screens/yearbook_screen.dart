@@ -156,7 +156,9 @@ class _AttendeeTile extends ConsumerWidget {
         children: [
           if (card.city.isNotEmpty)
             Text(card.city, style: const TextStyle(fontSize: 12, color: Colors.black54)),
-          if (card.messageable)
+          // Not on your own row: the server rejects self-messaging, so offering it here would
+          // only produce an error the guest can't act on.
+          if (card.messageable && card.id != ref.watch(meProvider).valueOrNull?.id)
             IconButton(
               tooltip: 'Message ${card.fullName}',
               icon: const Icon(Icons.forum_outlined),
