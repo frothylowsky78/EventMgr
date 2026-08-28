@@ -222,6 +222,7 @@ export const toWeather = (i: Item): WeatherInfo => ({
   current: i.current ?? null,
   daily: i.daily ?? [],
   notes: i.notes ?? [],
+  location: i.location ?? null,
   updatedAt: i.updatedAt,
 });
 

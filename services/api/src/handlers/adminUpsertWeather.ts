@@ -11,8 +11,9 @@ import { weatherUpsertSchema, parseBody } from '../lib/validation';
 import { audit } from '../lib/audit';
 
 /**
- * PUT /admin/events/{eventId}/weather — set the manual weather snapshot, daily forecast, and
- * notes/alerts (spec §4.17: admin-entered; a live API can replace this later).
+ * PUT /admin/events/{eventId}/weather — set the weather snapshot, daily forecast, and
+ * notes/alerts (spec §4.17). Current/daily are normally sourced from Open-Meteo in the admin
+ * portal and reviewed before saving; notes/alerts stay admin-authored (open-questions A6).
  */
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
@@ -31,6 +32,7 @@ export const handler = async (
       current: input.current ?? null,
       daily: input.daily ?? [],
       notes: input.notes ?? [],
+      location: input.location ?? null,
       updatedAt: new Date().toISOString(),
     };
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { WeatherDay, WeatherNote } from '@eventmgr/shared-types';
+import type { WeatherDay, WeatherLocation, WeatherNote } from '@eventmgr/shared-types';
 import { adminApi } from '../api';
+import { FORECAST_HORIZON_DAYS, fetchForecast, searchLocations, type GeocodeResult } from '../openMeteo';
 
 export function WeatherPage() {
   const [tempF, setTempF] = useState('');
@@ -10,6 +11,14 @@ export function WeatherPage() {
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
 
+  // --- Forecast source (Open-Meteo) ---
+  const [location, setLocation] = useState<WeatherLocation | null>(null);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<GeocodeResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [sourceMsg, setSourceMsg] = useState<string | null>(null);
+
   useEffect(() => {
     adminApi
       .getWeather()
@@ -18,6 +27,7 @@ export function WeatherPage() {
         setCondition(w.current?.condition ?? '');
         setDaily(w.daily ?? []);
         setNotes(w.notes ?? []);
+        setLocation(w.location ?? null);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -27,6 +37,50 @@ export function WeatherPage() {
     setDaily(daily.map((d, idx) => (idx === i ? { ...d, ...patch } : d)));
   }
 
+  async function search(e: React.FormEvent) {
+    e.preventDefault();
+    setSourceMsg(null);
+    setSearching(true);
+    try {
+      const found = await searchLocations(query);
+      setResults(found);
+      if (found.length === 0) setSourceMsg('No places matched that search.');
+    } catch (err) {
+      setSourceMsg(err instanceof Error ? err.message : 'Location search failed');
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  function choose(r: GeocodeResult) {
+    setLocation({ name: r.name, latitude: r.latitude, longitude: r.longitude });
+    setResults([]);
+    setQuery('');
+    setSourceMsg(null);
+  }
+
+  /** Pull the forecast and fill the fields below. Nothing is saved until "Save weather". */
+  async function pullForecast() {
+    if (!location) return;
+    setSourceMsg(null);
+    setFetching(true);
+    try {
+      const f = await fetchForecast(location);
+      if (f.current) {
+        setTempF(String(f.current.tempF));
+        setCondition(f.current.condition);
+      }
+      setDaily(f.daily);
+      setSourceMsg(
+        `Filled ${f.daily.length} day(s) from Open-Meteo. Review, then Save weather.`
+      );
+    } catch (err) {
+      setSourceMsg(err instanceof Error ? err.message : 'Forecast lookup failed');
+    } finally {
+      setFetching(false);
+    }
+  }
+
   async function save() {
     setMsg(null);
     try {
@@ -34,6 +88,7 @@ export function WeatherPage() {
         current: tempF ? { tempF: Number(tempF), condition } : null,
         daily,
         notes,
+        location,
       });
       setMsg('Saved.');
     } catch (e) {
@@ -47,7 +102,63 @@ export function WeatherPage() {
     <div className="card">
       <h2 style={{ marginTop: 0 }}>Weather</h2>
 
-      <h3>Current</h3>
+      <h3>Forecast source</h3>
+      <p className="muted" style={{ marginTop: 0 }}>
+        Pull current conditions and the daily forecast from Open-Meteo, then review and edit
+        before saving. Forecasts only reach about {FORECAST_HORIZON_DAYS} days ahead — dates
+        further out come back empty until they move inside that window.
+      </p>
+
+      {location && (
+        <p style={{ margin: '8px 0' }}>
+          <strong>{location.name}</strong>{' '}
+          <span className="muted">
+            ({location.latitude.toFixed(3)}, {location.longitude.toFixed(3)})
+          </span>{' '}
+          <button className="secondary" type="button" onClick={() => setLocation(null)}>
+            Change
+          </button>
+        </p>
+      )}
+
+      {!location && (
+        <form className="row" onSubmit={search}>
+          <div style={{ flex: 1 }}>
+            <label>Search location</label>
+            <input
+              value={query}
+              placeholder="e.g. Coeur d'Alene"
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          <div style={{ flex: '0 0 auto', alignSelf: 'end' }}>
+            <button type="submit" disabled={searching || !query.trim()}>
+              {searching ? 'Searching…' : 'Search'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {results.length > 0 && (
+        <ul style={{ listStyle: 'none', padding: 0, margin: '8px 0' }}>
+          {results.map((r) => (
+            <li key={r.id} style={{ marginBottom: 4 }}>
+              <button className="secondary" type="button" onClick={() => choose(r)}>
+                {r.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div style={{ marginTop: 8 }}>
+        <button type="button" onClick={pullForecast} disabled={!location || fetching}>
+          {fetching ? 'Fetching…' : 'Fetch forecast'}
+        </button>
+        {sourceMsg && <span className="muted" style={{ marginLeft: 12 }}>{sourceMsg}</span>}
+      </div>
+
+      <h3 style={{ marginTop: 20 }}>Current</h3>
       <div className="row">
         <div><label>Temp °F</label><input type="number" value={tempF} onChange={(e) => setTempF(e.target.value)} /></div>
         <div><label>Condition</label><input value={condition} onChange={(e) => setCondition(e.target.value)} /></div>

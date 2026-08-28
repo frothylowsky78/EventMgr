@@ -156,6 +156,11 @@ export interface Attendee {
   enabled: boolean;
 }
 
+/** Admin patch of an attendee record. Tags drive notification targeting (see NotificationTarget). */
+export interface AttendeeUpdate {
+  tags?: string[];
+}
+
 /** Public yearbook projection — excludes private fields (phone, dietary, accessibility). */
 export interface AttendeeCard {
   id: string;
@@ -544,10 +549,18 @@ export interface WeatherNote {
   createdAt: string;
 }
 
+/** Geocoded place the forecast was pulled for. Remembered so staff can re-fetch. */
+export interface WeatherLocation {
+  name: string;
+  latitude: number;
+  longitude: number;
+}
+
 export interface WeatherInfo {
   current?: { tempF: number; condition: string } | null;
   daily: WeatherDay[];
   notes: WeatherNote[];
+  location?: WeatherLocation | null;
   updatedAt?: string;
 }
 
@@ -555,6 +568,7 @@ export interface WeatherUpsert {
   current?: { tempF: number; condition: string } | null;
   daily?: WeatherDay[];
   notes?: WeatherNote[];
+  location?: WeatherLocation | null;
 }
 
 // ---------------------------------------------------------------------------

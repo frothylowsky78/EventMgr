@@ -187,6 +187,11 @@ const weatherNote = z.object({
   body: z.string().max(2000),
   createdAt: z.string(),
 });
+export const weatherLocation = z.object({
+  name: z.string().min(1).max(200),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});
 export const weatherUpsertSchema = z.object({
   current: z
     .object({ tempF: z.number(), condition: z.string().max(100) })
@@ -194,6 +199,12 @@ export const weatherUpsertSchema = z.object({
     .optional(),
   daily: z.array(weatherDay).optional(),
   notes: z.array(weatherNote).optional(),
+  location: weatherLocation.nullable().optional(),
+});
+
+// --- Attendees (admin edit) ---
+export const attendeeUpdateSchema = z.object({
+  tags: z.array(z.string().min(1).max(50)).max(50).optional(),
 });
 
 // --- Feedback (spec §4.16) ---
