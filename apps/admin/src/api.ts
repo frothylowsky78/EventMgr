@@ -20,6 +20,8 @@ import type {
   DiningItemCreate,
   DiningItemUpdate,
   EventLocation,
+  EventProfile,
+  EventProfileUpdate,
   EventLocationCreate,
   EventLocationUpdate,
   MapLocation,
@@ -127,6 +129,11 @@ export const adminApi = {
   // Map images — pre-signed PUT straight to the private assets bucket
   requestMapImageUrl: (mapId: string, contentType: string) =>
     request<UploadTicket>('POST', `/admin/events/${ev()}/maps/${mapId}/image-url`, { contentType }),
+
+  // Event profile — read via the shared endpoint, write via the admin one
+  getEvent: () => request<EventProfile>('GET', `/events/${ev()}`),
+  updateEvent: (patch: EventProfileUpdate) =>
+    request<EventProfile>('PATCH', `/admin/events/${ev()}`, patch),
 
   // Locations (named places referenced by agenda + dining)
   listLocations: () => request<EventLocation[]>('GET', `/admin/events/${ev()}/locations`),

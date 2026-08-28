@@ -62,6 +62,9 @@ export class AdminApi extends NestedStack {
       return fn;
     };
 
+    // Admin — event profile (name, venue, dates, branding; drives the mobile home screen)
+    route('AdminUpdateEvent', apigw.HttpMethod.PATCH, '/admin/events/{eventId}', 'adminUpdateEvent.ts', 'write');
+
     // Admin — agenda CRUD (role enforced inside the handler in addition to the authorizer)
     route('AdminListAgenda', apigw.HttpMethod.GET, '/admin/events/{eventId}/agenda', 'adminListAgenda.ts', 'read');
     route('AdminCreateAgenda', apigw.HttpMethod.POST, '/admin/events/{eventId}/agenda', 'adminCreateAgenda.ts', 'write');

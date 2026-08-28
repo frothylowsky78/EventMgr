@@ -207,6 +207,76 @@ export const mapImageSchema = z.object({
   contentType: z.string().min(1).max(100),
 });
 
+// --- Event profile (admin edit) ---
+const hexColor = z
+  .string()
+  .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'expected a hex color like #1A2B4C');
+
+/**
+ * Canonical IANA zone name, checked against the runtime's tz database.
+ *
+ * Intl.DateTimeFormat is NOT sufficient on its own: it happily accepts the legacy aliases
+ * "PST" and "pst8pdt", which are not IANA zone names and which the mobile app and the ICS
+ * export cannot rely on. Intl.supportedValuesOf returns only canonical zones, so it rejects
+ * those. UTC is allowed explicitly because it is legitimate but absent from that list.
+ */
+const canonicalZones = (() => {
+  // Typed locally: supportedValuesOf is ES2022 and this package compiles against lib ES2021.
+  const supportedValuesOf = (
+    Intl as unknown as { supportedValuesOf?: (key: 'timeZone') => string[] }
+  ).supportedValuesOf;
+  if (!supportedValuesOf) return null;
+  try {
+    const list = supportedValuesOf('timeZone');
+    // Guard against a cut-down ICU build returning a stub list.
+    return list.length > 100 ? new Set(list) : null;
+  } catch {
+    return null;
+  }
+})();
+
+const ianaTimezone = z
+  .string()
+  .min(1)
+  .max(100)
+  .refine((tz) => {
+    if (tz === 'UTC') return true;
+    if (canonicalZones) return canonicalZones.has(tz);
+    // Fallback for a runtime without supportedValuesOf: at least require Area/Location shape.
+    if (!/^[A-Za-z_]+\/[A-Za-z0-9_+\-\/]+$/.test(tz)) return false;
+    try {
+      new Intl.DateTimeFormat('en-US', { timeZone: tz });
+      return true;
+    } catch {
+      return false;
+    }
+  }, 'expected a canonical IANA timezone, e.g. America/Los_Angeles');
+
+export const eventUpdateSchema = z
+  .object({
+    name: z.string().min(1).max(200),
+    startDate: dateStr,
+    endDate: dateStr,
+    locationName: z.string().max(200),
+    address: z.string().max(500),
+    timezone: ianaTimezone,
+    registrationDeadline: z.string().datetime({ offset: true }).nullable(),
+    registrationActions: z.array(
+      z.object({ id: z.string().min(1).max(100), label: z.string().min(1).max(200) })
+    ),
+    // .partial() inside too: the handler merges branding field-by-field, so sending only
+    // primaryColor must be accepted rather than demanding all four every time.
+    branding: z
+      .object({
+        logoUrl: z.string().max(2000),
+        heroImageUrl: z.string().max(2000),
+        primaryColor: hexColor,
+        secondaryColor: hexColor,
+      })
+      .partial(),
+  })
+  .partial();
+
 // --- Locations (named places referenced by agenda/dining/itinerary) ---
 export const locationCreateSchema = z.object({
   name: z.string().min(1).max(200),

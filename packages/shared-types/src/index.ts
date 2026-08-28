@@ -71,6 +71,9 @@ export interface EventProfile {
   branding: Branding;
 }
 
+/** Admin patch of the event profile. Every field optional; branding merges field-by-field. */
+export type EventProfileUpdate = Partial<Omit<EventProfile, 'id'>>;
+
 export type AgendaCategory =
   | 'general_session'
   | 'meal'

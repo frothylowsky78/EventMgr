@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Login } from './components/Login';
 import { AgendaPage } from './components/AgendaPage';
+import { EventPage } from './components/EventPage';
 import { NotificationsPage } from './components/NotificationsPage';
 import { PhotosPage } from './components/PhotosPage';
 import { FaqPage } from './components/FaqPage';
@@ -16,6 +17,7 @@ import { setToken } from './api';
 import { config } from './config';
 
 type Tab =
+  | 'event'
   | 'agenda'
   | 'attendees'
   | 'dining'
@@ -29,6 +31,7 @@ type Tab =
   | 'data';
 
 const TABS: { id: Tab; label: string }[] = [
+  { id: 'event', label: 'Event' },
   { id: 'agenda', label: 'Agenda' },
   { id: 'attendees', label: 'Attendees' },
   { id: 'dining', label: 'Dining' },
@@ -89,6 +92,7 @@ export function App() {
         ))}
       </nav>
       <main className="container">
+        {tab === 'event' && <EventPage />}
         {tab === 'agenda' && <AgendaPage />}
         {tab === 'attendees' && <AttendeesPage />}
         {tab === 'dining' && <DiningPage />}
