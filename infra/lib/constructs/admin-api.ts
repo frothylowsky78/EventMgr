@@ -103,7 +103,9 @@ export class AdminApi extends NestedStack {
       entry: 'adminProvisionAttendees.ts',
       config,
       table,
-      access: 'read',
+      // 'write', not 'read': the handler only queries attendees, but audit() writes an
+      // entry at the end. With read-only access the whole run 500s after doing its work.
+      access: 'write',
       environment: { USER_POOL_ID: userPool.userPoolId },
       timeoutSeconds: 29,
     });
