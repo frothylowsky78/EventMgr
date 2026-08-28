@@ -1,11 +1,14 @@
 <!--
-  Paste these keys into ios/Runner/Info.plist (inside the top-level <dict>) after running
-  `flutter create .`. Permission strings are user-facing — keep them specific and honest
-  (App Store review rejects vague descriptions).
+  APPLIED — these keys are already merged into ios/Runner/Info.plist. This file is kept as the
+  reference for what was added and why; re-apply it only if the iOS project is regenerated.
+
+  Permission strings are user-facing — keep them specific and honest (App Store review rejects
+  vague descriptions). ITSAppUsesNonExemptEncryption is required, or every upload prompts for
+  export-compliance answers.
 -->
 
 <key>CFBundleDisplayName</key>
-<string>VIP Summit</string>
+<string>Event Companion</string>
 
 <!-- image_picker: camera capture + library selection (photo upload, profile photo) -->
 <key>NSCameraUsageDescription</key>

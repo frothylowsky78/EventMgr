@@ -1,7 +1,15 @@
 <!--
-  Merge into android/app/src/main/AndroidManifest.xml after `flutter create .`.
-  - <uses-permission> and <queries> go as direct children of <manifest>.
+  APPLIED — these entries are already merged into android/app/src/main/AndroidManifest.xml.
+  Kept as the reference for what was added and why; re-apply only if the Android project is
+  regenerated.
+
+  - <uses-permission> goes as a direct child of <manifest>.
+  - The intents below were merged INTO the existing <queries> block rather than added as a
+    second one — the manifest schema allows only one <queries> element per file, and the
+    generated PROCESS_TEXT intent must be preserved.
   - Set android:label on <application> (or via a string resource).
+
+  POST_NOTIFICATIONS is deliberately absent: push notifications are cut from v1. Do not add it.
 -->
 
 <!-- Direct children of <manifest> -->
@@ -11,7 +19,6 @@
 <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
     android:maxSdkVersion="32"/>
-<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
 <!-- url_launcher needs explicit intent visibility on Android 11+ (package visibility). -->
 <queries>
@@ -33,4 +40,4 @@
   </intent>
 </queries>
 
-<!-- On <application>: android:label="VIP Summit"  (and keep android:usesCleartextTraffic="false") -->
+<!-- On <application>: android:label="Event Companion"  (and keep android:usesCleartextTraffic="false") -->
