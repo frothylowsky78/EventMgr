@@ -85,11 +85,11 @@ Config files are git-ignored and exist only locally: `apps/mobile/config/dev.jso
   `/home`, `/agenda`, `/itinerary` render `HomeShell` (5 tabs: Home · Agenda · My Trip ·
   Photos · More).
 
-## Known suspect (unverified — do not fix blind)
+## Settled — don't re-investigate
 
-`apps/admin/src/App.tsx:50,58` sends `accessToken` to the API — the same bug fixed for mobile in
-`89f87e6`. Untested against the deployed API. Cheap to check: `npm run dev -w @eventmgr/admin`,
-log in at localhost:5173, see whether data loads — if it 401s, same fix, same reason. Before prod.
+**Admin portal `accessToken` is NOT a bug.** API Gateway's JWT authorizer accepts an access
+token's `client_id` as the audience when `aud` is absent. Verified 2026-08-28 — a portal login
+drove 4 authorized `AdminListAgenda` calls, zero errors. Mobile still needs the *ID* token.
 
 ## Working style
 
