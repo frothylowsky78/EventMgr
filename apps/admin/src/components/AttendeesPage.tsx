@@ -3,6 +3,7 @@ import type {
   Attendee,
   AttendeeUpdate,
   ItineraryItem,
+  ProvisionResult,
   TransportationItem,
   TravelDetail,
 } from '@eventmgr/shared-types';
@@ -51,6 +52,7 @@ export function AttendeesPage() {
   return (
     <div className="card">
       <h2 style={{ marginTop: 0 }}>Attendees</h2>
+      <ProvisionLogins />
       <input placeholder="Search name, company, email" value={query}
         onChange={(e) => setQuery(e.target.value)} style={{ marginBottom: 12 }} />
       {loading && <p className="muted">Loading…</p>}
@@ -404,6 +406,57 @@ function TransportationSection({ attendeeId }: { attendeeId: string }) {
           {items.length === 0 && <tr><td className="muted">No transportation.</td></tr>}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/**
+ * Creates Cognito logins for imported attendees. The CSV import writes attendee records but no
+ * users, so without this nobody can sign in. Safe to click repeatedly — already-provisioned
+ * attendees are skipped — and the call is time-boxed server-side, so a large event needs a few
+ * clicks rather than one long request.
+ */
+function ProvisionLogins() {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<ProvisionResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function run() {
+    setError(null);
+    setBusy(true);
+    try {
+      setResult(await adminApi.provisionAttendees());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Provisioning failed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <button type="button" onClick={run} disabled={busy}>
+        {busy ? 'Provisioning…' : 'Provision logins'}
+      </button>
+      {result && (
+        <span className="muted" style={{ marginLeft: 12 }}>
+          {result.provisioned} created · {result.skipped} already had logins
+          {result.errors.length > 0 && ` · ${result.errors.length} failed`}
+          {result.remaining > 0 && (
+            <strong style={{ marginLeft: 8 }}>
+              {result.remaining} still to do — click again to continue.
+            </strong>
+          )}
+        </span>
+      )}
+      {error && <div className="error">{error}</div>}
+      {result && result.errors.length > 0 && (
+        <ul className="muted" style={{ marginTop: 6 }}>
+          {result.errors.map((e) => (
+            <li key={e.email}>{e.email}: {e.message}</li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

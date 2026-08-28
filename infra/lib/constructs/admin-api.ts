@@ -3,12 +3,13 @@ import { NestedStack, NestedStackProps } from 'aws-cdk-lib';
 import * as apigw from 'aws-cdk-lib/aws-apigatewayv2';
 import { HttpLambdaIntegration } from 'aws-cdk-lib/aws-apigatewayv2-integrations';
 import type { IHttpRouteAuthorizer } from 'aws-cdk-lib/aws-apigatewayv2';
+import * as cognito from 'aws-cdk-lib/aws-cognito';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import type { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { EnvConfig } from '../config';
 import { makeHandler } from './function-factory';
-import { grantPush, grantScheduling } from './grants';
+import { grantCognitoProvisioning, grantPush, grantScheduling } from './grants';
 
 interface AdminApiProps extends NestedStackProps {
   config: EnvConfig;
@@ -18,6 +19,8 @@ interface AdminApiProps extends NestedStackProps {
   authorizer: IHttpRouteAuthorizer;
   galleryBucket: s3.Bucket;
   assetsBucket: s3.Bucket;
+  /** Attendee logins are provisioned into this pool. */
+  userPool: cognito.UserPool;
   schedulerRoleArn: string;
   pushEnv: Record<string, string>;
   schedulingEnv: Record<string, string>;
@@ -31,7 +34,7 @@ interface AdminApiProps extends NestedStackProps {
 export class AdminApi extends NestedStack {
   constructor(scope: Construct, id: string, props: AdminApiProps) {
     super(scope, id, props);
-    const { config, table, httpApi, authorizer, galleryBucket, assetsBucket } = props;
+    const { config, table, httpApi, authorizer, galleryBucket, assetsBucket, userPool } = props;
     const galleryEnv = { GALLERY_BUCKET: galleryBucket.bucketName };
     const assetsEnv = { ASSETS_BUCKET: assetsBucket.bucketName };
 
@@ -93,6 +96,24 @@ export class AdminApi extends NestedStack {
     // Admin — attendees + CSV import/export
     route('AdminListAttendees', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees', 'adminListAttendees.ts', 'read');
     route('AdminUpdateAttendee', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/attendees/{attendeeId}', 'adminUpdateAttendee.ts', 'write');
+
+    // Creates Cognito logins for imported attendees. Time-boxed in the handler and given a
+    // 29s Lambda timeout (API Gateway hard-stops at 30s), so ~100 attendees take a few clicks.
+    const provisionFn = makeHandler(this, 'AdminProvisionAttendees', {
+      entry: 'adminProvisionAttendees.ts',
+      config,
+      table,
+      access: 'read',
+      environment: { USER_POOL_ID: userPool.userPoolId },
+      timeoutSeconds: 29,
+    });
+    grantCognitoProvisioning(provisionFn, userPool.userPoolArn);
+    httpApi.addRoutes({
+      path: '/admin/events/{eventId}/attendees/provision',
+      methods: [apigw.HttpMethod.POST],
+      integration: new HttpLambdaIntegration('AdminProvisionAttendeesInt', provisionFn),
+      authorizer,
+    });
     route('AdminImportAttendees', apigw.HttpMethod.POST, '/admin/events/{eventId}/attendees/import', 'adminImportAttendees.ts', 'write');
     route('AdminImportAgenda', apigw.HttpMethod.POST, '/admin/events/{eventId}/agenda/import', 'adminImportAgenda.ts', 'write');
     route('AdminExportAttendees', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees/export', 'adminExportAttendees.ts', 'read');

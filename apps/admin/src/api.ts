@@ -25,6 +25,7 @@ import type {
   MapLocation,
   MapLocationCreate,
   MapLocationUpdate,
+  ProvisionResult,
   WeatherInfo,
   WeatherUpsert,
   Attendee,
@@ -136,6 +137,8 @@ export const adminApi = {
 
   // Attendees + per-attendee management
   listAttendees: () => request<Attendee[]>('GET', `/admin/events/${ev()}/attendees`),
+  provisionAttendees: () =>
+    request<ProvisionResult>('POST', `/admin/events/${ev()}/attendees/provision`),
   updateAttendee: (attendeeId: string, patch: AttendeeUpdate) =>
     request<Attendee>('PATCH', `/admin/events/${ev()}/attendees/${attendeeId}`, patch),
   getItinerary: (attendeeId: string) =>

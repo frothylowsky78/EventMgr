@@ -209,6 +209,7 @@ export class Api extends Construct {
       authorizer,
       galleryBucket,
       assetsBucket,
+      userPool,
       schedulerRoleArn: schedulerRole.roleArn,
       pushEnv,
       schedulingEnv,

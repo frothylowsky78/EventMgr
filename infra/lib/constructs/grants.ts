@@ -26,3 +26,21 @@ export function grantScheduling(fn: NodejsFunction, schedulerRoleArn: string): v
     })
   );
 }
+
+/**
+ * Cognito user provisioning for the attendee-provision handler only. Scoped to the single user
+ * pool ARN — do not widen this to other functions or to '*'.
+ */
+export function grantCognitoProvisioning(fn: NodejsFunction, userPoolArn: string): void {
+  fn.addToRolePolicy(
+    new iam.PolicyStatement({
+      actions: [
+        'cognito-idp:AdminCreateUser',
+        'cognito-idp:AdminSetUserPassword',
+        'cognito-idp:AdminGetUser',
+        'cognito-idp:ListUsers',
+      ],
+      resources: [userPoolArn],
+    })
+  );
+}

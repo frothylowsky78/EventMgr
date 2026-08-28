@@ -19,6 +19,8 @@ interface HandlerOptions {
   environment?: Record<string, string>;
   /** Auto-create an SQS dead-letter queue for failed async invocations (S3/EventBridge). */
   deadLetterQueueEnabled?: boolean;
+  /** Override the 10s default. Cap at 29s for API routes — API Gateway hard-stops at 30s. */
+  timeoutSeconds?: number;
 }
 
 /**
@@ -34,7 +36,7 @@ export function makeHandler(scope: Construct, id: string, opts: HandlerOptions):
     runtime: lambda.Runtime.NODEJS_20_X,
     architecture: lambda.Architecture.ARM_64,
     memorySize: 256,
-    timeout: Duration.seconds(10),
+    timeout: Duration.seconds(opts.timeoutSeconds ?? 10),
     tracing: lambda.Tracing.ACTIVE,
     deadLetterQueueEnabled: opts.deadLetterQueueEnabled,
     bundling: { minify: true, sourceMap: true, target: 'node20' },

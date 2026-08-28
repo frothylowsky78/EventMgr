@@ -158,6 +158,17 @@ export interface Attendee {
   enabled: boolean;
 }
 
+/**
+ * Result of POST /admin/events/{eventId}/attendees/provision. `remaining > 0` means the run hit
+ * its time box before finishing — call again to continue.
+ */
+export interface ProvisionResult {
+  provisioned: number;
+  skipped: number;
+  remaining: number;
+  errors: { email: string; message: string }[];
+}
+
 /** Admin patch of an attendee record. Tags drive notification targeting (see NotificationTarget). */
 export interface AttendeeUpdate {
   tags?: string[];
