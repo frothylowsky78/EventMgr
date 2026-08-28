@@ -12,6 +12,8 @@ import * as sqs from 'aws-cdk-lib/aws-sqs';
 import type { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { EnvConfig } from '../config';
 import { makeHandler } from './function-factory';
+import { grantPush } from './grants';
+import { AdminApi } from './admin-api';
 
 interface ApiProps {
   config: EnvConfig;
@@ -160,89 +162,12 @@ export class Api extends Construct {
     route('SubmitHelpRequest', apigw.HttpMethod.POST, '/events/{eventId}/help-requests', 'submitHelpRequest.ts', 'write');
     route('GetMyHelpRequests', apigw.HttpMethod.GET, '/me/help-requests', 'getMyHelpRequests.ts', 'read');
 
-    // Admin — agenda CRUD (role enforced inside the handler in addition to the authorizer)
-    route('AdminListAgenda', apigw.HttpMethod.GET, '/admin/events/{eventId}/agenda', 'adminListAgenda.ts', 'read');
-    route('AdminCreateAgenda', apigw.HttpMethod.POST, '/admin/events/{eventId}/agenda', 'adminCreateAgenda.ts', 'write');
-    route('AdminUpdateAgenda', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/agenda/{agendaId}', 'adminUpdateAgenda.ts', 'write');
-
-    // Admin — dining, travel, transportation management
-    route('AdminListDining', apigw.HttpMethod.GET, '/admin/events/{eventId}/dining', 'adminListDining.ts', 'read');
-    route('AdminCreateDining', apigw.HttpMethod.POST, '/admin/events/{eventId}/dining', 'adminCreateDining.ts', 'write');
-    route('AdminUpdateDining', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/dining/{diningId}', 'adminUpdateDining.ts', 'write');
-    route('AdminAssignDiningSeat', apigw.HttpMethod.POST, '/admin/events/{eventId}/dining/{diningId}/seats', 'adminAssignDiningSeat.ts', 'write');
-    route('AdminUpsertTravel', apigw.HttpMethod.PUT, '/admin/events/{eventId}/attendees/{attendeeId}/travel', 'adminUpsertTravel.ts', 'write');
-    route('AdminCreateTransportation', apigw.HttpMethod.POST, '/admin/events/{eventId}/transportation', 'adminCreateTransportation.ts', 'write');
-    route('AdminUpdateTransportation', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/transportation/{attendeeId}/{transportId}', 'adminUpdateTransportation.ts', 'write');
-
-    // Admin — FAQ + weather management
-    route('AdminListFaq', apigw.HttpMethod.GET, '/admin/events/{eventId}/faq', 'adminListFaq.ts', 'read');
-    route('AdminCreateFaq', apigw.HttpMethod.POST, '/admin/events/{eventId}/faq', 'adminCreateFaq.ts', 'write');
-    route('AdminUpdateFaq', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/faq/{faqId}', 'adminUpdateFaq.ts', 'write');
-    route('AdminUpsertWeather', apigw.HttpMethod.PUT, '/admin/events/{eventId}/weather', 'adminUpsertWeather.ts', 'write');
-
-    // Admin — feedback + help desk
-    route('AdminListFeedback', apigw.HttpMethod.GET, '/admin/events/{eventId}/feedback', 'adminListFeedback.ts', 'read');
-    route('AdminUpsertHelp', apigw.HttpMethod.PUT, '/admin/events/{eventId}/help', 'adminUpsertHelp.ts', 'write');
-    route('AdminListHelpRequests', apigw.HttpMethod.GET, '/admin/events/{eventId}/help-requests', 'adminListHelpRequests.ts', 'read');
-    route('AdminUpdateHelpRequest', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/help-requests/{attendeeId}/{requestId}', 'adminUpdateHelpRequest.ts', 'write');
-
-    // Admin — attendees + CSV import/export
-    route('AdminListAttendees', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees', 'adminListAttendees.ts', 'read');
-    route('AdminImportAttendees', apigw.HttpMethod.POST, '/admin/events/{eventId}/attendees/import', 'adminImportAttendees.ts', 'write');
-    route('AdminImportAgenda', apigw.HttpMethod.POST, '/admin/events/{eventId}/agenda/import', 'adminImportAgenda.ts', 'write');
-    route('AdminExportAttendees', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees/export', 'adminExportAttendees.ts', 'read');
-    route('AdminExportFeedback', apigw.HttpMethod.GET, '/admin/events/{eventId}/feedback/export', 'adminExportFeedback.ts', 'read');
-
-    // Admin — per-attendee management (itinerary / travel / transportation)
-    route('AdminListItinerary', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees/{attendeeId}/itinerary', 'adminListItinerary.ts', 'read');
-    route('AdminCreateItinerary', apigw.HttpMethod.POST, '/admin/events/{eventId}/attendees/{attendeeId}/itinerary', 'adminCreateItinerary.ts', 'write');
-    route('AdminUpdateItinerary', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/attendees/{attendeeId}/itinerary/{itemId}', 'adminUpdateItinerary.ts', 'write');
-    route('AdminDeleteItinerary', apigw.HttpMethod.DELETE, '/admin/events/{eventId}/attendees/{attendeeId}/itinerary/{itemId}', 'adminDeleteItinerary.ts', 'write');
-    route('AdminGetTravel', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees/{attendeeId}/travel', 'adminGetTravel.ts', 'read');
-    route('AdminListTransportation', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees/{attendeeId}/transportation', 'adminListTransportation.ts', 'read');
-
-    // Admin — maps
-    route('AdminListMaps', apigw.HttpMethod.GET, '/admin/events/{eventId}/maps', 'adminListMaps.ts', 'read');
-    route('AdminCreateMap', apigw.HttpMethod.POST, '/admin/events/{eventId}/maps', 'adminCreateMap.ts', 'write');
-    route('AdminUpdateMap', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/maps/{mapId}', 'adminUpdateMap.ts', 'write');
-
     // Attendee — device tokens + in-app notification center
     route('RegisterDeviceToken', apigw.HttpMethod.POST, '/me/device-tokens', 'registerDeviceToken.ts', 'write');
     route('DeleteDeviceToken', apigw.HttpMethod.DELETE, '/me/device-tokens/{id}', 'deleteDeviceToken.ts', 'write');
     route('GetMyNotifications', apigw.HttpMethod.GET, '/me/notifications', 'getMyNotifications.ts', 'read');
     route('MarkNotificationRead', apigw.HttpMethod.PATCH, '/me/notifications/{id}/read', 'markNotificationRead.ts', 'write');
     route('MarkAllNotificationsRead', apigw.HttpMethod.PATCH, '/me/notifications/read-all', 'markNotificationRead.ts', 'write');
-
-    // Admin — notifications (ad-hoc push composer, spec §18.16)
-    route('AdminListNotifications', apigw.HttpMethod.GET, '/admin/events/{eventId}/notifications', 'adminListNotifications.ts', 'read');
-    route('AdminCreateNotification', apigw.HttpMethod.POST, '/admin/events/{eventId}/notifications', 'adminCreateNotification.ts', 'write');
-    route('AdminPreviewAudience', apigw.HttpMethod.POST, '/admin/events/{eventId}/notifications/preview', 'adminPreviewAudience.ts', 'read');
-    route('AdminGetNotification', apigw.HttpMethod.GET, '/admin/events/{eventId}/notifications/{notificationId}', 'adminGetNotification.ts', 'read');
-    const testFn = route('AdminSendTestNotification', apigw.HttpMethod.POST, '/admin/events/{eventId}/notifications/{notificationId}/send-test', 'adminSendTestNotification.ts', 'write', { environment: pushEnv });
-    grantPush(testFn);
-    route('AdminDuplicateNotification', apigw.HttpMethod.POST, '/admin/events/{eventId}/notifications/{notificationId}/duplicate', 'adminDuplicateNotification.ts', 'write');
-
-    // Send + cancel need push delivery and EventBridge Scheduler access.
-    const sendFn = route(
-      'AdminSendNotification',
-      apigw.HttpMethod.POST,
-      '/admin/events/{eventId}/notifications/{notificationId}/send',
-      'adminSendNotification.ts',
-      'write',
-      { environment: { ...pushEnv, ...schedulingEnv } }
-    );
-    grantPush(sendFn);
-    grantScheduling(sendFn, schedulerRole.roleArn);
-
-    const cancelFn = route(
-      'AdminCancelNotification',
-      apigw.HttpMethod.POST,
-      '/admin/events/{eventId}/notifications/{notificationId}/cancel',
-      'adminCancelNotification.ts',
-      'write',
-      { environment: schedulingEnv }
-    );
-    grantScheduling(cancelFn, schedulerRole.roleArn);
 
     // --- Photos & gallery (pre-signed S3 upload + moderation, spec §4.14/§18.5) ---
     const uploadUrlFn = route('RequestPhotoUploadUrl', apigw.HttpMethod.POST, '/events/{eventId}/photos/upload-url', 'requestPhotoUploadUrl.ts', 'write', { environment: galleryEnv });
@@ -255,11 +180,6 @@ export class Api extends Construct {
 
     const deletePhotoFn = route('DeletePhoto', apigw.HttpMethod.DELETE, '/events/{eventId}/photos/{photoId}', 'deletePhoto.ts', 'write', { environment: galleryEnv });
     galleryBucket.grantDelete(deletePhotoFn);
-
-    const adminListPhotosFn = route('AdminListPhotos', apigw.HttpMethod.GET, '/admin/events/{eventId}/photos', 'adminListPhotos.ts', 'read', { environment: galleryEnv });
-    galleryBucket.grantRead(adminListPhotosFn);
-
-    route('AdminModeratePhoto', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/photos/{photoId}', 'adminModeratePhoto.ts', 'write');
 
     // S3 ObjectCreated -> finalize photo metadata (thumbnail/moderation hook).
     const photoProcessFn = makeHandler(this, 'PhotoProcessFn', {
@@ -276,31 +196,18 @@ export class Api extends Construct {
       new s3n.LambdaDestination(photoProcessFn)
     );
     this.photoProcessFn = photoProcessFn;
+
+    // All /admin/* routes live in a nested stack, keeping the parent stack under
+    // CloudFormation's 500-resource limit. Routes still attach to the shared HttpApi above.
+    new AdminApi(this, 'AdminApi', {
+      config,
+      table,
+      httpApi: this.httpApi,
+      authorizer,
+      galleryBucket,
+      schedulerRoleArn: schedulerRole.roleArn,
+      pushEnv,
+      schedulingEnv,
+    });
   }
-}
-
-/** SNS permissions for creating platform endpoints + publishing native push. */
-function grantPush(fn: NodejsFunction): void {
-  fn.addToRolePolicy(
-    new iam.PolicyStatement({
-      actions: ['sns:CreatePlatformEndpoint', 'sns:Publish'],
-      resources: ['*'], // platform application + endpoint ARNs are dynamic
-    })
-  );
-}
-
-/** EventBridge Scheduler permissions + ability to pass the scheduler role. */
-function grantScheduling(fn: NodejsFunction, schedulerRoleArn: string): void {
-  fn.addToRolePolicy(
-    new iam.PolicyStatement({
-      actions: ['scheduler:CreateSchedule', 'scheduler:DeleteSchedule', 'scheduler:GetSchedule'],
-      resources: ['*'],
-    })
-  );
-  fn.addToRolePolicy(
-    new iam.PolicyStatement({
-      actions: ['iam:PassRole'],
-      resources: [schedulerRoleArn],
-    })
-  );
 }
