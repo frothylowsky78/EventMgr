@@ -5,8 +5,8 @@ CDK stack outputs. These are passed to Flutter at build time and read by `lib/co
 
 ```bash
 flutter run                 --dart-define-from-file=config/dev.json
-flutter build appbundle --flavor prod --dart-define-from-file=config/prod.json
-flutter build ipa       --flavor prod --dart-define-from-file=config/prod.json
+flutter build appbundle     --dart-define-from-file=config/prod.json
+flutter build ipa           --dart-define-from-file=config/prod.json
 ```
 
 `*.json` (the real, filled files) are git-ignored — only the `.example.json` templates are committed.
