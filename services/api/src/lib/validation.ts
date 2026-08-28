@@ -202,6 +202,17 @@ export const weatherUpsertSchema = z.object({
   location: weatherLocation.nullable().optional(),
 });
 
+// --- Locations (named places referenced by agenda/dining/itinerary) ---
+export const locationCreateSchema = z.object({
+  name: z.string().min(1).max(200),
+  detail: z.string().max(500).optional(),
+  address: z.string().max(500).optional(),
+  mapLink: z.string().url().optional().or(z.literal('')),
+  order: z.number().int().min(0).optional(),
+  published: z.boolean().optional(),
+});
+export const locationUpdateSchema = locationCreateSchema.partial();
+
 // --- Attendees (admin edit) ---
 export const attendeeUpdateSchema = z.object({
   tags: z.array(z.string().min(1).max(50)).max(50).optional(),

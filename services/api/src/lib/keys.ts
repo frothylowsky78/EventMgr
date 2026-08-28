@@ -163,6 +163,16 @@ export const keys = {
     GSI1PK: `EVENT#${eventId}#HELP#${status}`,
   }),
 
+  // --- Locations (event-scoped venues/rooms; GSI1 lists by display order) ---
+  location: (eventId: string, locationId: string) => ({
+    PK: eventPk(eventId),
+    SK: `LOCATION#${locationId}`,
+  }),
+  locationList: (eventId: string) => ({
+    GSI1PK: `EVENT#${eventId}#LOCATION`,
+  }),
+  locationGsi1Sk: (order: number) => String(order).padStart(4, '0'),
+
   // --- Maps (event-scoped; GSI1 lists by order) ---
   mapLocation: (eventId: string, mapId: string) => ({
     PK: eventPk(eventId),

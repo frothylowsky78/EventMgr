@@ -6,6 +6,7 @@ import { PhotosPage } from './components/PhotosPage';
 import { FaqPage } from './components/FaqPage';
 import { SupportPage } from './components/SupportPage';
 import { DiningPage } from './components/DiningPage';
+import { LocationsPage } from './components/LocationsPage';
 import { MapsPage } from './components/MapsPage';
 import { WeatherPage } from './components/WeatherPage';
 import { DataPage } from './components/DataPage';
@@ -18,6 +19,7 @@ type Tab =
   | 'agenda'
   | 'attendees'
   | 'dining'
+  | 'locations'
   | 'notifications'
   | 'photos'
   | 'faq'
@@ -30,6 +32,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'agenda', label: 'Agenda' },
   { id: 'attendees', label: 'Attendees' },
   { id: 'dining', label: 'Dining' },
+  { id: 'locations', label: 'Locations' },
   { id: 'maps', label: 'Maps' },
   { id: 'weather', label: 'Weather' },
   { id: 'notifications', label: 'Notifications' },
@@ -89,6 +92,7 @@ export function App() {
         {tab === 'agenda' && <AgendaPage />}
         {tab === 'attendees' && <AttendeesPage />}
         {tab === 'dining' && <DiningPage />}
+        {tab === 'locations' && <LocationsPage />}
         {tab === 'maps' && <MapsPage />}
         {tab === 'weather' && <WeatherPage />}
         {tab === 'notifications' && <NotificationsPage />}

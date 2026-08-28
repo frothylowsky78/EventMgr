@@ -8,6 +8,7 @@ import { ApiException, fail, getAuth, ok, requireAdmin } from '../lib/http';
 import { TABLE_NAME, keys } from '../lib/keys';
 import { toAgendaItem } from '../lib/mappers';
 import { agendaUpdateSchema, parseBody } from '../lib/validation';
+import { resolveLocationName } from '../lib/locations';
 
 /**
  * PATCH /admin/events/{eventId}/agenda/{agendaId} — partial update (admin only).
@@ -31,9 +32,17 @@ export const handler = async (
     );
     if (!existing.Item) throw new ApiException('NOT_FOUND', 'Agenda item not found');
 
+    // Re-resolve whenever locationId is part of the patch (including clearing it).
+    const locationPatch =
+      'locationId' in patch
+        ? { locationId: patch.locationId ?? null,
+            locationName: await resolveLocationName(eventId, patch.locationId) }
+        : {};
+
     const merged: Record<string, any> = {
       ...existing.Item,
       ...patch,
+      ...locationPatch,
       updatedAt: new Date().toISOString(),
     };
     // Keep the GSI1 sort key consistent with possibly-updated date/startTime.

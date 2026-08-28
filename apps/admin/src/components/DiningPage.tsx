@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import type { DiningItem, DiningItemCreate } from '@eventmgr/shared-types';
+import type { DiningItem, DiningItemCreate, EventLocation } from '@eventmgr/shared-types';
 import { adminApi } from '../api';
+import { LocationSelect } from './LocationsPage';
 
 type Mode = { kind: 'list' } | { kind: 'create' } | { kind: 'edit'; item: DiningItem };
 
@@ -92,11 +93,17 @@ function DiningForm({
     menu: (initial?.menu ?? []).join(', '),
     dressCode: initial?.dressCode ?? '',
     dietaryNotes: initial?.dietaryNotes ?? '',
+    locationId: initial?.locationId ?? '',
     seatingAssignmentEnabled: initial?.seatingAssignmentEnabled ?? false,
     published: initial?.published ?? true,
   });
+  const [locations, setLocations] = useState<EventLocation[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    adminApi.listLocations().then(setLocations).catch(() => {});
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -112,6 +119,7 @@ function DiningForm({
         menu: form.menu.split(',').map((m) => m.trim()).filter(Boolean),
         dressCode: form.dressCode || undefined,
         dietaryNotes: form.dietaryNotes || undefined,
+        locationId: form.locationId || undefined,
         seatingAssignmentEnabled: form.seatingAssignmentEnabled,
         published: form.published,
       });
@@ -142,6 +150,12 @@ function DiningForm({
         <div><label>Dress code</label><input value={form.dressCode} onChange={(e) => set('dressCode', e.target.value)} /></div>
         <div><label>Dietary notes</label><input value={form.dietaryNotes} onChange={(e) => set('dietaryNotes', e.target.value)} /></div>
       </div>
+      <label>Location</label>
+      <LocationSelect
+        value={form.locationId}
+        onChange={(id) => set('locationId', id)}
+        locations={locations}
+      />
       <div className="row" style={{ marginTop: 12 }}>
         <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           <input type="checkbox" style={{ width: 'auto' }} checked={form.seatingAssignmentEnabled}

@@ -10,6 +10,7 @@ import { toDiningItem } from '../lib/mappers';
 import { diningCreateSchema, parseBody } from '../lib/validation';
 import { newId } from '../lib/id';
 import { audit } from '../lib/audit';
+import { resolveLocationName } from '../lib/locations';
 
 /** POST /admin/events/{eventId}/dining — create a dining item. */
 export const handler = async (
@@ -25,6 +26,8 @@ export const handler = async (
     const id = newId('dining');
     const now = new Date().toISOString();
 
+    const locationName = await resolveLocationName(eventId, input.locationId);
+
     const item = {
       ...keys.diningItem(eventId, id),
       GSI1PK: keys.diningList(eventId).GSI1PK,
@@ -36,7 +39,8 @@ export const handler = async (
       date: input.date,
       startTime: input.startTime,
       endTime: input.endTime,
-      locationId: input.locationId,
+      locationId: input.locationId ?? null,
+      locationName,
       description: input.description ?? '',
       menu: input.menu ?? [],
       dressCode: input.dressCode ?? '',

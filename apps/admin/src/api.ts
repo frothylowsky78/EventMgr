@@ -19,6 +19,9 @@ import type {
   DiningItem,
   DiningItemCreate,
   DiningItemUpdate,
+  EventLocation,
+  EventLocationCreate,
+  EventLocationUpdate,
   MapLocation,
   MapLocationCreate,
   MapLocationUpdate,
@@ -118,6 +121,13 @@ export const adminApi = {
     request<HelpRequest>('PATCH', `/admin/events/${ev()}/help-requests/${attendeeId}/${requestId}`, patch),
   listFeedback: (targetId: string) =>
     request<FeedbackSummary>('GET', `/admin/events/${ev()}/feedback?targetId=${encodeURIComponent(targetId)}`),
+
+  // Locations (named places referenced by agenda + dining)
+  listLocations: () => request<EventLocation[]>('GET', `/admin/events/${ev()}/locations`),
+  createLocation: (input: EventLocationCreate) =>
+    request<EventLocation>('POST', `/admin/events/${ev()}/locations`, input),
+  updateLocation: (locationId: string, patch: EventLocationUpdate) =>
+    request<EventLocation>('PATCH', `/admin/events/${ev()}/locations/${locationId}`, patch),
 
   // Attendees + per-attendee management
   listAttendees: () => request<Attendee[]>('GET', `/admin/events/${ev()}/attendees`),

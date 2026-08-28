@@ -26,6 +26,7 @@ class DiningItem {
   final String startTime;
   final String? endTime;
   final String description;
+  final String? locationName;
   final List<String> menu;
   final String dressCode;
   final String dietaryNotes;
@@ -39,6 +40,7 @@ class DiningItem {
     required this.startTime,
     this.endTime,
     this.description = '',
+    this.locationName,
     this.menu = const [],
     this.dressCode = '',
     this.dietaryNotes = '',
@@ -53,6 +55,7 @@ class DiningItem {
         startTime: j['startTime'] as String? ?? '',
         endTime: j['endTime'] as String?,
         description: j['description'] as String? ?? '',
+        locationName: j['locationName'] as String?,
         menu: (j['menu'] as List?)?.map((e) => e.toString()).toList() ?? const [],
         dressCode: j['dressCode'] as String? ?? '',
         dietaryNotes: j['dietaryNotes'] as String? ?? '',
@@ -69,6 +72,7 @@ class DiningItem {
         'startTime': startTime,
         'endTime': endTime,
         'description': description,
+        'locationName': locationName,
         'menu': menu,
         'dressCode': dressCode,
         'dietaryNotes': dietaryNotes,

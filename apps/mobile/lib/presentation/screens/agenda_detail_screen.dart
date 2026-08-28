@@ -55,6 +55,8 @@ class _Detail extends StatelessWidget {
         Chip(label: Text(item.categoryLabel)),
         const SizedBox(height: 16),
         _Field(icon: Icons.schedule, label: '${item.date} · $time'),
+        if ((item.locationName ?? '').isNotEmpty)
+          _Field(icon: Icons.place_outlined, label: item.locationName!),
         if (item.speaker.isNotEmpty)
           _Field(icon: Icons.person_outline, label: item.speaker),
         if (item.dressCode.isNotEmpty)
@@ -97,7 +99,7 @@ class _Detail extends StatelessWidget {
     cal.Add2Calendar.addEvent2Cal(cal.Event(
       title: item.title,
       description: item.description,
-      location: item.mapLink,
+      location: (item.locationName?.isNotEmpty ?? false) ? item.locationName : item.mapLink,
       startDate: start,
       endDate: end,
     ));

@@ -59,6 +59,16 @@ class _DiningCard extends StatelessWidget {
             Text(item.title, style: theme.textTheme.titleMedium),
             const SizedBox(height: 4),
             Text('$day · $time', style: const TextStyle(color: Colors.black54)),
+            if ((item.locationName ?? '').isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(children: [
+                  const Icon(Icons.place_outlined, size: 18, color: Colors.black54),
+                  const SizedBox(width: 6),
+                  Expanded(child: Text(item.locationName!,
+                      style: const TextStyle(color: Colors.black54))),
+                ]),
+              ),
             if (item.seating != null && item.seating!.label.isNotEmpty) ...[
               const SizedBox(height: 10),
               Container(

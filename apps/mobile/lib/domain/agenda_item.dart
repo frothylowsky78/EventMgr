@@ -6,6 +6,7 @@ class AgendaItem {
   final String startTime; // HH:mm
   final String? endTime;
   final String? locationId;
+  final String? locationName;
   final String category;
   final String description;
   final String speaker;
@@ -25,6 +26,7 @@ class AgendaItem {
     required this.category,
     this.endTime,
     this.locationId,
+    this.locationName,
     this.description = '',
     this.speaker = '',
     this.dressCode = '',
@@ -43,6 +45,7 @@ class AgendaItem {
         startTime: j['startTime'] as String? ?? '',
         endTime: j['endTime'] as String?,
         locationId: j['locationId'] as String?,
+        locationName: j['locationName'] as String?,
         category: j['category'] as String? ?? 'general_session',
         description: j['description'] as String? ?? '',
         speaker: j['speaker'] as String? ?? '',
@@ -64,6 +67,7 @@ class AgendaItem {
         'startTime': startTime,
         'endTime': endTime,
         'locationId': locationId,
+        'locationName': locationName,
         'category': category,
         'description': description,
         'speaker': speaker,

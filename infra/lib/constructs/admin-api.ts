@@ -83,6 +83,11 @@ export class AdminApi extends NestedStack {
     route('AdminListHelpRequests', apigw.HttpMethod.GET, '/admin/events/{eventId}/help-requests', 'adminListHelpRequests.ts', 'read');
     route('AdminUpdateHelpRequest', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/help-requests/{attendeeId}/{requestId}', 'adminUpdateHelpRequest.ts', 'write');
 
+    // Admin — locations (named places referenced by agenda items)
+    route('AdminListLocations', apigw.HttpMethod.GET, '/admin/events/{eventId}/locations', 'adminListLocations.ts', 'read');
+    route('AdminCreateLocation', apigw.HttpMethod.POST, '/admin/events/{eventId}/locations', 'adminCreateLocation.ts', 'write');
+    route('AdminUpdateLocation', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/locations/{locationId}', 'adminUpdateLocation.ts', 'write');
+
     // Admin — attendees + CSV import/export
     route('AdminListAttendees', apigw.HttpMethod.GET, '/admin/events/{eventId}/attendees', 'adminListAttendees.ts', 'read');
     route('AdminUpdateAttendee', apigw.HttpMethod.PATCH, '/admin/events/{eventId}/attendees/{attendeeId}', 'adminUpdateAttendee.ts', 'write');

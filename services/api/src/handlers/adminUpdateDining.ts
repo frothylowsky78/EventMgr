@@ -9,6 +9,7 @@ import { TABLE_NAME, keys } from '../lib/keys';
 import { toDiningItem } from '../lib/mappers';
 import { diningUpdateSchema, parseBody } from '../lib/validation';
 import { audit } from '../lib/audit';
+import { resolveLocationName } from '../lib/locations';
 
 /** PATCH /admin/events/{eventId}/dining/{diningId} — partial update. */
 export const handler = async (
@@ -29,9 +30,17 @@ export const handler = async (
     );
     if (!existing.Item) throw new ApiException('NOT_FOUND', 'Dining item not found');
 
+    // Re-resolve whenever locationId is part of the patch (including clearing it).
+    const locationPatch =
+      'locationId' in patch
+        ? { locationId: patch.locationId ?? null,
+            locationName: await resolveLocationName(eventId, patch.locationId) }
+        : {};
+
     const merged: Record<string, any> = {
       ...existing.Item,
       ...patch,
+      ...locationPatch,
       updatedAt: new Date().toISOString(),
     };
     merged.GSI1SK = keys.diningGsi1Sk(merged.date, merged.startTime, diningId);

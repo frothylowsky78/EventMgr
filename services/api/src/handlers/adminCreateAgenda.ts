@@ -9,6 +9,7 @@ import { TABLE_NAME, keys } from '../lib/keys';
 import { toAgendaItem } from '../lib/mappers';
 import { agendaCreateSchema, parseBody } from '../lib/validation';
 import { newId } from '../lib/id';
+import { resolveLocationName } from '../lib/locations';
 
 /** POST /admin/events/{eventId}/agenda — create an agenda item (admin only). */
 export const handler = async (
@@ -20,6 +21,8 @@ export const handler = async (
     if (!eventId) throw new ApiException('VALIDATION', 'eventId is required');
 
     const input = parseBody(agendaCreateSchema, event.body);
+    // Resolve now so the item carries a printable location and a bad id is rejected here.
+    const locationName = await resolveLocationName(eventId, input.locationId);
     const id = newId('agenda');
     const now = new Date().toISOString();
 
@@ -34,7 +37,8 @@ export const handler = async (
       date: input.date,
       startTime: input.startTime,
       endTime: input.endTime,
-      locationId: input.locationId,
+      locationId: input.locationId ?? null,
+      locationName,
       category: input.category,
       description: input.description ?? '',
       speaker: input.speaker ?? '',

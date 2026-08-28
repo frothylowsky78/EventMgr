@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { AGENDA_CATEGORIES, type AgendaItem, type AgendaItemCreate } from '@eventmgr/shared-types';
+import { useEffect, useState } from 'react';
+import { AGENDA_CATEGORIES, type AgendaItem, type AgendaItemCreate, type EventLocation } from '@eventmgr/shared-types';
+import { adminApi } from '../api';
+import { LocationSelect } from './LocationsPage';
 
 interface Props {
   initial?: AgendaItem;
@@ -21,8 +23,13 @@ export function AgendaForm({ initial, onSubmit, onCancel }: Props) {
     required: initial?.required ?? false,
     published: initial?.published ?? true,
   });
+  const [locations, setLocations] = useState<EventLocation[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    adminApi.listLocations().then(setLocations).catch(() => {});
+  }, []);
 
   const set = <K extends keyof AgendaItemCreate>(k: K, v: AgendaItemCreate[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -72,8 +79,12 @@ export function AgendaForm({ initial, onSubmit, onCancel }: Props) {
           </select>
         </div>
         <div>
-          <label>Location ID</label>
-          <input value={form.locationId} onChange={(e) => set('locationId', e.target.value)} />
+          <label>Location</label>
+          <LocationSelect
+            value={form.locationId ?? ''}
+            onChange={(id) => set('locationId', id)}
+            locations={locations}
+          />
         </div>
         <div>
           <label>Speaker / host</label>

@@ -5,6 +5,7 @@ import type {
   DeviceTokenRecord,
   DiningItem,
   DiningSeat,
+  EventLocation,
   EventProfile,
   FaqItem,
   FeedbackSubmission,
@@ -54,6 +55,7 @@ export const toAgendaItem = (i: Item): AgendaItem => ({
   startTime: i.startTime,
   endTime: i.endTime,
   locationId: i.locationId ?? null,
+  locationName: i.locationName ?? null,
   category: i.category,
   description: i.description ?? '',
   speaker: i.speaker ?? '',
@@ -130,6 +132,7 @@ export const toDiningItem = (i: Item): DiningItem => ({
   startTime: i.startTime,
   endTime: i.endTime,
   locationId: i.locationId ?? null,
+  locationName: i.locationName ?? null,
   description: i.description ?? '',
   menu: i.menu ?? [],
   dressCode: i.dressCode ?? '',
@@ -214,6 +217,17 @@ export const toFaqItem = (i: Item): FaqItem => ({
   question: i.question,
   answer: i.answer,
   featured: i.featured ?? false,
+  order: i.order ?? 0,
+  published: i.published ?? true,
+});
+
+export const toEventLocation = (i: Item): EventLocation => ({
+  id: i.id,
+  eventId: i.eventId,
+  name: i.name,
+  detail: i.detail ?? '',
+  address: i.address ?? '',
+  mapLink: i.mapLink ?? '',
   order: i.order ?? 0,
   published: i.published ?? true,
 });

@@ -88,6 +88,8 @@ export interface AgendaItem {
   startTime: string; // HH:mm
   endTime?: string; // HH:mm
   locationId?: string | null;
+  /** Resolved from locationId when the item is saved. Display this; don't send it. */
+  locationName?: string | null;
   category: AgendaCategory;
   description?: string;
   speaker?: string;
@@ -341,6 +343,8 @@ export interface DiningItem {
   startTime: string; // HH:mm
   endTime?: string;
   locationId?: string | null;
+  /** Resolved from locationId when the item is saved. Display this; don't send it. */
+  locationName?: string | null;
   description?: string;
   menu: string[];
   dressCode?: string;
@@ -664,6 +668,33 @@ export interface MapPin {
   label: string;
   note?: string;
 }
+
+/**
+ * A named place at the event (ballroom, terrace, clubhouse). Agenda/dining/itinerary items
+ * reference one by `locationId`; the resolved `name` is denormalized onto the item for display.
+ * Named EventLocation rather than Location to avoid colliding with the DOM global.
+ */
+export interface EventLocation {
+  id: string;
+  eventId: string;
+  name: string;
+  /** Optional detail line, e.g. "2nd floor, north wing". */
+  detail?: string;
+  address?: string;
+  mapLink?: string;
+  order: number;
+  published: boolean;
+}
+
+export interface EventLocationCreate {
+  name: string;
+  detail?: string;
+  address?: string;
+  mapLink?: string;
+  order?: number;
+  published?: boolean;
+}
+export type EventLocationUpdate = Partial<EventLocationCreate>;
 
 export interface MapLocation {
   id: string;
