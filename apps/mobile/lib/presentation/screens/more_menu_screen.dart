@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/auth_controller.dart';
+import '../../application/providers.dart';
 
 /// The "More" tab (spec §7 More menu). Links to the secondary modules; the ones not yet
 /// built show a polished "coming soon" so the menu always looks complete.
