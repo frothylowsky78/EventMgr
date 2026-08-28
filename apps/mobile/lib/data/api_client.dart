@@ -6,12 +6,15 @@ import 'auth/cognito_service.dart';
 /// Thin HTTP client over the backend API. Attaches the Cognito access token and
 /// unwraps the `{ data }` / `{ error }` envelope.
 class ApiClient {
-  ApiClient(this._auth)
-      : _dio = Dio(BaseOptions(
-          baseUrl: AppConfig.apiUrl,
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 15),
-        )) {
+  /// [dio] is injectable so tests can exercise this class (auth interceptor, envelope
+  /// unwrapping, error mapping) against a fake adapter instead of the network.
+  ApiClient(this._auth, {Dio? dio})
+      : _dio = dio ??
+            Dio(BaseOptions(
+              baseUrl: AppConfig.apiUrl,
+              connectTimeout: const Duration(seconds: 10),
+              receiveTimeout: const Duration(seconds: 15),
+            )) {
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final token = await _auth.currentAccessToken();

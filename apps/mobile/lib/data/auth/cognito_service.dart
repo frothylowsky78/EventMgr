@@ -21,7 +21,9 @@ class CognitoService {
       : _storage = storage ?? const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
-  final CognitoUserPool _pool =
+  // Built lazily: constructing the service must not require valid config. Nothing needs the
+  // pool until a sign-in actually happens, and tests subclass this to supply canned tokens.
+  late final CognitoUserPool _pool =
       CognitoUserPool(AppConfig.userPoolId, AppConfig.appClientId);
 
   static const _kAccess = 'access_token';
