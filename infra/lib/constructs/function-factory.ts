@@ -3,7 +3,6 @@ import * as path from 'path';
 import { Duration } from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
-import * as logs from 'aws-cdk-lib/aws-logs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { EnvConfig } from '../config';
 
@@ -37,7 +36,6 @@ export function makeHandler(scope: Construct, id: string, opts: HandlerOptions):
     memorySize: 256,
     timeout: Duration.seconds(10),
     tracing: lambda.Tracing.ACTIVE,
-    logRetention: config.logRetentionDays as logs.RetentionDays,
     deadLetterQueueEnabled: opts.deadLetterQueueEnabled,
     bundling: { minify: true, sourceMap: true, target: 'node20' },
     environment: {
