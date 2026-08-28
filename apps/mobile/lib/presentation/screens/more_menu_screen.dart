@@ -14,9 +14,9 @@ class MoreMenuScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final entries = <_MoreEntry>[
       const _MoreEntry('My Profile', Icons.person_outline, route: '/profile'),
-      const _MoreEntry('Travel', Icons.flight_takeoff, route: '/travel'),
       const _MoreEntry('Transportation', Icons.directions_bus, route: '/transportation'),
       const _MoreEntry('Dining', Icons.restaurant, route: '/dining'),
+      const _MoreEntry('Messages', Icons.forum_outlined, route: '/messages'),
       const _MoreEntry('Notifications', Icons.notifications, route: '/notifications'),
       const _MoreEntry('Attendees / Yearbook', Icons.people_outline, route: '/attendees'),
       const _MoreEntry('Weather', Icons.wb_sunny_outlined, route: '/weather'),

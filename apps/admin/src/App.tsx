@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Login } from './components/Login';
 import { AgendaPage } from './components/AgendaPage';
 import { EventPage } from './components/EventPage';
+import { MessagesPage } from './components/MessagesPage';
 import { NotificationsPage } from './components/NotificationsPage';
 import { PhotosPage } from './components/PhotosPage';
 import { FaqPage } from './components/FaqPage';
@@ -22,6 +23,7 @@ type Tab =
   | 'attendees'
   | 'dining'
   | 'locations'
+  | 'messages'
   | 'notifications'
   | 'photos'
   | 'faq'
@@ -38,6 +40,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'locations', label: 'Locations' },
   { id: 'maps', label: 'Maps' },
   { id: 'weather', label: 'Weather' },
+  { id: 'messages', label: 'Messages' },
   { id: 'notifications', label: 'Notifications' },
   { id: 'photos', label: 'Photos' },
   { id: 'faq', label: 'FAQ' },
@@ -99,6 +102,7 @@ export function App() {
         {tab === 'locations' && <LocationsPage />}
         {tab === 'maps' && <MapsPage />}
         {tab === 'weather' && <WeatherPage />}
+        {tab === 'messages' && <MessagesPage />}
         {tab === 'notifications' && <NotificationsPage />}
         {tab === 'photos' && <PhotosPage />}
         {tab === 'faq' && <FaqPage />}

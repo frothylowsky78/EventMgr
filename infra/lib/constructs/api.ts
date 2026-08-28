@@ -172,6 +172,16 @@ export class Api extends Construct {
     route('MarkNotificationRead', apigw.HttpMethod.PATCH, '/me/notifications/{id}/read', 'markNotificationRead.ts', 'write');
     route('MarkAllNotificationsRead', apigw.HttpMethod.PATCH, '/me/notifications/read-all', 'markNotificationRead.ts', 'write');
 
+    // --- Messaging (CF-6/CF-7). Polled, not sockets: no WebSocket API by design — with push
+    // cut, a socket cannot wake a backgrounded app. The admin inbox reuses these same routes;
+    // an admin token resolves to the shared per-event staff partition, so staff need none of
+    // their own. See services/api/src/lib/messaging.ts.
+    route('ListMyConversations', apigw.HttpMethod.GET, '/me/conversations', 'listMyConversations.ts', 'read');
+    route('CreateConversation', apigw.HttpMethod.POST, '/me/conversations', 'createConversation.ts', 'write');
+    route('ListConversationMessages', apigw.HttpMethod.GET, '/me/conversations/{id}/messages', 'listConversationMessages.ts', 'write');
+    route('PostConversationMessage', apigw.HttpMethod.POST, '/me/conversations/{id}/messages', 'postConversationMessage.ts', 'write');
+    route('GetUnreadCount', apigw.HttpMethod.GET, '/me/unread-count', 'getUnreadCount.ts', 'read');
+
     // --- Photos & gallery (pre-signed S3 upload + moderation, spec §4.14/§18.5) ---
     const uploadUrlFn = route('RequestPhotoUploadUrl', apigw.HttpMethod.POST, '/events/{eventId}/photos/upload-url', 'requestPhotoUploadUrl.ts', 'write', { environment: galleryEnv });
     galleryBucket.grantPut(uploadUrlFn);

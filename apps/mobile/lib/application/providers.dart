@@ -6,6 +6,7 @@ import '../data/local_cache.dart';
 import '../data/repositories/agenda_repository.dart';
 import '../data/repositories/event_repository.dart';
 import '../data/repositories/itinerary_repository.dart';
+import '../data/repositories/messages_repository.dart';
 import '../data/repositories/notifications_repository.dart';
 import '../data/repositories/content_repository.dart';
 import '../data/repositories/personal_repository.dart';
@@ -19,6 +20,7 @@ import '../domain/faq_item.dart';
 import '../domain/help.dart';
 import '../domain/itinerary_item.dart';
 import '../domain/map_location.dart';
+import '../domain/message.dart';
 import '../domain/me.dart';
 import '../domain/notification_item.dart';
 import '../domain/photo.dart';
@@ -65,6 +67,9 @@ final personalRepositoryProvider = Provider<PersonalRepository>(
 );
 final photosRepositoryProvider = Provider<PhotosRepository>(
   (ref) => PhotosRepository(ref.watch(apiClientProvider)),
+);
+final messagesRepositoryProvider = Provider<MessagesRepository>(
+  (ref) => MessagesRepository(ref.watch(apiClientProvider)),
 );
 final contentRepositoryProvider = Provider<ContentRepository>(
   (ref) => ContentRepository(ref.watch(apiClientProvider), ref.watch(localCacheProvider)),
@@ -218,5 +223,27 @@ final helpProvider = FutureProvider<HelpContent>((ref) async {
     final cached = repo.cachedHelp();
     if (cached != null) return cached;
     rethrow;
+  }
+});
+
+// --- Messaging (CF-6/CF-7). Polled: refreshed on foreground, and every 30s inside a thread.
+// No cache fallback — a stale conversation is worse than an empty one.
+
+final conversationsProvider = FutureProvider<List<Conversation>>((ref) async {
+  return ref.watch(messagesRepositoryProvider).conversations();
+});
+
+final conversationMessagesProvider =
+    FutureProvider.family<List<Message>, String>((ref, conversationId) async {
+  return ref.watch(messagesRepositoryProvider).messages(conversationId);
+});
+
+/// Drives the unread badge. Returns 0 rather than throwing so a transient failure never
+/// blocks the shell chrome.
+final unreadCountProvider = FutureProvider<int>((ref) async {
+  try {
+    return await ref.watch(messagesRepositoryProvider).unreadCount();
+  } catch (_) {
+    return 0;
   }
 });

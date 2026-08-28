@@ -8,6 +8,11 @@ export const TABLE_NAME = process.env.TABLE_NAME ?? 'EventApp-dev';
 export const eventPk = (eventId: string) => `EVENT#${eventId}`;
 export const attendeePk = (attendeeId: string) => `ATTENDEE#${attendeeId}`;
 
+// Messaging principals. An attendee's conversations hang off their own partition; staff share
+// one per-event partition, so any admin sees the same inbox.
+export const attendeePrincipal = attendeePk;
+export const staffPrincipal = (eventId: string) => `STAFF#${eventId}`;
+
 export const keys = {
   eventProfile: (eventId: string) => ({
     PK: eventPk(eventId),
@@ -182,6 +187,25 @@ export const keys = {
     GSI1PK: `EVENT#${eventId}#MAP`,
   }),
   mapGsi1Sk: (order: number) => String(order).padStart(4, '0'),
+
+  // --- Messaging (spec CF-6/CF-7). Polled, not socket-based; see docs/open-questions.md A13.
+  // A conversation's messages live under the conversation partition; each participant also
+  // gets a lightweight pointer row so "my conversations" and the unread badge are one query.
+  conversation: (conversationId: string) => ({
+    PK: `CONV#${conversationId}`,
+    SK: 'META',
+  }),
+  messagePrefix: 'MSG#',
+  message: (conversationId: string, createdAt: string, messageId: string) => ({
+    PK: `CONV#${conversationId}`,
+    SK: `MSG#${createdAt}#${messageId}`,
+  }),
+  /** Participant pointer. `principal` is attendeePrincipal() or staffPrincipal(). */
+  conversationRef: (principal: string, conversationId: string) => ({
+    PK: principal,
+    SK: `CONV#${conversationId}`,
+  }),
+  conversationRefPrefix: 'CONV#',
 
   // --- Audit log ---
   audit: (eventId: string, ts: string, id: string) => ({

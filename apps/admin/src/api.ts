@@ -27,10 +27,12 @@ import type {
   MapLocation,
   MapLocationCreate,
   MapLocationUpdate,
+  Message,
   ProvisionResult,
   WeatherInfo,
   WeatherUpsert,
   Attendee,
+  Conversation,
   AttendeeUpdate,
   ItineraryItem,
   ItineraryItemCreate,
@@ -40,6 +42,7 @@ import type {
   TransportationItem,
   TransportationCreate,
   TransportationUpdate,
+  UnreadCount,
   UploadTicket,
 } from '@eventmgr/shared-types';
 
@@ -129,6 +132,16 @@ export const adminApi = {
   // Map images — pre-signed PUT straight to the private assets bucket
   requestMapImageUrl: (mapId: string, contentType: string) =>
     request<UploadTicket>('POST', `/admin/events/${ev()}/maps/${mapId}/image-url`, { contentType }),
+
+  // Messaging — the staff inbox reuses the attendee endpoints. An admin token resolves to the
+  // shared per-event staff partition server-side, so no /admin/* routes were needed for chat.
+  listConversations: () =>
+    request<Conversation[]>('GET', `/me/conversations?eventId=${ev()}`),
+  conversationMessages: (id: string) =>
+    request<Message[]>('GET', `/me/conversations/${id}/messages?eventId=${ev()}`),
+  sendMessage: (id: string, body: string) =>
+    request<Message>('POST', `/me/conversations/${id}/messages?eventId=${ev()}`, { body }),
+  unreadCount: () => request<UnreadCount>('GET', `/me/unread-count?eventId=${ev()}`),
 
   // Event profile — read via the shared endpoint, write via the admin one
   getEvent: () => request<EventProfile>('GET', `/events/${ev()}`),

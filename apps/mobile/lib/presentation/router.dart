@@ -11,7 +11,9 @@ import 'screens/faq_screen.dart';
 import 'screens/feedback_screen.dart';
 import 'screens/help_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/conversation_screen.dart';
 import 'screens/maps_screen.dart';
+import 'screens/messages_screen.dart';
 import 'screens/notification_center_screen.dart';
 import 'screens/profile_screen.dart';
 import 'screens/registration_screen.dart';
@@ -50,6 +52,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, __) => const NotificationCenterScreen(),
       ),
       GoRoute(path: '/travel', builder: (_, __) => const TravelScreen()),
+      GoRoute(path: '/messages', builder: (_, __) => const MessagesScreen()),
+      GoRoute(
+        path: '/messages/:id',
+        builder: (_, state) =>
+            ConversationScreen(conversationId: state.pathParameters['id']!),
+      ),
       GoRoute(path: '/transportation', builder: (_, __) => const TransportationScreen()),
       GoRoute(path: '/dining', builder: (_, __) => const DiningScreen()),
       GoRoute(path: '/faq', builder: (_, __) => const FaqScreen()),
