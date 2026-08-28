@@ -1,0 +1,6 @@
+firstName,lastName,email,phone,company,title,city,dietaryRestrictions,accessibilityNeeds,guestName,tags,accessCode,directoryVisible,contactSharingOptIn
+Maria,Delgado,maria.delgado@example.com,+1-208-555-0111,BioMed Realty,VP Asset Management,"Boise, ID","vegetarian",,Luis Delgado,"golf;early_arrival",CDA2601,true,true
+Tom,Okafor,tom.okafor@example.com,+1-509-555-0122,BioMed Realty,Regional Director,"Spokane, WA","gluten-free;shellfish allergy",,,"vip",CDA2602,true,false
+Priya,Raman,priya.raman@example.com,+1-206-555-0133,Anchor Partners,Principal,"Seattle, WA",,Wheelchair access,,"vip;late_departure",CDA2603,true,true
+Dale,Whitcomb,dale.whitcomb@example.com,+1-208-555-0144,Cascade Capital,Managing Partner,"Coeur d'Alene, ID","no red meat",,Susan Whitcomb,"golf",CDA2604,false,false
+Nina,Brackett,nina.brackett@example.com,+1-415-555-0155,BioMed Realty,Chief of Staff,"San Francisco, CA",,,,"staff;early_arrival",CDA2605,true,true
