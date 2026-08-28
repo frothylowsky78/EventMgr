@@ -45,6 +45,10 @@ class ItineraryItem {
         'reminderEnabled': reminderEnabled,
       };
 
-  DateTime get start => DateTime.parse(startDateTime);
-  DateTime? get end => endDateTime == null ? null : DateTime.parse(endDateTime!);
+  // startDateTime/endDateTime carry a UTC offset, and Dart returns a UTC DateTime for those.
+  // Convert to the device timezone so times render as the attendee's local wall clock —
+  // the same thing travel/transportation/notification screens already do at their call sites.
+  DateTime get start => DateTime.parse(startDateTime).toLocal();
+  DateTime? get end =>
+      endDateTime == null ? null : DateTime.parse(endDateTime!).toLocal();
 }
