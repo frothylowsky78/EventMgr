@@ -66,7 +66,7 @@ export const ENVIRONMENTS: Record<EnvName, EnvConfig> = {
     pointInTimeRecovery: true,
     s3Versioned: true,
     enforceAdminMfa: true,
-    adminPortalOrigins: ['https://admin.example.com'],
+    adminPortalOrigins: ['https://dbhn28eq3w6cv.cloudfront.net'],
     logRetentionDays: 90,
     enableBackups: true,
     backupRetentionDays: 35,
