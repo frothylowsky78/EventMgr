@@ -33,11 +33,10 @@ class HomeScreen extends ConsumerWidget {
                 expandedHeight: 200,
                 pinned: true,
                 actions: const [_NotificationBell()],
+                // No title here on purpose: the event name over an arbitrary photo was
+                // unreadable no matter how the scrim was tuned. It reads as a heading below
+                // the hero instead, where contrast is guaranteed.
                 flexibleSpace: FlexibleSpaceBar(
-                  title: Text(event.name,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          shadows: [Shadow(blurRadius: 8, color: Colors.black54)])),
                   background: _Hero(
                     url: event.branding.heroImageUrl,
                     logoUrl: event.branding.logoUrl,
@@ -47,6 +46,10 @@ class HomeScreen extends ConsumerWidget {
               SliverPadding(
                 padding: const EdgeInsets.all(16),
                 sliver: SliverList.list(children: [
+                  Text(event.name,
+                      style: theme.textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 12),
                   _InfoRow(
                       icon: Icons.calendar_today_outlined,
                       text: _dateRange(event.startDate, event.endDate)),
