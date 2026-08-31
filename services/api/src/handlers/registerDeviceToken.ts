@@ -8,6 +8,7 @@ import { ddb } from '../lib/dynamo';
 import { fail, getAuth, ok, requireAttendee } from '../lib/http';
 import { TABLE_NAME, keys } from '../lib/keys';
 import { deviceTokenSchema, parseBody } from '../lib/validation';
+import { resolveEventId } from '../lib/eventId';
 
 /**
  * POST /me/device-tokens — register (or refresh) a push device token for the caller.
@@ -21,6 +22,7 @@ export const handler = async (
     const auth = getAuth(event);
     const attendeeId = requireAttendee(auth);
     const input = parseBody(deviceTokenSchema, event.body);
+    const eventId = await resolveEventId(auth);
 
     const tokenId = createHash('sha256').update(input.deviceToken).digest('hex').slice(0, 16);
     const now = new Date().toISOString();
@@ -30,12 +32,12 @@ export const handler = async (
         TableName: TABLE_NAME,
         Item: {
           ...keys.deviceToken(attendeeId, tokenId),
-          GSI2PK: `EVENT#${auth.eventId ?? ''}#DEVICE`,
+          GSI2PK: `EVENT#${eventId}#DEVICE`,
           GSI2SK: attendeeId,
           entity: 'DeviceToken',
           id: tokenId,
           attendeeId,
-          eventId: auth.eventId ?? '',
+          eventId,
           platform: input.platform,
           deviceToken: input.deviceToken,
           enabled: true,

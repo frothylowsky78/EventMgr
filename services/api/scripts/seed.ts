@@ -392,7 +392,16 @@ async function main() {
   console.log(`  Table:       ${TABLE_NAME}`);
   console.log(`  Event:       ${EVENT_ID}`);
   console.log(`  Test login:  email=${EMAIL}  accessCode=${ACCESS_CODE}`);
-  console.log('  (Create a matching Cognito user with custom:attendeeId=' + ATTENDEE_ID + ')');
+  // Both attributes matter: a user missing custom:eventId used to break /me/itinerary,
+  // /me/dining and device-token registration. Handlers now fall back to the attendee record,
+  // but the claim still saves a read on every call.
+  console.log(
+    '  (Create a matching Cognito user with custom:attendeeId=' +
+      ATTENDEE_ID +
+      ' and custom:eventId=' +
+      EVENT_ID +
+      ')'
+  );
 }
 
 main().catch((e) => {

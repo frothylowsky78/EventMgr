@@ -8,10 +8,11 @@ import { ddb } from '../lib/dynamo';
 import { fail, getAuth, ok, requireAttendee } from '../lib/http';
 import { TABLE_NAME, attendeePk, eventPk, keys } from '../lib/keys';
 import { toDiningItem, toDiningSeat } from '../lib/mappers';
+import { resolveEventId } from '../lib/eventId';
 
 /**
  * GET /me/dining — published dining items with the caller's personal seating merged in.
- * eventId comes from the JWT (custom:eventId); seating is private to the attendee.
+ * eventId comes from the JWT when present, else the attendee record; seating is private.
  */
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
@@ -19,7 +20,7 @@ export const handler = async (
   try {
     const auth = getAuth(event);
     const attendeeId = requireAttendee(auth);
-    const eventId = auth.eventId ?? '';
+    const eventId = await resolveEventId(auth);
 
     const [diningRes, seatRes] = await Promise.all([
       ddb.send(

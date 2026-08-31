@@ -10,6 +10,7 @@ import { toItineraryItem } from '../lib/mappers';
 import { myItineraryCreateSchema, parseBody } from '../lib/validation';
 import { localToIso } from '../lib/localTime';
 import { newId } from '../lib/id';
+import { resolveEventId } from '../lib/eventId';
 
 /**
  * POST /me/itinerary — the caller adds an agenda session to their own itinerary.
@@ -23,8 +24,7 @@ export const handler = async (
   try {
     const auth = getAuth(event);
     const attendeeId = requireAttendee(auth);
-    const eventId = auth.eventId ?? '';
-    if (!eventId) throw new ApiException('FORBIDDEN', 'Token is not scoped to an event');
+    const eventId = await resolveEventId(auth);
 
     const input = parseBody(myItineraryCreateSchema, event.body);
 

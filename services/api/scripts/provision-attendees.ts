@@ -15,6 +15,9 @@
  * Usage:
  *   USER_POOL_ID=... AWS_REGION=... EVENT_ID=... npx tsx scripts/provision-attendees.ts <csv>
  *
+ *   # Backfill custom:attendeeId / custom:eventId on users already in the pool:
+ *   USER_POOL_ID=... AWS_REGION=... TABLE_NAME=... npx tsx scripts/provision-attendees.ts --repair
+ *
  * Run with `npx tsx` — the repo's imports are extensionless and Node's ESM resolver rejects
  * them under --experimental-strip-types.
  */
@@ -25,10 +28,14 @@ import {
   AdminSetUserPasswordCommand,
   AdminUpdateUserAttributesCommand,
   CognitoIdentityProviderClient,
+  ListUsersCommand,
   UsernameExistsException,
 } from '@aws-sdk/client-cognito-identity-provider';
+import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { parseCsv } from '../src/lib/csv';
 import { deriveAttendeeId } from '../src/lib/attendeeId';
+import { ddb } from '../src/lib/dynamo';
+import { TABLE_NAME, keys } from '../src/lib/keys';
 
 type Outcome = 'created' | 'existed' | 'failed' | 'skipped';
 
@@ -56,10 +63,111 @@ function throwawayPassword(): string {
   return `Aa1!${randomBytes(24).toString('base64url')}`;
 }
 
+/**
+ * Backfills the two custom attributes on users already in the pool.
+ *
+ * A Cognito user created by hand (the demo account was) can be missing custom:eventId, which
+ * previously broke every handler that trusted the claim. Values come from the attendee record
+ * looked up by email, so a record with an explicit id is honoured rather than re-derived.
+ *
+ * Idempotent and read-only for users that are already correct.
+ */
+async function repair(userPoolId: string, region: string): Promise<void> {
+  const cognito = new CognitoIdentityProviderClient({ region });
+  console.log(`Repairing custom attributes in ${userPoolId} (${region})`);
+  console.log(`Table: ${TABLE_NAME}\n`);
+
+  let paginationToken: string | undefined;
+  let scanned = 0;
+  let repaired = 0;
+  let alreadyOk = 0;
+  let unmatched = 0;
+  let failed = 0;
+
+  do {
+    const page = await cognito.send(
+      new ListUsersCommand({ UserPoolId: userPoolId, Limit: 60, PaginationToken: paginationToken })
+    );
+    paginationToken = page.PaginationToken;
+
+    for (const user of page.Users ?? []) {
+      scanned++;
+      const attrs = new Map(
+        (user.Attributes ?? []).map((a) => [a.Name ?? '', a.Value ?? ''] as const)
+      );
+      const email = (attrs.get('email') ?? user.Username ?? '').toLowerCase();
+      if (!email) {
+        unmatched++;
+        console.log('  (user with no email) — SKIPPED');
+        continue;
+      }
+      if (attrs.get('custom:attendeeId') && attrs.get('custom:eventId')) {
+        alreadyOk++;
+        continue;
+      }
+
+      try {
+        const res = await ddb.send(
+          new QueryCommand({
+            TableName: TABLE_NAME,
+            IndexName: 'GSI2',
+            KeyConditionExpression: 'GSI2PK = :pk',
+            ExpressionAttributeValues: { ':pk': keys.attendeeByEmail(email).GSI2PK },
+          })
+        );
+        const record = (res.Items ?? [])[0];
+        if (!record?.eventId) {
+          // No attendee record: an admin/staff login, or a guest who was never imported.
+          unmatched++;
+          console.log(`  ${email} — SKIPPED: no attendee record`);
+          continue;
+        }
+
+        const attendeeId = deriveAttendeeId(email, record.id as string | undefined);
+        await cognito.send(
+          new AdminUpdateUserAttributesCommand({
+            UserPoolId: userPoolId,
+            Username: user.Username!,
+            UserAttributes: [
+              { Name: 'custom:attendeeId', Value: attendeeId },
+              { Name: 'custom:eventId', Value: String(record.eventId) },
+            ],
+          })
+        );
+        repaired++;
+        const was = attrs.get('custom:eventId') ? 'attendeeId' : 'eventId';
+        console.log(`  ${email} — REPAIRED (missing ${was}) -> ${attendeeId} / ${record.eventId}`);
+      } catch (e) {
+        failed++;
+        console.log(`  ${email} — FAILED: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+  } while (paginationToken);
+
+  console.log('\nSummary');
+  console.log(`  scanned:    ${scanned}`);
+  console.log(`  repaired:   ${repaired}`);
+  console.log(`  already ok: ${alreadyOk}`);
+  console.log(`  unmatched:  ${unmatched}`);
+  console.log(`  failed:     ${failed}`);
+  if (failed > 0) process.exit(1);
+}
+
 async function main(): Promise<void> {
+  if (process.argv.includes('--repair')) {
+    // TABLE_NAME is read by src/lib/dynamo; require it explicitly so a repair can never run
+    // against the default dev table by accident.
+    requireEnv('TABLE_NAME');
+    await repair(requireEnv('USER_POOL_ID'), requireEnv('AWS_REGION'));
+    return;
+  }
+
   const csvPath = process.argv[2];
   if (!csvPath) {
-    console.error('Usage: npx tsx scripts/provision-attendees.ts <attendees.csv>');
+    console.error(
+      'Usage: npx tsx scripts/provision-attendees.ts <attendees.csv>\n' +
+        '       npx tsx scripts/provision-attendees.ts --repair'
+    );
     process.exit(2);
   }
 
