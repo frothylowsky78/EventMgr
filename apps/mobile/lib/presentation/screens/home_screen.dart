@@ -218,14 +218,17 @@ class _Hero extends StatelessWidget {
             placeholder: (_, __) => gradient,
             errorWidget: (_, __, ___) => gradient,
           ),
-        // Scrim over whatever is behind it — an arbitrary photo cannot be trusted to keep the
-        // white title legible on its own.
+        // Scrim over whatever is behind it. Darkened at BOTH ends, not just the bottom: the
+        // logo sits top-left, and on a photo with a bright sky there (this event's hero is
+        // luma ~210 up there) a white logo on an undarkened top is invisible. The middle stays
+        // clear so the photo still reads as a photo.
         const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.black38],
+              colors: [Colors.black45, Colors.transparent, Colors.black54],
+              stops: [0.0, 0.4, 1.0],
             ),
           ),
         ),
