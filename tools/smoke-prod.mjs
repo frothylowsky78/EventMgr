@@ -16,6 +16,11 @@ const REGION = process.env.SMOKE_REGION ?? 'us-west-2';
 const CLIENT_ID = process.env.SMOKE_CLIENT_ID ?? 'cq5k6d80t98sssp4t6n8q76j3';
 const EVENT = 'event_001';
 const EMAIL = process.env.SMOKE_EMAIL ?? 'jane@example.com';
+// SMOKE_READONLY=1 runs only the GETs and the auth boundary. The write half of this suite is
+// NOT self-cleaning — it leaves a staff conversation, a feedback row, an open help request and
+// a content report behind — so use read-only against a live event, e.g. to take a routing
+// baseline before an infrastructure change.
+const READONLY = process.env.SMOKE_READONLY === '1';
 const CODE = process.env.SMOKE_CODE ?? 'VIP2026';
 
 const results = [];
@@ -120,91 +125,95 @@ async function check(name, method, path, body, assert) {
   }
   await check('GET /me/itinerary.ics', 'GET', '/me/itinerary.ics');
 
-  // ---- itinerary self-service ----
-  // Pick an agenda item NOT already on the itinerary (seed pre-assigns agenda_001 as an admin item).
-  const existingItin = (await call('GET', '/me/itinerary')).body ?? [];
-  const freeAgenda = agendaItems.find((a) => !existingItin.some((i) => i.agendaItemId === a.id));
-  const adminItem = existingItin.find((i) => i.source === 'admin');
-  if (adminItem) {
-    const r = await call('DELETE', `/me/itinerary/${adminItem.id}`);
-    log('DELETE admin-assigned itinerary item is refused', r.status === 403, `HTTP ${r.status}`);
-  }
-  if (freeAgenda) {
-    const add = await check('POST /me/itinerary (add agenda item)', 'POST', '/me/itinerary',
-      { agendaItemId: freeAgenda.id }, (b) => b?.id ? true : 'no item id');
-    const again = await check('POST /me/itinerary (same item → idempotent)', 'POST', '/me/itinerary',
-      { agendaItemId: freeAgenda.id }, (b) => b?.id === add.body?.id ? true : `duplicate created: ${b?.id}`);
-    const list = await check('GET /me/itinerary (contains added item)', 'GET', '/me/itinerary', undefined, (b) =>
-      b.some((i) => i.id === add.body?.id) ? true : 'added item missing');
-    const mine = list.body?.find((i) => i.id === add.body?.id);
-    log('  item has source=attendee', mine?.source === 'attendee', `source=${mine?.source}`);
-    if (add.body?.id) await check('DELETE /me/itinerary/{id} (cleanup)', 'DELETE', `/me/itinerary/${add.body.id}`);
-    void again;
-  }
-
-  if (!freeAgenda) log('itinerary self-service', true, 'skipped — every agenda item already on itinerary');
-
-  // ---- registration ----
-  if (actions[0]) {
-    const done = await check(`POST registration complete (${actions[0].id})`, 'POST',
-      `/me/registration/actions/${actions[0].id}/complete`, undefined, (b) =>
-        b?.completedRegistrationActions?.includes(actions[0].id) ? true : 'not marked complete');
-    log('  registrationStatus advanced', ['in_progress', 'complete'].includes(done.body?.registrationStatus), done.body?.registrationStatus);
-    await check(`DELETE registration complete (cleanup)`, 'DELETE', `/me/registration/actions/${actions[0].id}/complete`);
-    const bogus = await call('POST', '/me/registration/actions/does_not_exist/complete');
-    log('POST registration complete (bogus id) rejected', bogus.status >= 400 && bogus.status < 500, `HTTP ${bogus.status}`);
-  }
-
-  // ---- profile ----
-  await check('PATCH /me/profile (no-op city)', 'PATCH', '/me/profile', { city: me.body?.city ?? '' });
-  await check('POST /me/profile-photo/upload-url', 'POST', '/me/profile-photo/upload-url',
-    { contentType: 'image/jpeg' }, (b) => b?.uploadUrl ? true : 'no uploadUrl');
-
-  // ---- photos / reports ----
-  await check(`POST photos/upload-url`, 'POST', `/events/${EVENT}/photos/upload-url`,
-    { contentType: 'image/jpeg' }, (b) => b?.uploadUrl ? true : 'no uploadUrl');
-  const photos = await call('GET', `/events/${EVENT}/photos`);
-  const photo = Array.isArray(photos.body) ? photos.body[0] : photos.body?.items?.[0] ?? photos.body?.photos?.[0];
-  if (photo) {
-    await check('POST photo like', 'POST', `/events/${EVENT}/photos/${photo.id}/like`);
-    await check('POST photo report', 'POST', `/events/${EVENT}/photos/${photo.id}/report`, { reason: 'other', note: 'smoke test — ignore' });
+  if (READONLY) {
+    log('write checks', true, 'skipped — SMOKE_READONLY=1');
   } else {
-    log('photo like/report', true, 'skipped — no approved photos in gallery yet');
-  }
-
-  // ---- blocks ----
-  if (other) {
-    await check(`POST /me/blocks/${other.id}`, 'POST', `/me/blocks/${other.id}`);
-    const me2 = await call('GET', '/me');
-    log('  /me shows block', me2.body?.blockedAttendeeIds?.includes(other.id) === true, JSON.stringify(me2.body?.blockedAttendeeIds));
-    const att2 = await call('GET', `/events/${EVENT}/attendees`);
-    log('  blocked attendee hidden from directory', !att2.body?.some?.((c) => c.id === other.id));
-    await check(`DELETE /me/blocks/${other.id} (cleanup)`, 'DELETE', `/me/blocks/${other.id}`);
-    const att3 = await call('GET', `/events/${EVENT}/attendees`);
-    log('  attendee visible again after unblock', !!att3.body?.some?.((c) => c.id === other.id));
-  }
-
-  // ---- messaging ----
-  if (other?.messageable) {
-    const conv = await check('POST /me/conversations (to attendee)', 'POST', '/me/conversations',
-      { withAttendeeId: other.id, body: 'smoke test — ignore' }, (b) => b?.id ? true : 'no conversation id');
-    if (conv.body?.id) {
-      const msg = await check('POST message', 'POST', `/me/conversations/${conv.body.id}/messages`, { body: 'smoke test 2' });
-      await check('GET messages', 'GET', `/me/conversations/${conv.body.id}/messages`);
-      if (msg.body?.id) await check('POST message report', 'POST',
-        `/events/${EVENT}/conversations/${conv.body.id}/messages/${msg.body.id}/report`, { reason: 'other' });
+    // ---- itinerary self-service ----
+    // Pick an agenda item NOT already on the itinerary (seed pre-assigns agenda_001 as an admin item).
+    const existingItin = (await call('GET', '/me/itinerary')).body ?? [];
+    const freeAgenda = agendaItems.find((a) => !existingItin.some((i) => i.agendaItemId === a.id));
+    const adminItem = existingItin.find((i) => i.source === 'admin');
+    if (adminItem) {
+      const r = await call('DELETE', `/me/itinerary/${adminItem.id}`);
+      log('DELETE admin-assigned itinerary item is refused', r.status === 403, `HTTP ${r.status}`);
     }
-  } else {
-    log('messaging', true, `skipped — ${other ? other.firstName + ' has not opted in to contact sharing' : 'no other attendee'}`);
-  }
-  await check('POST /me/conversations (to staff)', 'POST', '/me/conversations', { body: 'smoke test — staff thread, ignore' });
+    if (freeAgenda) {
+      const add = await check('POST /me/itinerary (add agenda item)', 'POST', '/me/itinerary',
+        { agendaItemId: freeAgenda.id }, (b) => b?.id ? true : 'no item id');
+      const again = await check('POST /me/itinerary (same item → idempotent)', 'POST', '/me/itinerary',
+        { agendaItemId: freeAgenda.id }, (b) => b?.id === add.body?.id ? true : `duplicate created: ${b?.id}`);
+      const list = await check('GET /me/itinerary (contains added item)', 'GET', '/me/itinerary', undefined, (b) =>
+        b.some((i) => i.id === add.body?.id) ? true : 'added item missing');
+      const mine = list.body?.find((i) => i.id === add.body?.id);
+      log('  item has source=attendee', mine?.source === 'attendee', `source=${mine?.source}`);
+      if (add.body?.id) await check('DELETE /me/itinerary/{id} (cleanup)', 'DELETE', `/me/itinerary/${add.body.id}`);
+      void again;
+    }
 
-  // ---- feedback / help ----
-  await check('POST feedback', 'POST', `/events/${EVENT}/feedback`,
-    { type: 'event', targetId: EVENT, rating: 9, comments: 'smoke test — ignore' });
-  await check('POST help-request', 'POST', `/events/${EVENT}/help-requests`,
-    { category: 'other', message: 'smoke test — ignore', urgency: 'low' });
-  await check('PATCH notifications read-all', 'PATCH', '/me/notifications/read-all');
+    if (!freeAgenda) log('itinerary self-service', true, 'skipped — every agenda item already on itinerary');
+
+    // ---- registration ----
+    if (actions[0]) {
+      const done = await check(`POST registration complete (${actions[0].id})`, 'POST',
+        `/me/registration/actions/${actions[0].id}/complete`, undefined, (b) =>
+          b?.completedRegistrationActions?.includes(actions[0].id) ? true : 'not marked complete');
+      log('  registrationStatus advanced', ['in_progress', 'complete'].includes(done.body?.registrationStatus), done.body?.registrationStatus);
+      await check(`DELETE registration complete (cleanup)`, 'DELETE', `/me/registration/actions/${actions[0].id}/complete`);
+      const bogus = await call('POST', '/me/registration/actions/does_not_exist/complete');
+      log('POST registration complete (bogus id) rejected', bogus.status >= 400 && bogus.status < 500, `HTTP ${bogus.status}`);
+    }
+
+    // ---- profile ----
+    await check('PATCH /me/profile (no-op city)', 'PATCH', '/me/profile', { city: me.body?.city ?? '' });
+    await check('POST /me/profile-photo/upload-url', 'POST', '/me/profile-photo/upload-url',
+      { contentType: 'image/jpeg' }, (b) => b?.uploadUrl ? true : 'no uploadUrl');
+
+    // ---- photos / reports ----
+    await check(`POST photos/upload-url`, 'POST', `/events/${EVENT}/photos/upload-url`,
+      { contentType: 'image/jpeg' }, (b) => b?.uploadUrl ? true : 'no uploadUrl');
+    const photos = await call('GET', `/events/${EVENT}/photos`);
+    const photo = Array.isArray(photos.body) ? photos.body[0] : photos.body?.items?.[0] ?? photos.body?.photos?.[0];
+    if (photo) {
+      await check('POST photo like', 'POST', `/events/${EVENT}/photos/${photo.id}/like`);
+      await check('POST photo report', 'POST', `/events/${EVENT}/photos/${photo.id}/report`, { reason: 'other', note: 'smoke test — ignore' });
+    } else {
+      log('photo like/report', true, 'skipped — no approved photos in gallery yet');
+    }
+
+    // ---- blocks ----
+    if (other) {
+      await check(`POST /me/blocks/${other.id}`, 'POST', `/me/blocks/${other.id}`);
+      const me2 = await call('GET', '/me');
+      log('  /me shows block', me2.body?.blockedAttendeeIds?.includes(other.id) === true, JSON.stringify(me2.body?.blockedAttendeeIds));
+      const att2 = await call('GET', `/events/${EVENT}/attendees`);
+      log('  blocked attendee hidden from directory', !att2.body?.some?.((c) => c.id === other.id));
+      await check(`DELETE /me/blocks/${other.id} (cleanup)`, 'DELETE', `/me/blocks/${other.id}`);
+      const att3 = await call('GET', `/events/${EVENT}/attendees`);
+      log('  attendee visible again after unblock', !!att3.body?.some?.((c) => c.id === other.id));
+    }
+
+    // ---- messaging ----
+    if (other?.messageable) {
+      const conv = await check('POST /me/conversations (to attendee)', 'POST', '/me/conversations',
+        { withAttendeeId: other.id, body: 'smoke test — ignore' }, (b) => b?.id ? true : 'no conversation id');
+      if (conv.body?.id) {
+        const msg = await check('POST message', 'POST', `/me/conversations/${conv.body.id}/messages`, { body: 'smoke test 2' });
+        await check('GET messages', 'GET', `/me/conversations/${conv.body.id}/messages`);
+        if (msg.body?.id) await check('POST message report', 'POST',
+          `/events/${EVENT}/conversations/${conv.body.id}/messages/${msg.body.id}/report`, { reason: 'other' });
+      }
+    } else {
+      log('messaging', true, `skipped — ${other ? other.firstName + ' has not opted in to contact sharing' : 'no other attendee'}`);
+    }
+    await check('POST /me/conversations (to staff)', 'POST', '/me/conversations', { body: 'smoke test — staff thread, ignore' });
+
+    // ---- feedback / help ----
+    await check('POST feedback', 'POST', `/events/${EVENT}/feedback`,
+      { type: 'event', targetId: EVENT, rating: 9, comments: 'smoke test — ignore' });
+    await check('POST help-request', 'POST', `/events/${EVENT}/help-requests`,
+      { category: 'other', message: 'smoke test — ignore', urgency: 'low' });
+    await check('PATCH notifications read-all', 'PATCH', '/me/notifications/read-all');
+  }
 
   // ---- auth boundary ----
   TOKEN = 'bogus';
