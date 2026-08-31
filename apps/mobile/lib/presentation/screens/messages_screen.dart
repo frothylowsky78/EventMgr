@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../application/providers.dart';
+import '../widgets/refreshable_message.dart';
 import '../../domain/message.dart';
 
 /// Conversation list (CF-6/CF-7). Pull to refresh; there is no live socket by design — with
@@ -31,29 +32,21 @@ class MessagesScreen extends ConsumerWidget {
           child: Text('Could not load messages.\n$e', textAlign: TextAlign.center),
         )),
         data: (conversations) {
-          if (conversations.isEmpty) {
-            return const Center(
-              child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'No messages yet.\nTap "Message staff" to ask the event team anything.',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            );
-          }
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(conversationsProvider);
               ref.invalidate(unreadCountProvider);
               await ref.read(conversationsProvider.future);
             },
-            child: ListView.separated(
-              itemCount: conversations.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (_, i) =>
-                  _ConversationTile(conversation: conversations[i], myAttendeeId: myId),
-            ),
+            child: conversations.isEmpty
+                ? const RefreshableMessage(
+                    'No messages yet.\nTap "Message staff" to ask the event team anything.')
+                : ListView.separated(
+                    itemCount: conversations.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (_, i) =>
+                        _ConversationTile(conversation: conversations[i], myAttendeeId: myId),
+                  ),
           );
         },
       ),
@@ -144,8 +137,7 @@ class _ConversationTile extends StatelessWidget {
         conversation.titleFor(myAttendeeId),
         style: TextStyle(fontWeight: unread > 0 ? FontWeight.bold : FontWeight.w600),
       ),
-      subtitle: Text(conversation.lastMessagePreview,
-          maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(conversation.lastMessagePreview, maxLines: 1, overflow: TextOverflow.ellipsis),
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,

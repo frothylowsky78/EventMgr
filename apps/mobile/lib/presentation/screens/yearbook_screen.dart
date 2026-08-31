@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../application/providers.dart';
 import '../../domain/attendee_card.dart';
 import '../widgets/moderation.dart';
+import '../widgets/refreshable_message.dart';
 
 /// Yearbook / attendee directory (spec §4.8). Only directory-visible attendees appear, with a
 /// polished initials avatar when there's no photo.
@@ -54,16 +55,11 @@ class _YearbookScreenState extends ConsumerState<YearbookScreen> {
           Expanded(
             child: async.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Could not load attendees.\n$e',
-                  textAlign: TextAlign.center)),
+              error: (e, _) =>
+                  Center(child: Text('Could not load attendees.\n$e', textAlign: TextAlign.center)),
               data: (cards) {
-                final filtered = _query.isEmpty
-                    ? cards
-                    : cards.where((c) => c.matches(_query)).toList();
-                if (filtered.isEmpty) {
-                  return const Center(child: Text('No matching attendees.'));
-                }
-
+                final filtered =
+                    _query.isEmpty ? cards : cards.where((c) => c.matches(_query)).toList();
                 // Group by market (CF-2). An attendee tagged with several markets appears
                 // under each; one tagged with none appears under "Other" so nobody is lost.
                 final groups = <String, List<AttendeeCard>>{};
@@ -78,29 +74,37 @@ class _YearbookScreenState extends ConsumerState<YearbookScreen> {
                   if (groups.containsKey(_otherGroup)) _otherGroup,
                 ];
 
-                return ListView.builder(
-                  itemCount: ordered.length,
-                  itemBuilder: (_, gi) {
-                    final name = ordered[gi];
-                    final members = groups[name]!;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                          child: Text(
-                            '$name  ·  ${members.length}',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ),
-                        for (final c in members) _AttendeeTile(card: c),
-                        const Divider(height: 1),
-                      ],
-                    );
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(attendeesProvider);
+                    await ref.read(attendeesProvider.future);
                   },
+                  child: filtered.isEmpty
+                      ? const RefreshableMessage('No matching attendees.')
+                      : ListView.builder(
+                          itemCount: ordered.length,
+                          itemBuilder: (_, gi) {
+                            final name = ordered[gi];
+                            final members = groups[name]!;
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                                  child: Text(
+                                    '$name  ·  ${members.length}',
+                                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                          color: Theme.of(context).colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ),
+                                for (final c in members) _AttendeeTile(card: c),
+                                const Divider(height: 1),
+                              ],
+                            );
+                          },
+                        ),
                 );
               },
             ),
@@ -146,9 +150,8 @@ class _AttendeeTile extends ConsumerWidget {
             ListTile(
               title: Text(card.fullName,
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              subtitle: Text([card.title, card.company, card.city]
-                  .where((v) => v.isNotEmpty)
-                  .join(' · ')),
+              subtitle: Text(
+                  [card.title, card.company, card.city].where((v) => v.isNotEmpty).join(' · ')),
             ),
             if (card.messageable && !isMe)
               ListTile(
@@ -187,17 +190,14 @@ class _AttendeeTile extends ConsumerWidget {
           .showSnackBar(SnackBar(content: Text('Blocked ${card.fullName}.')));
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Could not block: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not block: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
-    final subtitle = [card.title, card.company]
-        .where((s) => s.isNotEmpty)
-        .join(' · ');
+    final subtitle = [card.title, card.company].where((s) => s.isNotEmpty).join(' · ');
     return ListTile(
       onTap: () => _openDetail(context, ref),
       leading: CircleAvatar(

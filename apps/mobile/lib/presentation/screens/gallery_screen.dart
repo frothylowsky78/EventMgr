@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../application/providers.dart';
 import '../../domain/photo.dart';
+import '../widgets/refreshable_message.dart';
 import '../widgets/moderation.dart';
 
 /// Event photo gallery (spec §4.14): browse approved photos, like, and upload from camera roll
@@ -36,8 +37,7 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
       ref.invalidate(galleryProvider);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -95,27 +95,28 @@ class _GalleryScreenState extends ConsumerState<GalleryScreen> {
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load the gallery.\n$e',
-            textAlign: TextAlign.center)),
+        error: (e, _) =>
+            Center(child: Text('Could not load the gallery.\n$e', textAlign: TextAlign.center)),
         data: (photos) {
-          if (photos.isEmpty) {
-            return const Center(child: Text('No photos yet — be the first to share!'));
-          }
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(galleryProvider);
               await ref.read(galleryProvider.future);
             },
-            child: GridView.builder(
-              padding: const EdgeInsets.all(8),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 6,
-                crossAxisSpacing: 6,
-              ),
-              itemCount: photos.length,
-              itemBuilder: (_, i) => _PhotoTile(photo: photos[i]),
-            ),
+            // The empty case is inside the indicator on purpose: waiting for a photo to clear
+            // moderation is exactly when a guest needs to pull.
+            child: photos.isEmpty
+                ? const RefreshableMessage('No photos yet — be the first to share!')
+                : GridView.builder(
+                    padding: const EdgeInsets.all(8),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                      mainAxisSpacing: 6,
+                      crossAxisSpacing: 6,
+                    ),
+                    itemCount: photos.length,
+                    itemBuilder: (_, i) => _PhotoTile(photo: photos[i]),
+                  ),
           );
         },
       ),
@@ -208,8 +209,7 @@ class _PhotoTile extends ConsumerWidget {
       );
     } catch (e) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Could not block: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Could not block: $e')));
     }
   }
 

@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../application/providers.dart';
 import '../../domain/agenda_item.dart';
+import '../widgets/refreshable_message.dart';
 
 class AgendaScreen extends ConsumerWidget {
   const AgendaScreen({super.key});
@@ -16,12 +17,9 @@ class AgendaScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Agenda')),
       body: agendaAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load agenda.\n$e',
-            textAlign: TextAlign.center)),
+        error: (e, _) =>
+            Center(child: Text('Could not load agenda.\n$e', textAlign: TextAlign.center)),
         data: (items) {
-          if (items.isEmpty) {
-            return const Center(child: Text('Agenda coming soon.'));
-          }
           final byDay = <String, List<AgendaItem>>{};
           for (final it in items) {
             byDay.putIfAbsent(it.date, () => []).add(it);
@@ -32,26 +30,28 @@ class AgendaScreen extends ConsumerWidget {
               ref.invalidate(agendaProvider);
               await ref.read(agendaProvider.future);
             },
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: days.length,
-              itemBuilder: (_, i) {
-                final day = days[i];
-                final dayItems = byDay[day]!;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Text(_dayLabel(day),
-                          style: Theme.of(context).textTheme.titleMedium),
-                    ),
-                    for (final item in dayItems) _AgendaTile(item: item),
-                    const SizedBox(height: 8),
-                  ],
-                );
-              },
-            ),
+            child: items.isEmpty
+                ? const RefreshableMessage('Agenda coming soon.')
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: days.length,
+                    itemBuilder: (_, i) {
+                      final day = days[i];
+                      final dayItems = byDay[day]!;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(_dayLabel(day),
+                                style: Theme.of(context).textTheme.titleMedium),
+                          ),
+                          for (final item in dayItems) _AgendaTile(item: item),
+                          const SizedBox(height: 8),
+                        ],
+                      );
+                    },
+                  ),
           );
         },
       ),
@@ -73,20 +73,15 @@ class _AgendaTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final time = item.endTime != null
-        ? '${item.startTime}–${item.endTime}'
-        : item.startTime;
+    final time = item.endTime != null ? '${item.startTime}–${item.endTime}' : item.startTime;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor:
-              Theme.of(context).colorScheme.secondary.withOpacity(0.18),
-          child: Icon(_iconFor(item.category),
-              color: Theme.of(context).colorScheme.primary),
+          backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.18),
+          child: Icon(_iconFor(item.category), color: Theme.of(context).colorScheme.primary),
         ),
-        title: Text(item.title,
-            style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text('$time · ${item.categoryLabel}'),
         trailing: item.required
             ? const Chip(

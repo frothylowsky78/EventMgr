@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../application/auth_controller.dart';
 import '../../application/providers.dart';
 import '../../domain/itinerary_item.dart';
+import '../widgets/refreshable_message.dart';
 import 'travel_screen.dart';
 
 /// "My Itinerary" — the attendee's personalized itinerary (own data only, enforced
@@ -20,8 +21,7 @@ class ItineraryScreen extends ConsumerWidget {
     final travel = ref.watch(travelProvider).valueOrNull;
     // Resolve linked agenda titles so shared items show their real name.
     final agendaTitles = <String, String>{
-      for (final a in ref.watch(agendaProvider).valueOrNull ?? const [])
-        a.id: a.title,
+      for (final a in ref.watch(agendaProvider).valueOrNull ?? const []) a.id: a.title,
     };
     return Scaffold(
       appBar: AppBar(
@@ -36,14 +36,10 @@ class ItineraryScreen extends ConsumerWidget {
       ),
       body: itinAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load your itinerary.\n$e',
-            textAlign: TextAlign.center)),
+        error: (e, _) =>
+            Center(child: Text('Could not load your itinerary.\n$e', textAlign: TextAlign.center)),
         data: (items) {
           final hasTravel = travel != null && !travel.isEmpty;
-          if (items.isEmpty && !hasTravel) {
-            return const Center(
-                child: Text('Your trip details will appear here.'));
-          }
 
           final byDay = <String, List<ItineraryItem>>{};
           for (final it in items) {
@@ -59,43 +55,45 @@ class ItineraryScreen extends ConsumerWidget {
               ref.invalidate(travelProvider);
               await ref.read(itineraryProvider.future);
             },
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                // Travel folded into this tab (CF-5) — one place for everything about the trip.
-                if (hasTravel) ...[
-                  Text('Travel', style: theme.textTheme.titleLarge),
-                  const SizedBox(height: 8),
-                  TravelSections(travel: travel),
-                  const SizedBox(height: 16),
-                ],
-                if (items.isNotEmpty) ...[
-                  Text('Schedule', style: theme.textTheme.titleLarge),
-                  for (final day in days) ...[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Text(
-                        DateFormat('EEEE, MMM d').format(DateTime.parse(day)),
-                        style: theme.textTheme.titleMedium,
-                      ),
-                    ),
-                    for (final item in byDay[day]!)
-                      _ItineraryTile(
-                        item: item,
-                        title: item.customTitle ??
-                            agendaTitles[item.agendaItemId] ??
-                            'Scheduled item',
-                      ),
-                    const SizedBox(height: 8),
-                  ],
-                ] else
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Text('Nothing scheduled for you yet.',
-                        textAlign: TextAlign.center),
+            child: (items.isEmpty && !hasTravel)
+                ? const RefreshableMessage('Your trip details will appear here.')
+                : ListView(
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      // Travel folded into this tab (CF-5) — one place for everything about the trip.
+                      if (hasTravel) ...[
+                        Text('Travel', style: theme.textTheme.titleLarge),
+                        const SizedBox(height: 8),
+                        TravelSections(travel: travel),
+                        const SizedBox(height: 16),
+                      ],
+                      if (items.isNotEmpty) ...[
+                        Text('Schedule', style: theme.textTheme.titleLarge),
+                        for (final day in days) ...[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              DateFormat('EEEE, MMM d').format(DateTime.parse(day)),
+                              style: theme.textTheme.titleMedium,
+                            ),
+                          ),
+                          for (final item in byDay[day]!)
+                            _ItineraryTile(
+                              item: item,
+                              title: item.customTitle ??
+                                  agendaTitles[item.agendaItemId] ??
+                                  'Scheduled item',
+                            ),
+                          const SizedBox(height: 8),
+                        ],
+                      ] else
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 24),
+                          child:
+                              Text('Nothing scheduled for you yet.', textAlign: TextAlign.center),
+                        ),
+                    ],
                   ),
-              ],
-            ),
           );
         },
       ),
@@ -119,13 +117,10 @@ class _ItineraryTile extends StatelessWidget {
         leading: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(start,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 13)),
+            Text(start, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           ],
         ),
-        title: Text(title,
-            style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text([
           time,
           if (item.notes.isNotEmpty) item.notes,

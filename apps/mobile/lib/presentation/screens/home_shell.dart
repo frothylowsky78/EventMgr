@@ -38,9 +38,44 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Poll unread on foreground (docs/open-questions.md A13) — there is no push to wake us.
+    // Poll on foreground (docs/open-questions.md A13) — there is no push to wake us, so
+    // returning to the app is the only signal that server-side state may have moved. Staff
+    // approve a photo or publish an agenda item while the guest is elsewhere; without this the
+    // change does not land until the app is killed and relaunched.
     if (state == AppLifecycleState.resumed) {
       ref.invalidate(unreadCountProvider);
+      for (final p in _contentProviders) {
+        ref.invalidate(p);
+      }
+    }
+  }
+
+  /// Everything a tab or a pushed screen renders from. Invalidating one it is not watching is
+  /// free — Riverpod only refetches providers with live listeners.
+  static final _contentProviders = [
+    eventProvider,
+    agendaProvider,
+    itineraryProvider,
+    galleryProvider,
+    attendeesProvider,
+    notificationsProvider,
+    conversationsProvider,
+  ];
+
+  /// The tab's own data, refreshed as it comes into view. The tabs live in an IndexedStack and
+  /// stay mounted, so switching to one never rebuilds it on its own.
+  void _onTabSelected(int i) {
+    setState(() => _index = i);
+    switch (i) {
+      case 0:
+        ref.invalidate(eventProvider);
+        ref.invalidate(itineraryProvider);
+      case 1:
+        ref.invalidate(agendaProvider);
+      case 2:
+        ref.invalidate(itineraryProvider);
+      case 3:
+        ref.invalidate(galleryProvider);
     }
   }
 
@@ -58,7 +93,7 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
       body: IndexedStack(index: _index, children: _tabs),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        onDestinationSelected: _onTabSelected,
         destinations: [
           const NavigationDestination(
               icon: Icon(Icons.home_outlined),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../application/providers.dart';
+import '../widgets/refreshable_message.dart';
 import '../../domain/notification_item.dart';
 
 /// In-app notification center (spec §4.7, §18.16). Mirrors every push the attendee received,
@@ -31,32 +32,31 @@ class NotificationCenterScreen extends ConsumerWidget {
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Could not load notifications.\n$e',
-            textAlign: TextAlign.center)),
+        error: (e, _) =>
+            Center(child: Text('Could not load notifications.\n$e', textAlign: TextAlign.center)),
         data: (center) {
-          if (center.items.isEmpty) {
-            return const Center(child: Text('No notifications yet.'));
-          }
           return RefreshIndicator(
             onRefresh: () async {
               ref.invalidate(notificationsProvider);
               await ref.read(notificationsProvider.future);
             },
-            child: ListView.separated(
-              itemCount: center.items.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (_, i) {
-                final n = center.items[i];
-                return _NotificationTile(
-                  item: n,
-                  onTap: () async {
-                    await repo.markRead(n.notificationId);
-                    ref.invalidate(notificationsProvider);
-                    _followDeepLink(context, n);
-                  },
-                );
-              },
-            ),
+            child: center.items.isEmpty
+                ? const RefreshableMessage('No notifications yet.')
+                : ListView.separated(
+                    itemCount: center.items.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (_, i) {
+                      final n = center.items[i];
+                      return _NotificationTile(
+                        item: n,
+                        onTap: () async {
+                          await repo.markRead(n.notificationId);
+                          ref.invalidate(notificationsProvider);
+                          _followDeepLink(context, n);
+                        },
+                      );
+                    },
+                  ),
           );
         },
       ),
@@ -100,8 +100,7 @@ class _NotificationTile extends StatelessWidget {
         color: isUrgent ? theme.colorScheme.error : theme.colorScheme.primary,
       ),
       title: Text(item.title,
-          style: TextStyle(
-              fontWeight: item.read ? FontWeight.w500 : FontWeight.bold)),
+          style: TextStyle(fontWeight: item.read ? FontWeight.w500 : FontWeight.bold)),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -115,8 +114,8 @@ class _NotificationTile extends StatelessWidget {
           : Container(
               width: 10,
               height: 10,
-              decoration: BoxDecoration(
-                  color: theme.colorScheme.secondary, shape: BoxShape.circle)),
+              decoration:
+                  BoxDecoration(color: theme.colorScheme.secondary, shape: BoxShape.circle)),
       isThreeLine: true,
     );
   }
