@@ -50,8 +50,10 @@ and CI (`buildspec.yml`) pins Node 20 — local Node 24 is newer than both.
 - **Android targets API 36** (Play requirement, Aug 31 2026). Inherited from Flutter's defaults
   via `flutter.targetSdkVersion`/`compileSdkVersion` in `android/app/build.gradle.kts` — do not
   pin these to a literal without checking what Flutter resolves to.
-- **iOS builds against the iOS 26 SDK or later.** (`IPHONEOS_DEPLOYMENT_TARGET` is 15.0 — that's
-  the floor, not the SDK; leave it alone.)
+- **iOS builds against the iOS 26 SDK or later.** (`IPHONEOS_DEPLOYMENT_TARGET` is 16.0 — that's
+  the floor, not the SDK; don't confuse the two.) The floor is set in three places that must
+  agree: `ios/Podfile`'s `platform :ios`, and `IPHONEOS_DEPLOYMENT_TARGET` in all three
+  configurations of `Runner.xcodeproj/project.pbxproj`.
 - **Push notifications are CUT from v1.** Do not add `firebase_messaging`, APNs, FCM, or SNS push
   wiring. Note: backend push scaffolding already exists and is dormant (`grants.ts:grantPush`,
   `notificationSendJob`, `/me/device-tokens`, empty `pushPlatformAppArn*`). Leave it dormant —

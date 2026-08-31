@@ -1,5 +1,7 @@
-# Uncomment this line to define a global platform for your project
-# platform :ios, '15.0'
+# Minimum supported iOS. Must stay in step with IPHONEOS_DEPLOYMENT_TARGET in
+# Runner.xcodeproj — CocoaPods builds pods against this, Xcode builds the app against that,
+# and a mismatch shows up as linker warnings rather than an obvious error.
+platform :ios, '16.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
