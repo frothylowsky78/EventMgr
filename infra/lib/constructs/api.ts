@@ -136,6 +136,23 @@ export class Api extends Construct {
     const getMeFn = route('GetMe', apigw.HttpMethod.GET, '/me', 'getMe.ts', 'read', { environment: profileEnv });
     profilePhotosBucket.grantRead(getMeFn);
     route('GetMyItinerary', apigw.HttpMethod.GET, '/me/itinerary', 'getMyItinerary.ts', 'read');
+
+    // Registration checklist (spec §4.3). POST ticks an action, DELETE un-ticks it; one Lambda
+    // for both, same reasoning as ManageBlocks below.
+    const registrationFn = makeHandler(this, 'CompleteRegistrationAction', {
+      entry: 'completeRegistrationAction.ts',
+      config,
+      table,
+      access: 'write',
+      environment: profileEnv,
+    });
+    profilePhotosBucket.grantRead(registrationFn);
+    this.httpApi.addRoutes({
+      path: '/me/registration/actions/{actionId}/complete',
+      methods: [apigw.HttpMethod.POST, apigw.HttpMethod.DELETE],
+      integration: new HttpLambdaIntegration('CompleteRegistrationActionInt', registrationFn),
+      authorizer,
+    });
     // Attendee self-service adds/removes; the handlers copy times from the agenda item and
     // refuse to delete admin-assigned rows.
     route('CreateMyItinerary', apigw.HttpMethod.POST, '/me/itinerary', 'createMyItinerary.ts', 'write');

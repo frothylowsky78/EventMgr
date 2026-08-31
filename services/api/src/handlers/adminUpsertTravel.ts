@@ -9,6 +9,7 @@ import { TABLE_NAME, keys } from '../lib/keys';
 import { toTravelDetail } from '../lib/mappers';
 import { travelUpsertSchema, parseBody } from '../lib/validation';
 import { audit } from '../lib/audit';
+import { autoCompleteAction } from '../lib/registration';
 
 /**
  * PUT /admin/events/{eventId}/attendees/{attendeeId}/travel — set/replace an attendee's travel.
@@ -38,6 +39,9 @@ export const handler = async (
 
     await ddb.send(new PutCommand({ TableName: TABLE_NAME, Item: item }));
     await audit(eventId, auth.userId, 'travel.upsert', { attendeeId });
+    // Travel on file settles the "share your flights" action. This is the only handler that
+    // writes travel — there is no attendee-facing save — so it is the only place to hook.
+    await autoCompleteAction(attendeeId, 'flight');
     return ok(toTravelDetail(item));
   } catch (e) {
     return fail(e);

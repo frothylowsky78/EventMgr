@@ -40,6 +40,16 @@ class SupportRepository {
     return me;
   }
 
+  /// Ticks a registration action off (spec §4.3), or un-ticks it. Both return the full
+  /// attendee, so the cached profile is replaced rather than patched.
+  Future<AttendeeMe> completeRegistrationAction(String actionId, {bool done = true}) async {
+    final path = '/me/registration/actions/$actionId/complete';
+    final data = done ? await _api.postData(path) : await _api.deleteData(path);
+    final me = AttendeeMe.fromJson((data as Map).cast<String, dynamic>());
+    _cache.putJson(_meKey, me.toJson());
+    return me;
+  }
+
   /// Blocking (App Store guideline 1.2). The server hides the other attendee's photos,
   /// directory row and messages in both directions. Both calls are idempotent.
   Future<void> block(String attendeeId) => _api.postData('/me/blocks/$attendeeId');

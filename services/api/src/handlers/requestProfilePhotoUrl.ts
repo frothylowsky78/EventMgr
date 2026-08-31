@@ -9,6 +9,7 @@ import { ApiException, fail, getAuth, ok, requireAttendee } from '../lib/http';
 import { TABLE_NAME, keys } from '../lib/keys';
 import { PROFILE_BUCKET, presignUploadTo, isImageType, extensionFor } from '../lib/s3';
 import { profilePhotoSchema, parseBody } from '../lib/validation';
+import { autoCompleteAction } from '../lib/registration';
 
 /**
  * POST /me/profile-photo/upload-url — pre-signed PUT to the private profile-photos bucket.
@@ -34,6 +35,9 @@ export const handler = async (
         ExpressionAttributeValues: { ':k': key, ':now': new Date().toISOString() },
       })
     );
+
+    // The key is recorded, so the "add a photo" registration action is provably done.
+    await autoCompleteAction(attendeeId, 'photo');
 
     const uploadUrl = await presignUploadTo(PROFILE_BUCKET, key, input.contentType);
     const ticket: UploadTicket = { uploadUrl, key };

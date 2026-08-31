@@ -6,6 +6,7 @@ import type {
 import { ddb } from './dynamo';
 import { TABLE_NAME, keys } from './keys';
 import { ApiException } from './http';
+import { isRegistrationDone } from './registrationStatus';
 
 export interface ResolvedAttendee {
   id: string;
@@ -102,7 +103,7 @@ export async function resolveAudience(
     }
 
     case 'incomplete_registration': {
-      const attendees = everyone.filter((a) => a.registrationStatus !== 'submitted');
+      const attendees = everyone.filter((a) => !isRegistrationDone(a.registrationStatus));
       return { attendees, description: 'Attendees with incomplete registration' };
     }
 

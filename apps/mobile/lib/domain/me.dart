@@ -14,7 +14,7 @@ class AttendeeMe {
   final String accessibilityNeeds;
   final bool directoryVisible;
   final bool contactSharingOptIn;
-  final String registrationStatus; // not_started | in_progress | submitted | past_due
+  final String registrationStatus; // not_started | in_progress | complete | submitted | past_due
   final List<String> completedRegistrationActions;
 
   const AttendeeMe({
@@ -74,5 +74,7 @@ class AttendeeMe {
         'completedRegistrationActions': completedRegistrationActions,
       };
 
-  bool get registrationComplete => registrationStatus == 'submitted';
+  /// 'submitted' predates attendee self-service; imported CSVs may still carry it.
+  bool get registrationComplete =>
+      registrationStatus == 'complete' || registrationStatus == 'submitted';
 }

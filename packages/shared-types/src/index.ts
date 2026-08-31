@@ -168,8 +168,15 @@ export type ItineraryItemUpdate = Partial<ItineraryItemCreate>;
 export type RegistrationStatus =
   | 'not_started'
   | 'in_progress'
+  /** Every action on the event's registrationActions list is done. */
+  | 'complete'
+  /**
+   * Legacy synonym for 'complete', predating attendee self-service. Nothing writes it any more;
+   * imported CSVs may still carry it, so every "is registration done?" check accepts both.
+   */
   | 'submitted'
   | 'past_due';
+
 
 export interface Attendee {
   id: string;

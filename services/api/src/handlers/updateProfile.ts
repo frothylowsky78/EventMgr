@@ -9,6 +9,7 @@ import { TABLE_NAME, keys } from '../lib/keys';
 import { toAttendee } from '../lib/mappers';
 import { presignProfileIfKey } from '../lib/s3';
 import { profileUpdateSchema, parseBody } from '../lib/validation';
+import { autoCompleteAction } from '../lib/registration';
 
 /**
  * PATCH /me/profile — attendee edits their own profile (editable subset only).
@@ -35,6 +36,13 @@ export const handler = async (
     };
 
     await ddb.send(new PutCommand({ TableName: TABLE_NAME, Item: merged }));
+
+    // Answering the dietary question counts even when the answer is "no restrictions" — the
+    // presence of the field in the patch is the signal, not a non-empty array.
+    if (patch.dietaryRestrictions !== undefined) {
+      await autoCompleteAction(attendeeId, 'dietary');
+    }
+
     return ok({
       ...toAttendee(merged),
       profilePhotoUrl: await presignProfileIfKey(merged.profilePhotoKey, merged.profilePhotoUrl),
