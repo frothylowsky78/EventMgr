@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -37,7 +38,10 @@ class HomeScreen extends ConsumerWidget {
                       style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           shadows: [Shadow(blurRadius: 8, color: Colors.black54)])),
-                  background: _Hero(url: event.branding.heroImageUrl),
+                  background: _Hero(
+                    url: event.branding.heroImageUrl,
+                    logoUrl: event.branding.logoUrl,
+                  ),
                 ),
               ),
               SliverPadding(
@@ -187,31 +191,89 @@ class _NotificationBell extends ConsumerWidget {
   }
 }
 
+/// Backdrop for the collapsing SliverAppBar: the event's hero photo when one is configured,
+/// the brand gradient otherwise, always under a scrim that keeps the title readable.
 class _Hero extends StatelessWidget {
-  const _Hero({required this.url});
+  const _Hero({required this.url, required this.logoUrl});
   final String url;
+  final String logoUrl;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [scheme.primary, scheme.secondary],
-        ),
-      ),
-      child: const DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Colors.transparent, Colors.black38],
+    final gradient = _brandGradient(scheme);
+
+    return Stack(
+      // Non-positioned children fill the flexible space, at both expanded and collapsed heights.
+      fit: StackFit.expand,
+      children: [
+        if (url.isEmpty)
+          gradient
+        else
+          CachedNetworkImage(
+            imageUrl: url,
+            fit: BoxFit.cover,
+            // The gradient stands in while loading and if the image never arrives, so the hero
+            // is never a blank box behind the event name.
+            placeholder: (_, __) => gradient,
+            errorWidget: (_, __, ___) => gradient,
+          ),
+        // Scrim over whatever is behind it — an arbitrary photo cannot be trusted to keep the
+        // white title legible on its own.
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, Colors.black38],
+            ),
           ),
         ),
-      ),
+        if (logoUrl.isNotEmpty)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 36),
+                        child: CachedNetworkImage(
+                          imageUrl: logoUrl,
+                          fit: BoxFit.contain,
+                          alignment: Alignment.centerLeft,
+                          // Branding is decoration: a missing logo leaves the hero clean rather
+                          // than showing a spinner or a broken-image glyph over the photo.
+                          placeholder: (_, __) => const SizedBox.shrink(),
+                          errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                        ),
+                      ),
+                    ),
+                    // Reserves the notification bell's corner so a wide logo cannot run under it.
+                    const SizedBox(width: 56),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
+
+  Widget _brandGradient(ColorScheme scheme) => DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [scheme.primary, scheme.secondary],
+          ),
+        ),
+      );
 }
 
 class _InfoRow extends StatelessWidget {
