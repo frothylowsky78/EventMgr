@@ -8,6 +8,7 @@ import { ApiException, fail, getAuth, ok, requireAttendee } from '../lib/http';
 import { TABLE_NAME, keys } from '../lib/keys';
 import { toAttendeeCard } from '../lib/mappers';
 import { presignProfileIfKey } from '../lib/s3';
+import { loadBlockedIds } from '../lib/blocks';
 
 /**
  * GET /events/{eventId}/attendees — yearbook directory.
@@ -18,9 +19,12 @@ export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
 ): Promise<APIGatewayProxyResultV2> => {
   try {
-    requireAttendee(getAuth(event));
+    const auth = getAuth(event);
+    requireAttendee(auth);
     const eventId = event.pathParameters?.eventId;
     if (!eventId) throw new ApiException('VALIDATION', 'eventId is required');
+
+    const blocked = new Set(await loadBlockedIds(auth.attendeeId));
 
     const res = await ddb.send(
       new QueryCommand({
@@ -35,6 +39,7 @@ export const handler = async (
     const cards = await Promise.all(
       (res.Items ?? [])
         .filter((a) => a.directoryVisible !== false && a.enabled !== false)
+        .filter((a) => !blocked.has(a.id as string))
         .map(async (a) => ({
           ...toAttendeeCard(a),
           profilePhotoUrl: await presignProfileIfKey(a.profilePhotoKey, a.profilePhotoUrl),

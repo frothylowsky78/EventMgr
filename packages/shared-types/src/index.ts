@@ -182,6 +182,8 @@ export interface Attendee {
   title?: string;
   city?: string;
   profilePhotoUrl?: string;
+  /** Attendees this attendee has blocked; their content and messages are hidden both ways. */
+  blockedAttendeeIds?: string[];
   dietaryRestrictions: string[];
   accessibilityNeeds?: string;
   guestName?: string;
@@ -519,6 +521,9 @@ export interface Photo {
   /** Presigned, time-limited URLs (only populated on read responses). */
   imageUrl?: string;
   thumbnailUrl?: string;
+  /** Set once any attendee reports the photo (App Store guideline 1.2). */
+  reported?: boolean;
+  reportCount?: number;
 }
 
 export interface PhotoUploadRequest {
@@ -665,6 +670,8 @@ export interface Message {
   senderName: string;
   body: string;
   createdAt: string;
+  reported?: boolean;
+  reportCount?: number;
 }
 
 /** Start a conversation with staff, or with another attendee who has opted in. */
@@ -681,6 +688,44 @@ export interface MessageCreate {
 
 export interface UnreadCount {
   unread: number;
+}
+
+// ---------------------------------------------------------------------------
+// Content reporting + blocking (App Store guideline 1.2 for user-generated content)
+// ---------------------------------------------------------------------------
+export type ReportReason = 'inappropriate' | 'spam' | 'harassment' | 'other';
+
+export interface ContentReportCreate {
+  reason: ReportReason;
+  note?: string;
+}
+
+/** One report, as stored on the reported photo or message. */
+export interface ContentReport {
+  reportedBy: string;
+  reason: ReportReason;
+  note?: string;
+  createdAt: string;
+}
+
+/** A row in the staff moderation feed (GET /admin/events/{eventId}/reports). */
+export interface ModerationReport {
+  id: string;
+  eventId: string;
+  targetType: 'photo' | 'message';
+  targetId: string;
+  /** Set for message reports, so staff can find the thread. */
+  conversationId?: string | null;
+  reportedBy: string;
+  reason: ReportReason;
+  note?: string;
+  /** Caption or message text at the time of the report, so the feed is readable on its own. */
+  summary: string;
+  createdAt: string;
+}
+
+export interface BlockList {
+  blockedAttendeeIds: string[];
 }
 
 // ---------------------------------------------------------------------------

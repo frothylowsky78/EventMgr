@@ -17,6 +17,7 @@ import {
   toConversation,
 } from '../lib/messaging';
 import { conversationCreateSchema, parseBody } from '../lib/validation';
+import { assertNotBlocked } from '../lib/blocks';
 
 const keyFor = (p: ConversationParticipant): string =>
   p.type === 'staff' ? staffPrincipal(p.id) : attendeePrincipal(p.id);
@@ -51,6 +52,8 @@ export const handler = async (
           throw new ApiException('VALIDATION', 'You cannot message yourself');
         }
         assertMessageable(target);
+        // Guideline 1.2: a block stops the thread being opened from either side.
+        await assertNotBlocked(auth.attendeeId!, input.withAttendeeId);
       }
       other = {
         type: 'attendee',

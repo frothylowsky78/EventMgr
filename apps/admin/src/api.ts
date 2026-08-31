@@ -28,6 +28,7 @@ import type {
   MapLocationCreate,
   MapLocationUpdate,
   Message,
+  ModerationReport,
   ProvisionResult,
   WeatherInfo,
   WeatherUpsert,
@@ -111,6 +112,16 @@ export const adminApi = {
   // Photos (moderation)
   listPhotos: (status: PhotoStatus) =>
     request<Photo[]>('GET', `/admin/events/${ev()}/photos?status=${status}`),
+  /** Reported photos across every status (App Store guideline 1.2). */
+  listReportedPhotos: () =>
+    request<Photo[]>('GET', `/admin/events/${ev()}/photos?reported=true`),
+
+  // Content reports (photos + direct messages)
+  listReports: (targetType?: 'photo' | 'message') =>
+    request<ModerationReport[]>(
+      'GET',
+      `/admin/events/${ev()}/reports${targetType ? `?targetType=${targetType}` : ''}`
+    ),
   moderatePhoto: (photoId: string, patch: PhotoModeration) =>
     request<Photo>('PATCH', `/admin/events/${ev()}/photos/${photoId}`, patch),
 

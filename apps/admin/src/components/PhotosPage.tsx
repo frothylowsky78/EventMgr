@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react';
 import type { Photo, PhotoStatus } from '@eventmgr/shared-types';
 import { adminApi } from '../api';
 
-const TABS: PhotoStatus[] = ['pending', 'approved', 'hidden', 'rejected'];
+/** 'reported' is not a status — it spans every status (App Store guideline 1.2). */
+type Tab = PhotoStatus | 'reported';
+
+const TABS: Tab[] = ['pending', 'approved', 'hidden', 'rejected', 'reported'];
 
 export function PhotosPage() {
-  const [status, setStatus] = useState<PhotoStatus>('pending');
+  const [status, setStatus] = useState<Tab>('pending');
   const [items, setItems] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -14,7 +17,11 @@ export function PhotosPage() {
     setLoading(true);
     setError(null);
     try {
-      setItems(await adminApi.listPhotos(status));
+      setItems(
+        status === 'reported'
+          ? await adminApi.listReportedPhotos()
+          : await adminApi.listPhotos(status)
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load photos');
     } finally {
@@ -63,18 +70,23 @@ export function PhotosPage() {
                 <div style={{ height: 150, background: '#eee', borderRadius: 8, display: 'grid', placeItems: 'center' }}
                   className="muted">processing…</div>
               )}
+              {p.reported && (
+                <div style={{ color: '#b3261e', fontSize: 12, fontWeight: 600, marginTop: 6 }}>
+                  ⚠ Reported ×{p.reportCount ?? 1}
+                </div>
+              )}
               {p.caption && <div style={{ fontSize: 13, marginTop: 6 }}>{p.caption}</div>}
               <div className="muted" style={{ fontSize: 12, margin: '4px 0' }}>
                 {p.featured ? '★ featured · ' : ''}{p.likeCount} likes
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {status !== 'approved' && (
+                {p.status !== 'approved' && (
                   <button onClick={() => moderate(p, { status: 'approved' })}>Approve</button>
                 )}
-                {status !== 'hidden' && (
+                {p.status !== 'hidden' && (
                   <button className="secondary" onClick={() => moderate(p, { status: 'hidden' })}>Hide</button>
                 )}
-                {status !== 'rejected' && (
+                {p.status !== 'rejected' && (
                   <button className="secondary" onClick={() => moderate(p, { status: 'rejected' })}>Reject</button>
                 )}
                 <button className="secondary" onClick={() => moderate(p, { featured: !p.featured })}>
@@ -83,7 +95,11 @@ export function PhotosPage() {
               </div>
             </div>
           ))}
-          {items.length === 0 && <p className="muted">No {status} photos.</p>}
+          {items.length === 0 && (
+            <p className="muted">
+              {status === 'reported' ? 'No reported photos.' : `No ${status} photos.`}
+            </p>
+          )}
         </div>
       )}
     </div>

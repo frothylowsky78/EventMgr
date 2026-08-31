@@ -14,6 +14,7 @@ import type {
   HelpRequest,
   ItineraryItem,
   MapLocation,
+  ModerationReport,
   NotificationCenterItem,
   NotificationRecord,
   Photo,
@@ -199,6 +200,21 @@ export const toPhoto = (i: Item): Photo => ({
   likeCount: i.likeCount ?? 0,
   contentType: i.contentType ?? 'image/jpeg',
   createdAt: i.createdAt,
+  reported: i.reported === true,
+  reportCount: i.reportCount ?? 0,
+});
+
+export const toModerationReport = (i: Item): ModerationReport => ({
+  id: i.id,
+  eventId: i.eventId,
+  targetType: i.targetType,
+  targetId: i.targetId,
+  conversationId: i.conversationId ?? null,
+  reportedBy: i.reportedBy,
+  reason: i.reason,
+  note: i.note ?? '',
+  summary: i.summary ?? '',
+  createdAt: i.createdAt,
 });
 
 export const toMapLocation = (i: Item): MapLocation => ({
@@ -274,6 +290,7 @@ export const toAttendee = (i: Item): Attendee => ({
   title: i.title ?? '',
   city: i.city ?? '',
   profilePhotoUrl: i.profilePhotoUrl ?? '',
+  blockedAttendeeIds: i.blockedAttendeeIds ?? [],
   dietaryRestrictions: i.dietaryRestrictions ?? [],
   accessibilityNeeds: i.accessibilityNeeds ?? '',
   guestName: i.guestName ?? '',

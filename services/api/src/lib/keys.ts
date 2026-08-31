@@ -207,6 +207,14 @@ export const keys = {
   }),
   conversationRefPrefix: 'CONV#',
 
+  // --- Moderation reports. Mirrored into the event partition so staff can list every
+  // report in one query; the target photo/message also carries its own reports array.
+  reportPrefix: 'REPORT#',
+  report: (eventId: string, createdAt: string, reportId: string) => ({
+    PK: eventPk(eventId),
+    SK: `REPORT#${createdAt}#${reportId}`,
+  }),
+
   // --- Audit log ---
   audit: (eventId: string, ts: string, id: string) => ({
     PK: eventPk(eventId),

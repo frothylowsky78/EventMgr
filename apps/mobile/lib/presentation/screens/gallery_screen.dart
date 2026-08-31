@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../application/providers.dart';
 import '../../domain/photo.dart';
+import '../widgets/moderation.dart';
 
 /// Event photo gallery (spec §4.14): browse approved photos, like, and upload from camera roll
 /// or camera. Uploads go to a moderation queue when moderation is enabled.
@@ -130,6 +131,7 @@ class _PhotoTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: () => _openViewer(context, ref),
+      onLongPress: () => _openModerationSheet(context, ref),
       child: Hero(
         tag: photo.id,
         child: photo.thumbnailUrl == null
@@ -143,6 +145,72 @@ class _PhotoTile extends ConsumerWidget {
               ),
       ),
     );
+  }
+
+  /// Guideline 1.2 entry point: every photo can be reported, and its uploader blocked.
+  void _openModerationSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.flag_outlined),
+              title: const Text('Report photo'),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                _report(context, ref);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.block),
+              title: const Text('Block this attendee'),
+              onTap: () {
+                Navigator.pop(sheetCtx);
+                _block(context, ref);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _report(BuildContext context, WidgetRef ref) async {
+    final reason = await pickReportReason(context, 'Report this photo');
+    if (reason == null || !context.mounted) return;
+    try {
+      await ref.read(photosRepositoryProvider).report(photo.id, reason);
+      ref.invalidate(galleryProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reported. Our team will take a look.')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not report the photo: $e')));
+    }
+  }
+
+  Future<void> _block(BuildContext context, WidgetRef ref) async {
+    if (photo.uploadedByAttendeeId.isEmpty) return;
+    if (!await confirmBlock(context, 'this attendee') || !context.mounted) return;
+    try {
+      await ref.read(supportRepositoryProvider).block(photo.uploadedByAttendeeId);
+      ref.invalidate(galleryProvider);
+      ref.invalidate(attendeesProvider);
+      ref.invalidate(meProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Blocked. You will no longer see their content.')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not block: $e')));
+    }
   }
 
   void _openViewer(BuildContext context, WidgetRef ref) {

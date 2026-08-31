@@ -211,6 +211,12 @@ export const mapImageSchema = z.object({
 export const messageCreateSchema = z.object({
   body: z.string().min(1).max(4000),
 });
+/** Reporting a photo or a message (App Store guideline 1.2). */
+export const contentReportSchema = z.object({
+  reason: z.enum(['inappropriate', 'spam', 'harassment', 'other']),
+  note: z.string().max(1000).optional(),
+});
+
 export const conversationCreateSchema = z.object({
   /** Omit to start a thread with event staff. */
   withAttendeeId: z.string().min(1).max(100).optional(),

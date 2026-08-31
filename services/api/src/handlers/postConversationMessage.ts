@@ -5,7 +5,13 @@ import type {
 import type { ConversationParticipant } from '@eventmgr/shared-types';
 import { ApiException, fail, getAuth, ok } from '../lib/http';
 import { attendeePrincipal, staffPrincipal } from '../lib/keys';
-import { appendMessage, requireParticipant, resolvePrincipal } from '../lib/messaging';
+import {
+  appendMessage,
+  otherAttendeeId,
+  requireParticipant,
+  resolvePrincipal,
+} from '../lib/messaging';
+import { assertNotBlocked } from '../lib/blocks';
 import { messageCreateSchema, parseBody } from '../lib/validation';
 
 /** Participant -> the partition key holding their pointer row. */
@@ -24,6 +30,8 @@ export const handler = async (
 
     const input = parseBody(messageCreateSchema, event.body);
     const ref = await requireParticipant(principal.key, conversationId);
+    const other = otherAttendeeId(ref, auth.attendeeId);
+    if (auth.attendeeId && other) await assertNotBlocked(auth.attendeeId, other);
     const participants = (ref.participants as ConversationParticipant[]) ?? [];
 
     const message = await appendMessage({

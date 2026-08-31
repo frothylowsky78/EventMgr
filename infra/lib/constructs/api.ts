@@ -162,6 +162,22 @@ export class Api extends Construct {
     const listMapsFn = route('ListMaps', apigw.HttpMethod.GET, '/events/{eventId}/maps', 'listMaps.ts', 'read', { environment: assetsEnv });
     assetsBucket.grantRead(listMapsFn);
     route('ListFaq', apigw.HttpMethod.GET, '/events/{eventId}/faq', 'listFaq.ts', 'read');
+    // Blocking (App Store guideline 1.2). POST and DELETE share one Lambda: same
+    // read-modify-write on the same attribute, and a second function would cost ~6 more
+    // resources against the parent stack's 500 limit.
+    const blocksFn = makeHandler(this, 'ManageBlocks', {
+      entry: 'manageBlock.ts',
+      config,
+      table,
+      access: 'write',
+    });
+    this.httpApi.addRoutes({
+      path: '/me/blocks/{attendeeId}',
+      methods: [apigw.HttpMethod.POST, apigw.HttpMethod.DELETE],
+      integration: new HttpLambdaIntegration('ManageBlocksInt', blocksFn),
+      authorizer,
+    });
+
     const listAttendeesFn = route('ListAttendees', apigw.HttpMethod.GET, '/events/{eventId}/attendees', 'listAttendees.ts', 'read', { environment: profileEnv });
     profilePhotosBucket.grantRead(listAttendeesFn);
     route('GetWeather', apigw.HttpMethod.GET, '/events/{eventId}/weather', 'getWeather.ts', 'read');
@@ -189,6 +205,7 @@ export class Api extends Construct {
     route('ListConversationMessages', apigw.HttpMethod.GET, '/me/conversations/{id}/messages', 'listConversationMessages.ts', 'write');
     route('PostConversationMessage', apigw.HttpMethod.POST, '/me/conversations/{id}/messages', 'postConversationMessage.ts', 'write');
     route('GetUnreadCount', apigw.HttpMethod.GET, '/me/unread-count', 'getUnreadCount.ts', 'read');
+    route('ReportMessage', apigw.HttpMethod.POST, '/events/{eventId}/conversations/{conversationId}/messages/{messageId}/report', 'reportMessage.ts', 'write');
 
     // --- Photos & gallery (pre-signed S3 upload + moderation, spec §4.14/§18.5) ---
     const uploadUrlFn = route('RequestPhotoUploadUrl', apigw.HttpMethod.POST, '/events/{eventId}/photos/upload-url', 'requestPhotoUploadUrl.ts', 'write', { environment: galleryEnv });
@@ -198,6 +215,7 @@ export class Api extends Construct {
     galleryBucket.grantRead(listPhotosFn);
 
     route('LikePhoto', apigw.HttpMethod.POST, '/events/{eventId}/photos/{photoId}/like', 'likePhoto.ts', 'write');
+    route('ReportPhoto', apigw.HttpMethod.POST, '/events/{eventId}/photos/{photoId}/report', 'reportPhoto.ts', 'write');
 
     const deletePhotoFn = route('DeletePhoto', apigw.HttpMethod.DELETE, '/events/{eventId}/photos/{photoId}', 'deletePhoto.ts', 'write', { environment: galleryEnv });
     galleryBucket.grantDelete(deletePhotoFn);

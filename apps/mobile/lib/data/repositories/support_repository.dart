@@ -40,6 +40,11 @@ class SupportRepository {
     return me;
   }
 
+  /// Blocking (App Store guideline 1.2). The server hides the other attendee's photos,
+  /// directory row and messages in both directions. Both calls are idempotent.
+  Future<void> block(String attendeeId) => _api.postData('/me/blocks/$attendeeId');
+  Future<void> unblock(String attendeeId) => _api.deleteData('/me/blocks/$attendeeId');
+
   /// Requests a pre-signed URL and uploads the profile photo straight to S3.
   Future<void> uploadProfilePhoto({
     required Uint8List bytes,

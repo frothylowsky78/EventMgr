@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 
 import '../../application/providers.dart';
 import '../../domain/message.dart';
+import '../widgets/moderation.dart';
 
 /// A single thread (CF-6/CF-7).
 ///
@@ -63,10 +64,60 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     }
   }
 
+  /// Guideline 1.2: any message in the thread can be reported.
+  Future<void> _reportMessage(Message message) async {
+    final reason = await pickReportReason(context, 'Report this message');
+    if (reason == null || !mounted) return;
+    try {
+      await ref
+          .read(messagesRepositoryProvider)
+          .reportMessage(widget.conversationId, message.id, reason);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reported. Our team will take a look.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not report the message: $e')));
+    }
+  }
+
+  /// Blocking ends the thread for both sides, so it closes the screen on success.
+  Future<void> _blockOther(String attendeeId, String name) async {
+    if (!await confirmBlock(context, name) || !mounted) return;
+    try {
+      await ref.read(supportRepositoryProvider).block(attendeeId);
+      ref.invalidate(conversationsProvider);
+      ref.invalidate(attendeesProvider);
+      ref.invalidate(galleryProvider);
+      ref.invalidate(meProvider);
+      ref.invalidate(unreadCountProvider);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Blocked $name.')));
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not block: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final async = ref.watch(conversationMessagesProvider(widget.conversationId));
     final myId = ref.watch(meProvider).valueOrNull?.id;
+
+    // The counterpart, for the block action. Staff threads have no attendee to block.
+    final conversation = ref
+        .watch(conversationsProvider)
+        .valueOrNull
+        ?.where((c) => c.id == widget.conversationId)
+        .firstOrNull;
+    final other = conversation?.participants
+        .where((p) => p.type == 'attendee' && p.id != myId)
+        .firstOrNull;
 
     // Opening the thread clears its unread count server-side, so refresh the badge.
     ref.listen(conversationMessagesProvider(widget.conversationId), (_, next) {
@@ -74,7 +125,21 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Conversation')),
+      appBar: AppBar(
+        title: Text(conversation?.titleFor(myId) ?? 'Conversation'),
+        actions: [
+          if (other != null)
+            PopupMenuButton<String>(
+              onSelected: (_) => _blockOther(other.id, other.name.isEmpty ? 'this attendee' : other.name),
+              itemBuilder: (_) => [
+                PopupMenuItem<String>(
+                  value: 'block',
+                  child: Text('Block ${other.name.isEmpty ? 'this attendee' : other.name}'),
+                ),
+              ],
+            ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
@@ -94,8 +159,14 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
                   controller: _scroll,
                   padding: const EdgeInsets.all(16),
                   itemCount: messages.length,
-                  itemBuilder: (_, i) =>
-                      _Bubble(message: messages[i], mine: messages[i].senderId == myId),
+                  itemBuilder: (_, i) => _Bubble(
+                    message: messages[i],
+                    mine: messages[i].senderId == myId,
+                    // Your own message is yours to delete, not to report.
+                    onReport: messages[i].senderId == myId
+                        ? null
+                        : () => _reportMessage(messages[i]),
+                  ),
                 );
               },
             ),
@@ -140,9 +211,10 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
 }
 
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.message, required this.mine});
+  const _Bubble({required this.message, required this.mine, this.onReport});
   final Message message;
   final bool mine;
+  final VoidCallback? onReport;
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +222,9 @@ class _Bubble extends StatelessWidget {
     final at = message.sentAt;
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
+      child: GestureDetector(
+        onLongPress: onReport,
+        child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.78),
@@ -180,7 +254,8 @@ class _Bubble extends StatelessWidget {
                   ),
                 ),
               ),
-          ],
+            ],
+          ),
         ),
       ),
     );

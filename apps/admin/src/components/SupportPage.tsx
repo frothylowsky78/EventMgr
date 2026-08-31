@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import type { HelpRequest, HelpRequestStatus } from '@eventmgr/shared-types';
+import type { HelpRequest, HelpRequestStatus, ModerationReport } from '@eventmgr/shared-types';
 import { adminApi } from '../api';
 
 const STATUSES: HelpRequestStatus[] = ['open', 'assigned', 'resolved'];
 
 export function SupportPage() {
-  const [view, setView] = useState<'help' | 'feedback'>('help');
+  const [view, setView] = useState<'help' | 'feedback' | 'reports'>('help');
   return (
     <div className="card">
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
@@ -15,8 +15,13 @@ export function SupportPage() {
         <button className={view === 'feedback' ? '' : 'secondary'} onClick={() => setView('feedback')}>
           Feedback
         </button>
+        <button className={view === 'reports' ? '' : 'secondary'} onClick={() => setView('reports')}>
+          Reported messages
+        </button>
       </div>
-      {view === 'help' ? <HelpRequests /> : <Feedback />}
+      {view === 'help' && <HelpRequests />}
+      {view === 'feedback' && <Feedback />}
+      {view === 'reports' && <ReportedMessages />}
     </div>
   );
 }
@@ -142,5 +147,60 @@ function Feedback() {
         </>
       )}
     </>
+  );
+}
+
+
+/**
+ * Reported direct messages (App Store guideline 1.2). Read-only: staff see who reported what
+ * and can follow up in the Messages inbox — messages have no separate moderation action.
+ */
+function ReportedMessages() {
+  const [items, setItems] = useState<ModerationReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        setItems(await adminApi.listReports('message'));
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Failed to load reports');
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  if (loading) return <p className="muted">Loading…</p>;
+  if (error) return <div className="error">{error}</div>;
+  if (items.length === 0) return <p className="muted">No reported messages.</p>;
+
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>Reported</th>
+          <th>Reason</th>
+          <th>Message</th>
+          <th>Reported by</th>
+          <th>Conversation</th>
+        </tr>
+      </thead>
+      <tbody>
+        {items.map((r) => (
+          <tr key={r.id}>
+            <td>{new Date(r.createdAt).toLocaleString()}</td>
+            <td>
+              <strong>{r.reason}</strong>
+              {r.note ? <div className="muted">{r.note}</div> : null}
+            </td>
+            <td>{r.summary}</td>
+            <td className="muted">{r.reportedBy}</td>
+            <td className="muted">{r.conversationId ?? '—'}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

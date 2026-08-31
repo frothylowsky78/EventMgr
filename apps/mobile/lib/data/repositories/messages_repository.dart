@@ -1,3 +1,4 @@
+import '../../core/config.dart';
 import '../../domain/message.dart';
 import '../api_client.dart';
 
@@ -23,6 +24,21 @@ class MessagesRepository {
 
   Future<void> send(String conversationId, String body) =>
       _api.postData('/me/conversations/$conversationId/messages', {'body': body});
+
+  /// Flags a message for staff review (App Store guideline 1.2). Idempotent per reporter.
+  Future<void> reportMessage(
+    String conversationId,
+    String messageId,
+    String reason, {
+    String? note,
+  }) =>
+      _api.postData(
+        '/events/${AppConfig.eventId}/conversations/$conversationId/messages/$messageId/report',
+        {
+          'reason': reason,
+          if (note != null && note.isNotEmpty) 'note': note,
+        },
+      );
 
   /// Omit [withAttendeeId] to start a thread with event staff.
   Future<Conversation> start({String? withAttendeeId, required String body}) async {

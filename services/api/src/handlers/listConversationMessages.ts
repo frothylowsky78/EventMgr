@@ -6,7 +6,14 @@ import { QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { ddb } from '../lib/dynamo';
 import { ApiException, fail, getAuth, ok } from '../lib/http';
 import { TABLE_NAME, keys } from '../lib/keys';
-import { markRead, requireParticipant, resolvePrincipal, toMessage } from '../lib/messaging';
+import {
+  markRead,
+  otherAttendeeId,
+  requireParticipant,
+  resolvePrincipal,
+  toMessage,
+} from '../lib/messaging';
+import { assertNotBlocked } from '../lib/blocks';
 
 /**
  * GET /me/conversations/{id}/messages — the thread, oldest first, and marks it read.
@@ -23,7 +30,9 @@ export const handler = async (
     const conversationId = event.pathParameters?.id;
     if (!conversationId) throw new ApiException('VALIDATION', 'conversation id is required');
 
-    await requireParticipant(principal.key, conversationId);
+    const ref = await requireParticipant(principal.key, conversationId);
+    const other = otherAttendeeId(ref, auth.attendeeId);
+    if (auth.attendeeId && other) await assertNotBlocked(auth.attendeeId, other);
 
     const res = await ddb.send(
       new QueryCommand({

@@ -25,6 +25,13 @@ class PhotosRepository {
   Future<void> like(String photoId) =>
       _api.postData('/events/${AppConfig.eventId}/photos/$photoId/like');
 
+  /// Flags a photo for staff review (App Store guideline 1.2). Idempotent per reporter.
+  Future<void> report(String photoId, String reason, {String? note}) =>
+      _api.postData('/events/${AppConfig.eventId}/photos/$photoId/report', {
+        'reason': reason,
+        if (note != null && note.isNotEmpty) 'note': note,
+      });
+
   /// Full upload: request a ticket, PUT the bytes straight to S3.
   Future<PhotoUploadTicket> upload({
     required Uint8List bytes,

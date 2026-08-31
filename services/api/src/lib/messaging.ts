@@ -99,6 +99,18 @@ export async function requireParticipant(
   return ref;
 }
 
+/**
+ * The other attendee in a thread, if any. Staff threads have no counterpart attendee, which is
+ * why blocking never applies to reaching the event team.
+ */
+export function otherAttendeeId(
+  ref: Record<string, any>,
+  meId: string | undefined
+): string | undefined {
+  const participants = (ref.participants as ConversationParticipant[] | undefined) ?? [];
+  return participants.find((p) => p.type === 'attendee' && p.id !== meId)?.id;
+}
+
 export async function listRefs(principalKey: string): Promise<Record<string, unknown>[]> {
   const res = await ddb.send(
     new QueryCommand({
@@ -130,6 +142,8 @@ export const toMessage = (i: Record<string, any>): Message => ({
   senderName: i.senderName ?? '',
   body: i.body ?? '',
   createdAt: i.createdAt,
+  reported: i.reported === true,
+  reportCount: i.reportCount ?? 0,
 });
 
 /**

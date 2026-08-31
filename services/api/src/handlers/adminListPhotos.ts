@@ -21,21 +21,34 @@ export const handler = async (
     const eventId = event.pathParameters?.eventId;
     if (!eventId) throw new ApiException('VALIDATION', 'eventId is required');
 
+    // ?reported=true spans every status: a reported photo may already be approved, and staff
+    // need to see it wherever it sits (App Store guideline 1.2).
+    const reportedOnly = event.queryStringParameters?.reported === 'true';
     const status = (event.queryStringParameters?.status as PhotoStatus) ?? 'pending';
-    if (!STATUSES.includes(status)) throw new ApiException('VALIDATION', 'Invalid status');
+    if (!reportedOnly && !STATUSES.includes(status)) {
+      throw new ApiException('VALIDATION', 'Invalid status');
+    }
 
-    const res = await ddb.send(
-      new QueryCommand({
-        TableName: TABLE_NAME,
-        IndexName: 'GSI1',
-        KeyConditionExpression: 'GSI1PK = :pk',
-        ExpressionAttributeValues: { ':pk': keys.photoByStatus(eventId, status).GSI1PK },
-        ScanIndexForward: false,
-      })
-    );
+    const queryStatus = (s: PhotoStatus) =>
+      ddb.send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          IndexName: 'GSI1',
+          KeyConditionExpression: 'GSI1PK = :pk',
+          ExpressionAttributeValues: { ':pk': keys.photoByStatus(eventId, s).GSI1PK },
+          ScanIndexForward: false,
+        })
+      );
+
+    const results = reportedOnly
+      ? await Promise.all(STATUSES.map(queryStatus))
+      : [await queryStatus(status)];
+    const items = results
+      .flatMap((r) => r.Items ?? [])
+      .filter((i) => !reportedOnly || i.reported === true);
 
     const photos: Photo[] = await Promise.all(
-      (res.Items ?? []).map(async (i) => ({
+      items.map(async (i) => ({
         ...toPhoto(i),
         imageUrl: await presignDownload(i.key as string),
         thumbnailUrl: await presignDownload((i.thumbnailKey ?? i.key) as string),

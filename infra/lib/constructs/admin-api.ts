@@ -172,6 +172,8 @@ export class AdminApi extends NestedStack {
     grantScheduling(cancelFn, props.schedulerRoleArn);
 
     // Admin — photo moderation
+    // Moderation feed: reported photos and messages in one list (guideline 1.2).
+    route('AdminListReports', apigw.HttpMethod.GET, '/admin/events/{eventId}/reports', 'adminListReports.ts', 'read');
     const adminListPhotosFn = route('AdminListPhotos', apigw.HttpMethod.GET, '/admin/events/{eventId}/photos', 'adminListPhotos.ts', 'read', { environment: galleryEnv });
     galleryBucket.grantRead(adminListPhotosFn);
 

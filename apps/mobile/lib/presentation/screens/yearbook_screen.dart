@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
 import '../../domain/attendee_card.dart';
+import '../widgets/moderation.dart';
 
 /// Yearbook / attendee directory (spec §4.8). Only directory-visible attendees appear, with a
 /// polished initials avatar when there's no photo.
@@ -132,6 +133,65 @@ class _AttendeeTile extends ConsumerWidget {
     }
   }
 
+  /// Attendee detail sheet — also the guideline 1.2 block entry point.
+  void _openDetail(BuildContext context, WidgetRef ref) {
+    final isMe = card.id == ref.read(meProvider).valueOrNull?.id;
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              title: Text(card.fullName,
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+              subtitle: Text([card.title, card.company, card.city]
+                  .where((v) => v.isNotEmpty)
+                  .join(' · ')),
+            ),
+            if (card.messageable && !isMe)
+              ListTile(
+                leading: const Icon(Icons.forum_outlined),
+                title: Text('Message ${card.firstName}'),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _message(context, ref);
+                },
+              ),
+            if (!isMe)
+              ListTile(
+                leading: const Icon(Icons.block),
+                title: Text('Block ${card.firstName}'),
+                onTap: () {
+                  Navigator.pop(sheetCtx);
+                  _block(context, ref);
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _block(BuildContext context, WidgetRef ref) async {
+    if (!await confirmBlock(context, card.fullName) || !context.mounted) return;
+    try {
+      await ref.read(supportRepositoryProvider).block(card.id);
+      ref.invalidate(attendeesProvider);
+      ref.invalidate(galleryProvider);
+      ref.invalidate(conversationsProvider);
+      ref.invalidate(meProvider);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Blocked ${card.fullName}.')));
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not block: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
@@ -139,6 +199,7 @@ class _AttendeeTile extends ConsumerWidget {
         .where((s) => s.isNotEmpty)
         .join(' · ');
     return ListTile(
+      onTap: () => _openDetail(context, ref),
       leading: CircleAvatar(
         backgroundColor: scheme.primary.withOpacity(0.12),
         foregroundColor: scheme.primary,
