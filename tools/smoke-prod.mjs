@@ -7,9 +7,13 @@ import {
   RespondToAuthChallengeCommand,
 } from '@aws-sdk/client-cognito-identity-provider';
 
-const API = 'https://xfiros62r5.execute-api.us-west-2.amazonaws.com';
-const REGION = 'us-west-2';
-const CLIENT_ID = 'cq5k6d80t98sssp4t6n8q76j3';
+// Defaults are prod, so `node tools/smoke-prod.mjs` behaves exactly as before. Override to run
+// the same suite against dev:
+//   SMOKE_API=https://9sy2cqdna2.execute-api.us-west-2.amazonaws.com \
+//   SMOKE_CLIENT_ID=1ncqtjjemv7aidpel34gq2ee5r node tools/smoke-prod.mjs
+const API = process.env.SMOKE_API ?? 'https://xfiros62r5.execute-api.us-west-2.amazonaws.com';
+const REGION = process.env.SMOKE_REGION ?? 'us-west-2';
+const CLIENT_ID = process.env.SMOKE_CLIENT_ID ?? 'cq5k6d80t98sssp4t6n8q76j3';
 const EVENT = 'event_001';
 const EMAIL = process.env.SMOKE_EMAIL ?? 'jane@example.com';
 const CODE = process.env.SMOKE_CODE ?? 'VIP2026';
