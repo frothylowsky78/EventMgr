@@ -33,15 +33,11 @@ class HomeScreen extends ConsumerWidget {
                 expandedHeight: 200,
                 pinned: true,
                 actions: const [_NotificationBell()],
-                // No title here on purpose: the event name over an arbitrary photo was
-                // unreadable no matter how the scrim was tuned. It reads as a heading below
-                // the hero instead, where contrast is guaranteed.
-                flexibleSpace: FlexibleSpaceBar(
-                  background: _Hero(
-                    url: event.branding.heroImageUrl,
-                    logoUrl: event.branding.logoUrl,
-                  ),
-                ),
+                // The name lives below the hero as a heading, not over the photo. It comes
+                // back only once the bar has collapsed far enough that FlexibleSpaceBar has
+                // faded the photo out and the toolbar is its own solid colour — so the pinned
+                // bar is never just a stray bell, and no text ever sits on the image.
+                flexibleSpace: _CollapsingTitle(event: event),
               ),
               SliverPadding(
                 padding: const EdgeInsets.all(16),
@@ -190,6 +186,60 @@ class _NotificationBell extends ConsumerWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Hero backdrop plus a title that only exists once the bar is collapsed.
+///
+/// FlexibleSpaceBar fades its own background out over the last toolbar-height of the collapse,
+/// after which the app bar shows its solid colour. The title is faded in across that same
+/// window, so it appears against the flat bar rather than against the photo. Reading the
+/// collapse fraction from FlexibleSpaceBarSettings is what AppBar itself uses — it is exact,
+/// unlike guessing from constraints.
+class _CollapsingTitle extends StatelessWidget {
+  const _CollapsingTitle({required this.event});
+  final EventProfile event;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, _) {
+        final settings =
+            context.dependOnInheritedWidgetOfExactType<FlexibleSpaceBarSettings>();
+        double collapsed = 0;
+        if (settings != null) {
+          final range = settings.maxExtent - settings.minExtent;
+          if (range > 0) {
+            collapsed =
+                ((settings.maxExtent - settings.currentExtent) / range).clamp(0.0, 1.0);
+          }
+        }
+        // Nothing until the photo is most of the way gone, then a quick fade in.
+        final opacity = ((collapsed - 0.82) / 0.18).clamp(0.0, 1.0);
+
+        return FlexibleSpaceBar(
+          titlePadding: const EdgeInsetsDirectional.only(start: 16, bottom: 16, end: 16),
+          title: Opacity(
+            opacity: opacity,
+            child: Text(
+              event.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                // Cheap insurance for the sliver of the fade where the photo is still
+                // faintly behind the text.
+                shadows: [Shadow(blurRadius: 8, color: Colors.black54)],
+              ),
+            ),
+          ),
+          background: _Hero(
+            url: event.branding.heroImageUrl,
+            logoUrl: event.branding.logoUrl,
+          ),
+        );
+      },
     );
   }
 }
