@@ -1,4 +1,3 @@
-import { MARKETS } from '@eventmgr/shared-types';
 import type {
   AgendaItem,
   Attendee,
@@ -22,6 +21,7 @@ import type {
   TravelDetail,
   WeatherInfo,
 } from '@eventmgr/shared-types';
+import { resolveMarkets } from './markets';
 
 /**
  * Map raw DynamoDB items (which carry PK/SK/GSI* attributes) to clean domain shapes
@@ -265,8 +265,9 @@ export const toWeather = (i: Item): WeatherInfo => ({
 /** Public yearbook card — excludes private fields (phone, dietary, accessibility, email). */
 export const toAttendeeCard = (i: Item): AttendeeCard => ({
   // Only market tags cross into the public projection; "vip"/"staff" and other internal
-  // segmentation stay server-side.
-  markets: ((i.tags as string[]) ?? []).filter((tag) => (MARKETS as readonly string[]).includes(tag)),
+  // segmentation stay server-side. Falls back to city/company inference when no market tag is
+  // set, so operationally-tagged attendees don't all pile into "Other" (CF-2).
+  markets: resolveMarkets(i),
   messageable: i.directoryVisible !== false && i.contactSharingOptIn === true,
   id: i.id,
   firstName: i.firstName,

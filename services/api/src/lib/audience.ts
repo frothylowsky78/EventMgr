@@ -7,6 +7,7 @@ import { ddb } from './dynamo';
 import { TABLE_NAME, keys } from './keys';
 import { ApiException } from './http';
 import { isRegistrationDone } from './registrationStatus';
+import { resolveMarkets } from './markets';
 
 export interface ResolvedAttendee {
   id: string;
@@ -14,6 +15,8 @@ export interface ResolvedAttendee {
   lastName: string;
   email: string;
   tags: string[];
+  /** Explicit market tags, or those inferred from city/company — what the directory shows. */
+  markets: string[];
   registrationStatus: string;
 }
 
@@ -49,6 +52,11 @@ async function allEventAttendees(eventId: string): Promise<ResolvedAttendee[]> {
       lastName: i.lastName ?? '',
       email: i.email ?? '',
       tags: (i.tags as string[]) ?? [],
+      markets: resolveMarkets({
+        city: i.city as string | undefined,
+        company: i.company as string | undefined,
+        tags: (i.tags as string[]) ?? [],
+      }),
       registrationStatus: i.registrationStatus ?? 'not_started',
     }));
 }
@@ -98,7 +106,11 @@ export async function resolveAudience(
 
     case 'tag': {
       const tags = criteria.tags ?? [];
-      const attendees = everyone.filter((a) => a.tags.some((t) => tags.includes(t)));
+      // Market names are targeted through this same case, so match resolved markets too —
+      // otherwise "notify Seattle" would miss the people the directory files under Seattle.
+      const attendees = everyone.filter(
+        (a) => a.tags.some((t) => tags.includes(t)) || a.markets.some((m) => tags.includes(m))
+      );
       return { attendees, description: `Tags: ${tags.join(', ') || '(none)'}` };
     }
 
