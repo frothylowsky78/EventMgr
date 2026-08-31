@@ -37,8 +37,7 @@ class AuthController extends StateNotifier<AuthState> {
     state = const AuthState(AuthStatus.signedOut);
   }
 
-  String _message(Object e) {
-    final s = e.toString().replaceFirst('Exception: ', '');
-    return s.isEmpty ? 'Sign-in failed. Check your email and access code.' : s;
-  }
+  /// Only [AuthFailure] carries text meant for a guest. Anything else is an unexpected error
+  /// whose string could leak internals, so it collapses to the same generic message.
+  String _message(Object e) => e is AuthFailure ? e.message : signInFailedMessage;
 }
