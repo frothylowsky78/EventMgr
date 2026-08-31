@@ -237,7 +237,7 @@ async function main() {
     id: NOTIF_ID,
     eventId: EVENT_ID,
     title: 'Welcome to VIP Summit 2026',
-    body: 'Your itinerary is ready — tap My Trip to see what is next.',
+    body: 'Your itinerary is ready — tap My Itinerary to see what is next.',
     target: { type: 'all', criteria: {} },
     deepLink: { type: 'itinerary' },
     priority: 'normal',
@@ -258,7 +258,7 @@ async function main() {
     attendeeId: ATTENDEE_ID,
     eventId: EVENT_ID,
     title: 'Welcome to VIP Summit 2026',
-    body: 'Your itinerary is ready — tap My Trip to see what is next.',
+    body: 'Your itinerary is ready — tap My Itinerary to see what is next.',
     deepLink: { type: 'itinerary' },
     priority: 'normal',
     read: false,
@@ -277,7 +277,7 @@ async function main() {
       answer: 'Yes — shuttle assignments are in your Travel and Transportation sections.',
       featured: true, order: 0 },
     { category: 'app_support', question: 'I can’t see my itinerary — what should I do?',
-      answer: 'Pull to refresh on the My Trip screen. If it persists, contact the app support desk in Help.',
+      answer: 'Pull to refresh on the My Itinerary screen. If it persists, contact the app support desk in Help.',
       featured: false, order: 0 },
   ];
   for (const f of faqs) {
