@@ -148,6 +148,8 @@ export interface ItineraryItem {
   transportationNote?: string;
   reminderEnabled: boolean;
   visibility: 'private' | 'shared';
+  /** Who put this on the itinerary. Attendees may only remove their own additions. */
+  source: 'admin' | 'attendee';
 }
 
 export interface ItineraryItemCreate {

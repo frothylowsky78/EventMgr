@@ -383,6 +383,14 @@ export const itineraryCreateSchema = z.object({
 });
 export const itineraryUpdateSchema = itineraryCreateSchema.partial();
 
+/**
+ * Attendee self-add (POST /me/itinerary). Only the agenda item is accepted — times and location
+ * are copied from it server-side, so an attendee can't schedule an arbitrary block.
+ */
+export const myItineraryCreateSchema = z.object({
+  agendaItemId: z.string().min(1).max(100),
+});
+
 export const helpContentUpsertSchema = z.object({
   contacts: z
     .array(

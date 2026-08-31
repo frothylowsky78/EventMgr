@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../application/providers.dart';
 import '../../domain/agenda_item.dart';
+import '../../domain/itinerary_item.dart';
 import 'feedback_screen.dart';
 
 /// Agenda item detail — also the target of agenda deep links (e.g. push notifications).
@@ -37,9 +38,19 @@ class AgendaDetailScreen extends ConsumerWidget {
   }
 }
 
-class _Detail extends StatelessWidget {
+class _Detail extends ConsumerStatefulWidget {
   const _Detail({required this.item});
   final AgendaItem item;
+
+  @override
+  ConsumerState<_Detail> createState() => _DetailState();
+}
+
+class _DetailState extends ConsumerState<_Detail> {
+  /// Set while an add/remove is in flight so the button can't be double-fired.
+  bool _busy = false;
+
+  AgendaItem get item => widget.item;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +77,8 @@ class _Detail extends StatelessWidget {
           Text(item.description, style: theme.textTheme.bodyLarge),
         ],
         const SizedBox(height: 24),
+        _itineraryButton(),
+        const SizedBox(height: 8),
         OutlinedButton.icon(
           onPressed: () => _addToCalendar(context),
           icon: const Icon(Icons.calendar_month),
@@ -85,6 +98,63 @@ class _Detail extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// Reflects the attendee's itinerary: not there -> add; added by them -> tap to remove;
+  /// assigned by staff -> shown as present but not removable.
+  Widget _itineraryButton() {
+    final mine = ref.watch(itineraryProvider).valueOrNull;
+    ItineraryItem? existing;
+    for (final it in mine ?? const <ItineraryItem>[]) {
+      if (it.agendaItemId == item.id) {
+        existing = it;
+        break;
+      }
+    }
+
+    if (existing == null) {
+      return FilledButton.icon(
+        onPressed: _busy ? null : _addToItinerary,
+        icon: const Icon(Icons.playlist_add),
+        label: const Text('Add to my itinerary'),
+      );
+    }
+
+    final removable = existing.removableByAttendee;
+    final itemId = existing.id;
+    return FilledButton.tonalIcon(
+      onPressed: (_busy || !removable) ? null : () => _removeFromItinerary(itemId),
+      icon: const Icon(Icons.check),
+      label: const Text('In my itinerary'),
+    );
+  }
+
+  Future<void> _addToItinerary() async {
+    setState(() => _busy = true);
+    try {
+      await ref.read(itineraryRepositoryProvider).add(item.id);
+      ref.invalidate(itineraryProvider);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not add to your itinerary: $e')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _removeFromItinerary(String itemId) async {
+    setState(() => _busy = true);
+    try {
+      await ref.read(itineraryRepositoryProvider).remove(itemId);
+      ref.invalidate(itineraryProvider);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Could not remove it: $e')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   void _addToCalendar(BuildContext context) {

@@ -132,8 +132,14 @@ export class Api extends Construct {
     route('Health', apigw.HttpMethod.GET, '/health', 'health.ts', 'read', { secured: false });
 
     // Attendee — self
-    route('GetMe', apigw.HttpMethod.GET, '/me', 'getMe.ts', 'read');
+    // /me, /me/profile and the yearbook all presign profile-photo keys on read.
+    const getMeFn = route('GetMe', apigw.HttpMethod.GET, '/me', 'getMe.ts', 'read', { environment: profileEnv });
+    profilePhotosBucket.grantRead(getMeFn);
     route('GetMyItinerary', apigw.HttpMethod.GET, '/me/itinerary', 'getMyItinerary.ts', 'read');
+    // Attendee self-service adds/removes; the handlers copy times from the agenda item and
+    // refuse to delete admin-assigned rows.
+    route('CreateMyItinerary', apigw.HttpMethod.POST, '/me/itinerary', 'createMyItinerary.ts', 'write');
+    route('DeleteMyItinerary', apigw.HttpMethod.DELETE, '/me/itinerary/{itemId}', 'deleteMyItinerary.ts', 'write');
 
     // Event content
     route('GetEvent', apigw.HttpMethod.GET, '/events/{eventId}', 'getEvent.ts', 'read');
@@ -147,7 +153,8 @@ export class Api extends Construct {
     route('GetItineraryIcs', apigw.HttpMethod.GET, '/me/itinerary.ics', 'getItineraryIcs.ts', 'read');
 
     // Profile self-service (edit + photo upload)
-    route('UpdateProfile', apigw.HttpMethod.PATCH, '/me/profile', 'updateProfile.ts', 'write');
+    const updateProfileFn = route('UpdateProfile', apigw.HttpMethod.PATCH, '/me/profile', 'updateProfile.ts', 'write', { environment: profileEnv });
+    profilePhotosBucket.grantRead(updateProfileFn);
     const profilePhotoFn = route('RequestProfilePhotoUrl', apigw.HttpMethod.POST, '/me/profile-photo/upload-url', 'requestProfilePhotoUrl.ts', 'write', { environment: profileEnv });
     profilePhotosBucket.grantPut(profilePhotoFn);
 
@@ -155,7 +162,8 @@ export class Api extends Construct {
     const listMapsFn = route('ListMaps', apigw.HttpMethod.GET, '/events/{eventId}/maps', 'listMaps.ts', 'read', { environment: assetsEnv });
     assetsBucket.grantRead(listMapsFn);
     route('ListFaq', apigw.HttpMethod.GET, '/events/{eventId}/faq', 'listFaq.ts', 'read');
-    route('ListAttendees', apigw.HttpMethod.GET, '/events/{eventId}/attendees', 'listAttendees.ts', 'read');
+    const listAttendeesFn = route('ListAttendees', apigw.HttpMethod.GET, '/events/{eventId}/attendees', 'listAttendees.ts', 'read', { environment: profileEnv });
+    profilePhotosBucket.grantRead(listAttendeesFn);
     route('GetWeather', apigw.HttpMethod.GET, '/events/{eventId}/weather', 'getWeather.ts', 'read');
     route('GetHelp', apigw.HttpMethod.GET, '/events/{eventId}/help', 'getHelp.ts', 'read');
 

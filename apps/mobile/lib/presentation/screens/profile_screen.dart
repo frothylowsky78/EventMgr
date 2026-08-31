@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -83,6 +84,8 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
       final bytes = await file.readAsBytes();
       final ct = file.name.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg';
       await ref.read(supportRepositoryProvider).uploadProfilePhoto(bytes: bytes, contentType: ct);
+      // /me re-presigns the key into a fresh URL, so the image cache can't serve the old photo.
+      ref.invalidate(meProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Photo uploaded.')));
@@ -99,6 +102,7 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
     final scheme = Theme.of(context).colorScheme;
     final initials = '${widget.me.firstName.isNotEmpty ? widget.me.firstName[0] : ''}'
         '${widget.me.lastName.isNotEmpty ? widget.me.lastName[0] : ''}';
+    final photoUrl = widget.me.profilePhotoUrl;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -109,8 +113,13 @@ class _ProfileFormState extends ConsumerState<_ProfileForm> {
                 radius: 44,
                 backgroundColor: scheme.primary.withOpacity(0.12),
                 foregroundColor: scheme.primary,
-                child: Text(initials.toUpperCase(),
-                    style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                backgroundImage: photoUrl.isNotEmpty
+                    ? CachedNetworkImageProvider(photoUrl)
+                    : null,
+                child: photoUrl.isEmpty
+                    ? Text(initials.toUpperCase(),
+                        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold))
+                    : null,
               ),
               const SizedBox(height: 8),
               Text('${widget.me.firstName} ${widget.me.lastName}',

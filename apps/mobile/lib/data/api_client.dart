@@ -56,6 +56,15 @@ class ApiClient {
     }
   }
 
+  Future<dynamic> deleteData(String path) async {
+    try {
+      final res = await _dio.delete(path);
+      return res.data is Map ? res.data['data'] : null;
+    } on DioException catch (e) {
+      throw _toApiError(e);
+    }
+  }
+
   Exception _toApiError(DioException e) {
     final res = e.response;
     final data = res?.data;

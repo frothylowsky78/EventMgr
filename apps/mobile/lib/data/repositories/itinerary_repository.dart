@@ -28,5 +28,17 @@ class ItineraryRepository {
     return items;
   }
 
+  /// POST /me/itinerary — add an agenda session to your own itinerary.
+  /// The server copies the times from the agenda item and is idempotent, so a repeat add
+  /// returns the existing item rather than a duplicate.
+  Future<ItineraryItem> add(String agendaItemId) async {
+    final data = await _api.postData('/me/itinerary', {'agendaItemId': agendaItemId});
+    return ItineraryItem.fromJson((data as Map).cast<String, dynamic>());
+  }
+
+  /// DELETE /me/itinerary/{itemId} — only items the attendee added themselves; the server
+  /// refuses admin-assigned ones.
+  Future<void> remove(String itemId) => _api.deleteData('/me/itinerary/$itemId');
+
   Future<void> clear() => _cache.clear();
 }

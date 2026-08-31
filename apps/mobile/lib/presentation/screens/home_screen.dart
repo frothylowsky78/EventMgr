@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../application/providers.dart';
+import '../../domain/agenda_item.dart';
 import '../../domain/event.dart';
 import '../../domain/itinerary_item.dart';
 
@@ -235,6 +236,9 @@ class _NextItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final itinAsync = ref.watch(itineraryProvider);
+    // Agenda is supplementary here: it names linked itinerary items and provides the fallback
+    // when the attendee has nothing personal scheduled. Its loading/error state must not block.
+    final agenda = ref.watch(agendaProvider).valueOrNull ?? const <AgendaItem>[];
     return itinAsync.when(
       loading: () => const Card(
           child: Padding(
@@ -242,36 +246,78 @@ class _NextItem extends ConsumerWidget {
               child: LinearProgressIndicator())),
       error: (_, __) => const SizedBox.shrink(),
       data: (items) {
-        final next = _findNext(items);
-        if (next == null) {
-          return const Card(
-            child: ListTile(
-              leading: Icon(Icons.check_circle_outline),
-              title: Text('Nothing scheduled next'),
-              subtitle: Text('Enjoy your free time.'),
-            ),
+        final now = DateTime.now();
+        final next = _findNext(items, now);
+        if (next != null) {
+          // Same title resolution as itinerary_screen: linked agenda items show their real name.
+          final agendaTitles = <String, String>{for (final a in agenda) a.id: a.title};
+          return _card(
+            title: next.customTitle ?? agendaTitles[next.agendaItemId] ?? 'Scheduled item',
+            start: next.start,
+            onTap: () => context.go('/itinerary'),
           );
         }
-        final time = DateFormat('EEE • h:mm a').format(next.start);
-        return Card(
+
+        final upcoming = _findNextAgenda(agenda, now);
+        if (upcoming != null) {
+          return _card(
+            title: upcoming.$1.title,
+            start: upcoming.$2,
+            onTap: () => context.push('/agenda/${upcoming.$1.id}'),
+          );
+        }
+
+        return const Card(
           child: ListTile(
-            leading: const Icon(Icons.schedule),
-            title: Text(next.customTitle ?? 'Itinerary item'),
-            subtitle: Text(time),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.go('/itinerary'),
+            leading: Icon(Icons.check_circle_outline),
+            title: Text('Nothing scheduled next'),
+            subtitle: Text('Enjoy your free time.'),
           ),
         );
       },
     );
   }
 
-  ItineraryItem? _findNext(List<ItineraryItem> items) {
-    final now = DateTime.now();
+  Widget _card({
+    required String title,
+    required DateTime start,
+    required VoidCallback onTap,
+  }) =>
+      Card(
+        child: ListTile(
+          leading: const Icon(Icons.schedule),
+          title: Text(title),
+          subtitle: Text(DateFormat('EEE • h:mm a').format(start)),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: onTap,
+        ),
+      );
+
+  ItineraryItem? _findNext(List<ItineraryItem> items, DateTime now) {
     for (final it in items) {
       if (it.start.isAfter(now)) return it;
     }
-    return items.isNotEmpty ? items.last : null;
+    return null;
+  }
+
+  /// Earliest agenda item still ahead of [now], paired with its parsed start.
+  (AgendaItem, DateTime)? _findNextAgenda(List<AgendaItem> items, DateTime now) {
+    (AgendaItem, DateTime)? best;
+    for (final a in items) {
+      final start = _agendaStart(a);
+      if (start == null || !start.isAfter(now)) continue;
+      if (best == null || start.isBefore(best.$2)) best = (a, start);
+    }
+    return best;
+  }
+
+  /// Agenda items carry date and start time as separate strings; malformed rows are skipped.
+  static DateTime? _agendaStart(AgendaItem a) {
+    try {
+      return DateTime.parse('${a.date} ${a.startTime}');
+    } catch (_) {
+      return null;
+    }
   }
 }
 

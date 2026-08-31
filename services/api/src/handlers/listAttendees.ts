@@ -7,6 +7,7 @@ import { ddb } from '../lib/dynamo';
 import { ApiException, fail, getAuth, ok, requireAttendee } from '../lib/http';
 import { TABLE_NAME, keys } from '../lib/keys';
 import { toAttendeeCard } from '../lib/mappers';
+import { presignProfileIfKey } from '../lib/s3';
 
 /**
  * GET /events/{eventId}/attendees — yearbook directory.
@@ -30,9 +31,15 @@ export const handler = async (
       })
     );
 
-    const cards = (res.Items ?? [])
-      .filter((a) => a.directoryVisible !== false && a.enabled !== false)
-      .map(toAttendeeCard);
+    // Presigning is local crypto (no network call), so signing each card is cheap.
+    const cards = await Promise.all(
+      (res.Items ?? [])
+        .filter((a) => a.directoryVisible !== false && a.enabled !== false)
+        .map(async (a) => ({
+          ...toAttendeeCard(a),
+          profilePhotoUrl: await presignProfileIfKey(a.profilePhotoKey, a.profilePhotoUrl),
+        }))
+    );
 
     return ok(cards);
   } catch (e) {

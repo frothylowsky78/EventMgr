@@ -8,6 +8,8 @@ class AttendeeMe {
   final String company;
   final String title;
   final String city;
+  /// Pre-signed GET URL issued by the API on each /me read; expires, so don't persist it long.
+  final String profilePhotoUrl;
   final List<String> dietaryRestrictions;
   final String accessibilityNeeds;
   final bool directoryVisible;
@@ -26,6 +28,7 @@ class AttendeeMe {
     this.company = '',
     this.title = '',
     this.city = '',
+    this.profilePhotoUrl = '',
     this.dietaryRestrictions = const [],
     this.accessibilityNeeds = '',
     this.directoryVisible = true,
@@ -41,6 +44,7 @@ class AttendeeMe {
         company: j['company'] as String? ?? '',
         title: j['title'] as String? ?? '',
         city: j['city'] as String? ?? '',
+        profilePhotoUrl: j['profilePhotoUrl'] as String? ?? '',
         dietaryRestrictions:
             (j['dietaryRestrictions'] as List?)?.map((e) => e.toString()).toList() ?? const [],
         accessibilityNeeds: j['accessibilityNeeds'] as String? ?? '',
@@ -61,6 +65,7 @@ class AttendeeMe {
         'company': company,
         'title': title,
         'city': city,
+        'profilePhotoUrl': profilePhotoUrl,
         'dietaryRestrictions': dietaryRestrictions,
         'accessibilityNeeds': accessibilityNeeds,
         'directoryVisible': directoryVisible,

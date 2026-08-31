@@ -7,6 +7,7 @@ import { ddb } from '../lib/dynamo';
 import { ApiException, fail, getAuth, ok, requireAttendee } from '../lib/http';
 import { TABLE_NAME, keys } from '../lib/keys';
 import { toAttendee } from '../lib/mappers';
+import { presignProfileIfKey } from '../lib/s3';
 import { profileUpdateSchema, parseBody } from '../lib/validation';
 
 /**
@@ -34,7 +35,10 @@ export const handler = async (
     };
 
     await ddb.send(new PutCommand({ TableName: TABLE_NAME, Item: merged }));
-    return ok(toAttendee(merged));
+    return ok({
+      ...toAttendee(merged),
+      profilePhotoUrl: await presignProfileIfKey(merged.profilePhotoKey, merged.profilePhotoUrl),
+    });
   } catch (e) {
     return fail(e);
   }

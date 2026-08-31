@@ -49,3 +49,13 @@ export const presignAssetIfKey = async (
   key: string | undefined,
   current: string | undefined
 ): Promise<string> => (key ? presignDownloadFrom(ASSETS_BUCKET, key) : (current ?? ''));
+
+/**
+ * Profile photos live in the private profile-photos bucket, so the stored key must become a
+ * temporary signed URL on read (upload records `profilePhotoKey`; nothing sets a URL).
+ * Falls back to `current` when there's no key, so attendees without a photo stay at ''.
+ */
+export const presignProfileIfKey = async (
+  key: string | undefined,
+  current: string | undefined
+): Promise<string> => (key ? presignDownloadFrom(PROFILE_BUCKET, key) : (current ?? ''));

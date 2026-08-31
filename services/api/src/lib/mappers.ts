@@ -84,6 +84,8 @@ export const toItineraryItem = (i: Item): ItineraryItem => ({
   transportationNote: i.transportationNote ?? '',
   reminderEnabled: i.reminderEnabled ?? true,
   visibility: i.visibility ?? 'private',
+  // Items predating attendee self-service were all admin-assigned.
+  source: i.source === 'attendee' ? 'attendee' : 'admin',
 });
 
 export const toNotification = (i: Item): NotificationRecord => ({
