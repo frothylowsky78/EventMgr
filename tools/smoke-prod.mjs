@@ -117,11 +117,19 @@ async function check(name, method, path, body, assert) {
   await check('GET /me/itinerary.ics', 'GET', '/me/itinerary.ics');
 
   // ---- itinerary self-service ----
-  if (agendaItems[0]) {
+  // Pick an agenda item NOT already on the itinerary (seed pre-assigns agenda_001 as an admin item).
+  const existingItin = (await call('GET', '/me/itinerary')).body ?? [];
+  const freeAgenda = agendaItems.find((a) => !existingItin.some((i) => i.agendaItemId === a.id));
+  const adminItem = existingItin.find((i) => i.source === 'admin');
+  if (adminItem) {
+    const r = await call('DELETE', `/me/itinerary/${adminItem.id}`);
+    log('DELETE admin-assigned itinerary item is refused', r.status === 403, `HTTP ${r.status}`);
+  }
+  if (freeAgenda) {
     const add = await check('POST /me/itinerary (add agenda item)', 'POST', '/me/itinerary',
-      { agendaItemId: agendaItems[0].id }, (b) => b?.id ? true : 'no item id');
+      { agendaItemId: freeAgenda.id }, (b) => b?.id ? true : 'no item id');
     const again = await check('POST /me/itinerary (same item → idempotent)', 'POST', '/me/itinerary',
-      { agendaItemId: agendaItems[0].id }, (b) => b?.id === add.body?.id ? true : `duplicate created: ${b?.id}`);
+      { agendaItemId: freeAgenda.id }, (b) => b?.id === add.body?.id ? true : `duplicate created: ${b?.id}`);
     const list = await check('GET /me/itinerary (contains added item)', 'GET', '/me/itinerary', undefined, (b) =>
       b.some((i) => i.id === add.body?.id) ? true : 'added item missing');
     const mine = list.body?.find((i) => i.id === add.body?.id);
@@ -130,6 +138,8 @@ async function check(name, method, path, body, assert) {
     void again;
   }
 
+  if (!freeAgenda) log('itinerary self-service', true, 'skipped — every agenda item already on itinerary');
+
   // ---- registration ----
   if (actions[0]) {
     const done = await check(`POST registration complete (${actions[0].id})`, 'POST',
@@ -137,9 +147,8 @@ async function check(name, method, path, body, assert) {
         b?.completedRegistrationActions?.includes(actions[0].id) ? true : 'not marked complete');
     log('  registrationStatus advanced', ['in_progress', 'complete'].includes(done.body?.registrationStatus), done.body?.registrationStatus);
     await check(`DELETE registration complete (cleanup)`, 'DELETE', `/me/registration/actions/${actions[0].id}/complete`);
-    await check('POST registration complete (bogus id → 4xx expected)', 'POST',
-      '/me/registration/actions/does_not_exist/complete').then((r) =>
-      log('  bogus action id rejected', r.status >= 400 && r.status < 500, `HTTP ${r.status}`));
+    const bogus = await call('POST', '/me/registration/actions/does_not_exist/complete');
+    log('POST registration complete (bogus id) rejected', bogus.status >= 400 && bogus.status < 500, `HTTP ${bogus.status}`);
   }
 
   // ---- profile ----
