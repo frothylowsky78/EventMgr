@@ -15,6 +15,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _email = TextEditingController();
   final _code = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  /// Access codes are shared aloud and typed by hand, so the field masks by default but can
+  /// always be revealed — a guest who mistypes an unreadable code has no way to spot it.
+  bool _codeVisible = false;
 
   @override
   void dispose() {
@@ -78,10 +81,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _code,
+                      obscureText: !_codeVisible,
+                      autocorrect: false,
+                      enableSuggestions: false,
                       textCapitalization: TextCapitalization.characters,
-                      decoration: const InputDecoration(
+                      autofillHints: const [AutofillHints.password],
+                      decoration: InputDecoration(
                         labelText: 'Access code',
-                        prefixIcon: Icon(Icons.key_outlined),
+                        prefixIcon: const Icon(Icons.key_outlined),
+                        suffixIcon: IconButton(
+                          icon: Icon(_codeVisible
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined),
+                          tooltip: _codeVisible ? 'Hide access code' : 'Show access code',
+                          onPressed: () => setState(() => _codeVisible = !_codeVisible),
+                        ),
                       ),
                       validator: (v) => (v == null || v.trim().isEmpty)
                           ? 'Enter your access code'
