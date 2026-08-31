@@ -10,6 +10,9 @@ class AttendeeMe {
   final String city;
   /// Pre-signed GET URL issued by the API on each /me read; expires, so don't persist it long.
   final String profilePhotoUrl;
+  /// Ids this attendee has blocked. The API enforces the block; this is what the unblock
+  /// screen lists.
+  final List<String> blockedAttendeeIds;
   final List<String> dietaryRestrictions;
   final String accessibilityNeeds;
   final bool directoryVisible;
@@ -29,6 +32,7 @@ class AttendeeMe {
     this.title = '',
     this.city = '',
     this.profilePhotoUrl = '',
+    this.blockedAttendeeIds = const [],
     this.dietaryRestrictions = const [],
     this.accessibilityNeeds = '',
     this.directoryVisible = true,
@@ -45,6 +49,8 @@ class AttendeeMe {
         title: j['title'] as String? ?? '',
         city: j['city'] as String? ?? '',
         profilePhotoUrl: j['profilePhotoUrl'] as String? ?? '',
+        blockedAttendeeIds:
+            (j['blockedAttendeeIds'] as List?)?.map((e) => e.toString()).toList() ?? const [],
         dietaryRestrictions:
             (j['dietaryRestrictions'] as List?)?.map((e) => e.toString()).toList() ?? const [],
         accessibilityNeeds: j['accessibilityNeeds'] as String? ?? '',
@@ -66,6 +72,7 @@ class AttendeeMe {
         'title': title,
         'city': city,
         'profilePhotoUrl': profilePhotoUrl,
+        'blockedAttendeeIds': blockedAttendeeIds,
         'dietaryRestrictions': dietaryRestrictions,
         'accessibilityNeeds': accessibilityNeeds,
         'directoryVisible': directoryVisible,

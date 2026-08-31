@@ -35,6 +35,18 @@ class ContentRepository {
           .map((e) => AttendeeCard.fromJson((e as Map).cast<String, dynamic>()))
           .toList();
 
+  /// The directory, blocked attendees included. Deliberately not cached and not merged into
+  /// [fetchAttendees]'s cache: this feeds the unblock list only, and the yearbook must never
+  /// serve it by accident.
+  Future<List<AttendeeCard>> fetchAttendeesIncludingBlocked() async {
+    final data =
+        await _api.getData('/events/${AppConfig.eventId}/attendees?includeBlocked=true');
+    return (data as List)
+        .map((e) => AttendeeCard.fromJson((e as Map).cast<String, dynamic>()))
+        .toList()
+      ..sort((a, b) => a.lastName.compareTo(b.lastName));
+  }
+
   Future<List<AttendeeCard>> fetchAttendees() async {
     final data = await _api.getData('/events/${AppConfig.eventId}/attendees');
     final items = (data as List)

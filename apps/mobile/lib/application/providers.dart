@@ -171,6 +171,16 @@ final faqProvider = FutureProvider<List<FaqItem>>((ref) async {
   }
 });
 
+/// Blocked attendees, resolved to names for the unblock screen. Depends on [meProvider] for
+/// the id list, so unblocking and invalidating me re-runs this automatically.
+final blockedAttendeesProvider = FutureProvider<List<AttendeeCard>>((ref) async {
+  final me = await ref.watch(meProvider.future);
+  final ids = me.blockedAttendeeIds.toSet();
+  if (ids.isEmpty) return const [];
+  final all = await ref.watch(contentRepositoryProvider).fetchAttendeesIncludingBlocked();
+  return all.where((c) => ids.contains(c.id)).toList();
+});
+
 final attendeesProvider = FutureProvider<List<AttendeeCard>>((ref) async {
   final repo = ref.watch(contentRepositoryProvider);
   try {

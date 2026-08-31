@@ -14,6 +14,11 @@ import { loadBlockedIds } from '../lib/blocks';
  * GET /events/{eventId}/attendees — yearbook directory.
  * Privacy: only attendees who opted into directory visibility are returned, and only the
  * public card projection (no email/phone/dietary/accessibility). Sorted by last name via GSI1.
+ *
+ * `?includeBlocked=true` keeps the caller's blocked attendees in the response. It exists for one
+ * screen — the unblock list, which needs names for ids it already holds — and lifts only the
+ * block filter. Directory-visibility and enabled still apply, so this cannot surface anyone the
+ * caller could not otherwise see.
  */
 export const handler = async (
   event: APIGatewayProxyEventV2WithJWTAuthorizer
@@ -24,6 +29,7 @@ export const handler = async (
     const eventId = event.pathParameters?.eventId;
     if (!eventId) throw new ApiException('VALIDATION', 'eventId is required');
 
+    const includeBlocked = event.queryStringParameters?.includeBlocked === 'true';
     const blocked = new Set(await loadBlockedIds(auth.attendeeId));
 
     const res = await ddb.send(
@@ -39,7 +45,7 @@ export const handler = async (
     const cards = await Promise.all(
       (res.Items ?? [])
         .filter((a) => a.directoryVisible !== false && a.enabled !== false)
-        .filter((a) => !blocked.has(a.id as string))
+        .filter((a) => includeBlocked || !blocked.has(a.id as string))
         .map(async (a) => ({
           ...toAttendeeCard(a),
           profilePhotoUrl: await presignProfileIfKey(a.profilePhotoKey, a.profilePhotoUrl),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../application/auth_controller.dart';
 import '../application/providers.dart';
 import 'screens/agenda_detail_screen.dart';
+import 'screens/blocked_attendees_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/dining_screen.dart';
 import 'screens/faq_screen.dart';
@@ -68,6 +69,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/registration', builder: (_, __) => const RegistrationScreen()),
       GoRoute(path: '/maps', builder: (_, __) => const MapsScreen()),
       GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+      GoRoute(
+          path: '/blocked',
+          builder: (_, __) => const BlockedAttendeesScreen()),
     ],
   );
 });
