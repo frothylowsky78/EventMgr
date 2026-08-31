@@ -55,7 +55,9 @@ phases:
           BUCKET=$(node tools/cdk-output.mjs cdk-outputs.json "$STACK" AdminBucketName)
           DIST=$(node tools/cdk-output.mjs cdk-outputs.json "$STACK" AdminDistributionId)
           npm run build -w @eventmgr/admin
-          aws s3 sync apps/admin/dist "s3://$BUCKET" --delete
+          # Excludes are load-bearing: --delete would otherwise remove the branding assets
+          # and privacy.html, which are uploaded out-of-band and are not build output.
+          aws s3 sync apps/admin/dist "s3://$BUCKET" --delete --exclude "branding/*" --exclude "privacy.html"
           aws cloudfront create-invalidation --distribution-id "$DIST" --paths '/*'
         else
           echo "DEPLOY_ADMIN=$DEPLOY_ADMIN — skipping admin deploy"

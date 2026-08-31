@@ -35,7 +35,7 @@ void main() {
   group('itinerary times render in the device timezone', () {
     // Regression: DateTime.parse returns a UTC DateTime for a string with an offset, and
     // DateFormat then printed those UTC fields verbatim — a 6:00 PM Pacific item showed as
-    // 1:00 AM the next day, on the My Trip heading and the Home "Up next" card.
+    // 1:00 AM the next day, on the My Itinerary heading and the Home "Up next" card.
     // Asserted against a fixed instant so the test holds in any machine timezone.
     final item = ItineraryItem.fromJson({
       'id': 'itinerary_001',

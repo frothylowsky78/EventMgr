@@ -72,7 +72,7 @@ class NotificationCenterScreen extends ConsumerWidget {
         context.go('/itinerary');
         break;
       case 'travel':
-        // Travel content now lives in the My Trip tab (CF-5), but /travel stays routable so
+        // Travel content now lives in the My Itinerary tab (CF-5), but /travel stays routable so
         // notification deep links keep working. push, so back returns to the notification list.
         context.push('/travel');
         break;

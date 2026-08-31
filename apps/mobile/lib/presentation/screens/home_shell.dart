@@ -9,7 +9,9 @@ import 'home_screen.dart';
 import 'itinerary_screen.dart';
 import 'more_menu_screen.dart';
 
-/// Bottom navigation per spec §7: Home · Agenda · My Trip · Photos · More.
+/// Bottom navigation per spec §7: Home · Agenda · My Itinerary · Photos · More.
+/// (The spec calls the third tab "My Trip"; the UI uses "My Itinerary" to match the
+/// Home quick link and the agenda detail button.)
 /// Photos/More are premium placeholders in Phase 1 and fill in during P1.
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({super.key, this.initialTab = 0});
@@ -69,7 +71,7 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
           const NavigationDestination(
               icon: Icon(Icons.luggage_outlined),
               selectedIcon: Icon(Icons.luggage),
-              label: 'My Trip'),
+              label: 'My Itinerary'),
           const NavigationDestination(
               icon: Icon(Icons.photo_library_outlined),
               label: 'Photos'),

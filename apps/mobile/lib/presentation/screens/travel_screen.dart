@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 import '../../application/providers.dart';
 import '../../domain/travel_detail.dart';
 
-/// Standalone Travel screen. Travel content now also lives inside the My Trip tab (CF-5);
+/// Standalone Travel screen. Travel content now also lives inside the My Itinerary tab (CF-5);
 /// this route is kept so existing deep links and notification targets keep resolving.
 class TravelScreen extends ConsumerWidget {
   const TravelScreen({super.key});
@@ -46,7 +46,7 @@ class TravelScreen extends ConsumerWidget {
   }
 }
 
-/// Arrival / departure / lodging / transfer cards. Shared by the Travel route and the My Trip
+/// Arrival / departure / lodging / transfer cards. Shared by the Travel route and the My Itinerary
 /// tab so the two can never drift apart.
 class TravelSections extends StatelessWidget {
   const TravelSections({super.key, required this.travel});

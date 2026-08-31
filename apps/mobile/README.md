@@ -40,7 +40,7 @@ lib/
 - **Login** — email + access code.
 - **Home** — event hero/branding, dates, location, "Up next", quick links (offline-capable).
 - **Agenda** — grouped by day, tap for detail (deep-link target `/agenda/:id`).
-- **My Trip** — personal itinerary (own data only), sign out.
+- **My Itinerary** — personal itinerary (own data only), sign out.
 
 ## Offline
 Agenda, itinerary, and the event profile are cached in Hive and shown when the network fails.

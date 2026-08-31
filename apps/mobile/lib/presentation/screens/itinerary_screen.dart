@@ -7,7 +7,8 @@ import '../../application/providers.dart';
 import '../../domain/itinerary_item.dart';
 import 'travel_screen.dart';
 
-/// "My Trip" — the attendee's personalized itinerary (own data only, enforced server-side).
+/// "My Itinerary" — the attendee's personalized itinerary (own data only, enforced
+/// server-side). Called "My Trip" in the spec and in CF-5.
 class ItineraryScreen extends ConsumerWidget {
   const ItineraryScreen({super.key});
 
@@ -24,7 +25,7 @@ class ItineraryScreen extends ConsumerWidget {
     };
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Trip'),
+        title: const Text('My Itinerary'),
         actions: [
           IconButton(
             tooltip: 'Sign out',
@@ -61,7 +62,7 @@ class ItineraryScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // Travel folded into My Trip (CF-5) — one place for everything about the trip.
+                // Travel folded into this tab (CF-5) — one place for everything about the trip.
                 if (hasTravel) ...[
                   Text('Travel', style: theme.textTheme.titleLarge),
                   const SizedBox(height: 8),
