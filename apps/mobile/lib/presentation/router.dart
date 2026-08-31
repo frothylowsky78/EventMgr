@@ -4,7 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../application/auth_controller.dart';
 import '../application/providers.dart';
+import 'screens/agenda_screen.dart';
 import 'screens/agenda_detail_screen.dart';
+import 'screens/gallery_screen.dart';
+import 'screens/home_screen.dart';
+import 'screens/itinerary_screen.dart';
+import 'screens/more_menu_screen.dart';
 import 'screens/blocked_attendees_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/dining_screen.dart';
@@ -40,9 +45,51 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
-      GoRoute(path: '/home', builder: (_, __) => const HomeShell(initialTab: 0)),
-      GoRoute(path: '/agenda', builder: (_, __) => const HomeShell(initialTab: 1)),
-      GoRoute(path: '/itinerary', builder: (_, __) => const HomeShell(initialTab: 2)),
+
+      // One persistent shell across all five tabs.
+      //
+      // Previously /home, /agenda and /itinerary each built their own HomeShell, so any
+      // context.go to them — the Home quick links, the Up next card — tore one shell down and
+      // built another. That is a full route transition: two nav bars on screen mid-slide, and
+      // because GalleryScreen sits in both shells' IndexedStacks, its Hero widgets matched
+      // across the two routes and the photos flew across the screen.
+      //
+      // StatefulShellRoute keeps a single shell and swaps branches in place. goBranch does no
+      // route transition at all, and context.go('/agenda') now selects that branch rather than
+      // constructing a second shell.
+      StatefulShellRoute(
+        builder: (_, __, navigationShell) => HomeShell(navigationShell: navigationShell),
+        // The default indexedStack constructor gives no access to the individual children, and
+        // Heroes in an offscreen branch would still be eligible to fly during a push from the
+        // visible one. Building the stack here lets each branch be sealed with HeroMode.
+        navigatorContainerBuilder: (_, navigationShell, children) => IndexedStack(
+          index: navigationShell.currentIndex,
+          children: [
+            for (var i = 0; i < children.length; i++)
+              HeroMode(
+                enabled: i == navigationShell.currentIndex,
+                child: children[i],
+              ),
+          ],
+        ),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/home', builder: (_, __) => const HomeScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/agenda', builder: (_, __) => const AgendaScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/itinerary', builder: (_, __) => const ItineraryScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/photos', builder: (_, __) => const GalleryScreen()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/more', builder: (_, __) => const MoreMenuScreen()),
+          ]),
+        ],
+      ),
       GoRoute(
         path: '/agenda/:id',
         builder: (_, state) =>

@@ -1,28 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../application/providers.dart';
-
-import 'agenda_screen.dart';
-import 'gallery_screen.dart';
-import 'home_screen.dart';
-import 'itinerary_screen.dart';
-import 'more_menu_screen.dart';
 
 /// Bottom navigation per spec §7: Home · Agenda · My Itinerary · Photos · More.
 /// (The spec calls the third tab "My Trip"; the UI uses "My Itinerary" to match the
 /// Home quick link and the agenda detail button.)
 /// Photos/More are premium placeholders in Phase 1 and fill in during P1.
 class HomeShell extends ConsumerStatefulWidget {
-  const HomeShell({super.key, this.initialTab = 0});
-  final int initialTab;
+  const HomeShell({super.key, required this.navigationShell});
+
+  /// Owns the branch state and the IndexedStack. Built once by StatefulShellRoute and reused,
+  /// which is what makes a tab switch a rebuild rather than a route transition.
+  final StatefulNavigationShell navigationShell;
 
   @override
   ConsumerState<HomeShell> createState() => _HomeShellState();
 }
 
 class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserver {
-  late int _index = widget.initialTab;
 
   @override
   void initState() {
@@ -62,10 +59,14 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
     conversationsProvider,
   ];
 
-  /// The tab's own data, refreshed as it comes into view. The tabs live in an IndexedStack and
-  /// stay mounted, so switching to one never rebuilds it on its own.
+  /// The tab's own data, refreshed as it comes into view. Branches stay mounted in the
+  /// IndexedStack, so selecting one never rebuilds it on its own.
   void _onTabSelected(int i) {
-    setState(() => _index = i);
+    widget.navigationShell.goBranch(
+      i,
+      // Re-tapping the current tab pops it back to its root, the platform convention.
+      initialLocation: i == widget.navigationShell.currentIndex,
+    );
     switch (i) {
       case 0:
         ref.invalidate(eventProvider);
@@ -79,20 +80,12 @@ class _HomeShellState extends ConsumerState<HomeShell> with WidgetsBindingObserv
     }
   }
 
-  static const _tabs = <Widget>[
-    HomeScreen(),
-    AgendaScreen(),
-    ItineraryScreen(),
-    GalleryScreen(),
-    MoreMenuScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(index: _index, children: _tabs),
+      body: widget.navigationShell,
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
+        selectedIndex: widget.navigationShell.currentIndex,
         onDestinationSelected: _onTabSelected,
         destinations: [
           const NavigationDestination(

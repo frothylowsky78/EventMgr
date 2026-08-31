@@ -219,6 +219,11 @@ class _CollapsingTitle extends StatelessWidget {
         final opacity = ((collapsed - 0.82) / 0.18).clamp(0.0, 1.0);
 
         return FlexibleSpaceBar(
+          // No scaling: FlexibleSpaceBar otherwise blows the title up to 1.5x while expanded
+          // and shrinks it as you scroll, which is what made the collapsed name look like a
+          // different, heavier typeface than the heading below the hero.
+          expandedTitleScale: 1.0,
+          centerTitle: false,
           titlePadding: const EdgeInsetsDirectional.only(start: 16, bottom: 16, end: 16),
           title: Opacity(
             opacity: opacity,
@@ -226,12 +231,15 @@ class _CollapsingTitle extends StatelessWidget {
               event.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                // Cheap insurance for the sliver of the fade where the photo is still
-                // faintly behind the text.
-                shadows: [Shadow(blurRadius: 8, color: Colors.black54)],
-              ),
+              // Same family and weight as the heading above the date, at app-bar size. Taking
+              // it from the type scale rather than a bare TextStyle is what keeps the two
+              // looking like the same word. No shadow: by the time this is visible the photo
+              // has faded out and the bar is its own flat colour, so the shadow only ever
+              // added a halo.
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
             ),
           ),
           background: _Hero(
