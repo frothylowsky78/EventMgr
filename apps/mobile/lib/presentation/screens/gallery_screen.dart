@@ -133,18 +133,19 @@ class _PhotoTile extends ConsumerWidget {
     return GestureDetector(
       onTap: () => _openViewer(context, ref),
       onLongPress: () => _openModerationSheet(context, ref),
-      child: Hero(
-        tag: photo.id,
-        child: photo.thumbnailUrl == null
-            ? Container(color: Colors.black12)
-            : CachedNetworkImage(
-                imageUrl: photo.thumbnailUrl!,
-                fit: BoxFit.cover,
-                placeholder: (_, __) => Container(color: Colors.black12),
-                errorWidget: (_, __, ___) =>
-                    const ColoredBox(color: Colors.black12, child: Icon(Icons.broken_image)),
-              ),
-      ),
+      // No Hero here: the viewer is a showDialog, not a PageRoute, so there was never a
+      // matching Hero to fly to. Its only effect was to make every tile eligible for a flight
+      // during unrelated route transitions, which is exactly how the photos ended up sliding
+      // across the screen on a tab change.
+      child: photo.thumbnailUrl == null
+          ? Container(color: Colors.black12)
+          : CachedNetworkImage(
+              imageUrl: photo.thumbnailUrl!,
+              fit: BoxFit.cover,
+              placeholder: (_, __) => Container(color: Colors.black12),
+              errorWidget: (_, __, ___) =>
+                  const ColoredBox(color: Colors.black12, child: Icon(Icons.broken_image)),
+            ),
     );
   }
 
